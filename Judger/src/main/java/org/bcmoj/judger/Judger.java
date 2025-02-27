@@ -37,9 +37,11 @@ public class Judger {
         // 编译
         try {
             if (compileProgram(programPath, executableFile) != 0) {
+                LOGGER.info("Result: COMPILE_ERROR", COMPILE_ERROR);
                 return COMPILE_ERROR; // 编译失败
             }
         } catch (IOException | InterruptedException e) {
+            LOGGER.error("Result: SYSTEM_ERROR",SYSTEM_ERROR,"\n",e.getMessage());
             return SYSTEM_ERROR; // 系统错误
         }
 
@@ -48,31 +50,36 @@ public class Judger {
         try {
             runProcess = runProgram(executableFile, inFile, timeMs);
         } catch (IOException | InterruptedException | TimeoutException e) {
+            LOGGER.info("Ressult: REAL_TIME_LIMIT_EXCEEDED",REAL_TIME_LIMIT_EXCEEDED);
             return REAL_TIME_LIMIT_EXCEEDED; // 超时或系统错误
         }
 
         // 检查运行结果
         if (runProcess.exitValue() != 0) {
+            LOGGER.info("Result: RUNTIME_ERROR", RUNTIME_ERROR);
             return RUNTIME_ERROR; // 运行时错误
         }
 
         // 验证输出
         try {
             if (!compareOutput(runProcess.getInputStream(), outFile)) {
+                LOGGER.info("Result: WRONG_ANSWER", WRONG_ANSWER);
                 return WRONG_ANSWER; // 答案错误
             }
         } catch (IOException e) {
+            LOGGER.error("Result: SYSTEM_ERROR",SYSTEM_ERROR,"\n",e.getMessage());
             return SYSTEM_ERROR; // 系统错误
         } finally {
             // 删除临时文件
             if (executableFile.exists()) {
                 boolean isDeleted = executableFile.delete();
+                LOGGER.debug("Deleted executable file: " + executableFile.getAbsolutePath());
                 if (!isDeleted) {
                     LOGGER.error("Failed to delete the executable file: " + executableFile.getAbsolutePath());
                 }
             }
         }
-
+        LOGGER.info("Result: Accepted", ACCEPTED);
         return ACCEPTED; // 答案正确
     }
 
