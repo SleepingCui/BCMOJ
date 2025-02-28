@@ -50,31 +50,25 @@ public class Judger {
 
             // 运行程序
             Process runProcess;
-            long startTime = System.nanoTime();
+            double elapsedTimeMs = 0.0;
             try {
-                runProcess = runProgram(executableFile, inFile, timeMs);
+                RunResult runResult = runProgram(executableFile, inFile, timeMs);
+                runProcess = runResult.process;
+                elapsedTimeMs = runResult.elapsedTimeMs;
             } catch (IOException | InterruptedException | TimeoutException e) {
-                long endTime = System.nanoTime();
-                double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
-                return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, elapsedTimeMs); // 超时或系统错误
+                return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, 0.0); // 超时或系统错误
             }
 
             // 检查运行结果
             if (runProcess.exitValue() != 0) {
-                long endTime = System.nanoTime();
-                double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
                 return new JudgeResult(RUNTIME_ERROR, elapsedTimeMs); // 运行时错误
             }
 
             // 验证输出
             if (!compareOutput(runProcess.getInputStream(), outFile)) {
-                long endTime = System.nanoTime();
-                double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
                 return new JudgeResult(WRONG_ANSWER, elapsedTimeMs); // 答案错误
             }
 
-            long endTime = System.nanoTime();
-            double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
             return new JudgeResult(ACCEPTED, elapsedTimeMs); // 答案正确
 
         } catch (IOException | InterruptedException e) {
@@ -101,7 +95,7 @@ public class Judger {
 
     // 编译程序
     private static int compileProgram(File programPath, File executableFile) throws IOException, InterruptedException {
-        ProcessBuilder compileBuilder = new ProcessBuilder("g++", "-o", executableFile.getName(), programPath.getAbsolutePath());
+        ProcessBuilder compileBuilder = new ProcessBuilder("g++", "-o", executableFile.getName(), programPath.getAbsolutePath(), "-std=c++11");
         compileBuilder.redirectErrorStream(true); // 合并标准输出和错误输出
         Process compileProcess = compileBuilder.start();
 
@@ -116,14 +110,28 @@ public class Judger {
         return compileProcess.waitFor(); // 返回编译退出码
     }
 
+    // 封装运行结果
+    private static class RunResult {
+        public final Process process;
+        public final double elapsedTimeMs;
+
+        public RunResult(Process process, double elapsedTimeMs) {
+            this.process = process;
+            this.elapsedTimeMs = elapsedTimeMs;
+        }
+    }
+
     // 运行程序
-    private static Process runProgram(File executableFile, File inFile, int timeMs)
+    private static RunResult runProgram(File executableFile, File inFile, int timeMs)
             throws IOException, InterruptedException, TimeoutException {
         // 根据操作系统调整可执行文件的调用方式
         String command = isWindows() ? executableFile.getName() : "./" + executableFile.getName();
         ProcessBuilder runBuilder = new ProcessBuilder(command);
         runBuilder.redirectErrorStream(true); // 合并标准输出和错误输出
         Process runProcess = runBuilder.start();
+
+        // 记录程序开始运行的时间
+        long startTime = System.nanoTime();
 
         // 输入重定向
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(runProcess.getOutputStream()));
@@ -141,7 +149,12 @@ public class Judger {
             throw new TimeoutException("Process timed out");
         }
 
-        return runProcess;
+        // 记录程序结束运行的时间
+        long endTime = System.nanoTime();
+        double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
+
+        // 返回运行结果
+        return new RunResult(runProcess, elapsedTimeMs);
     }
 
     // 比较输出
