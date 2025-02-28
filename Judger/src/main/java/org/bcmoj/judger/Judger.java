@@ -33,7 +33,7 @@ public class Judger {
     public static JudgeResult judge(File programPath, File inFile, File outFile, int timeMs) {
         Random random = new Random();
         String programName = "c_" + random.nextInt(1000000);
-        LOGGER.info("Compiling program: " + programName);
+        LOGGER.info("Compiling program: {}", programName);
 
         // 如果是 Windows 系统，添加 .exe 后缀
         if (isWindows()) {
@@ -50,7 +50,7 @@ public class Judger {
 
             // 运行程序
             Process runProcess;
-            double elapsedTimeMs = 0.0;
+            double elapsedTimeMs;
             try {
                 RunResult runResult = runProgram(executableFile, inFile, timeMs);
                 runProcess = runResult.process;
@@ -72,16 +72,16 @@ public class Judger {
             return new JudgeResult(ACCEPTED, elapsedTimeMs); // 答案正确
 
         } catch (IOException | InterruptedException e) {
-            LOGGER.error("IO error occurred: " + e.getMessage());
+            LOGGER.error("IO error occurred: {}", e.getMessage());
             return new JudgeResult(SYSTEM_ERROR, 0.0); // 系统错误
         } finally {
             // 无论结果如何，最后都删除编译文件
             if (executableFile.exists()) {
                 boolean isDeleted = executableFile.delete();
                 if (isDeleted) {
-                    LOGGER.debug("Deleted executable file: " + executableFile.getAbsolutePath());
+                    LOGGER.debug("Deleted executable file: {}", executableFile.getAbsolutePath());
                 } else {
-                    LOGGER.error("Failed to delete the executable file: " + executableFile.getAbsolutePath());
+                    LOGGER.error("Failed to delete the executable file: {}", executableFile.getAbsolutePath());
                 }
             }
         }
@@ -164,7 +164,7 @@ public class Judger {
             String expectedLine, actualLine;
             while ((expectedLine = expectedReader.readLine()) != null) {
                 actualLine = actualReader.readLine();
-                if (actualLine == null || !expectedLine.equals(actualLine)) {
+                if (!expectedLine.equals(actualLine)) {
                     return false; // 输出不匹配
                 }
             }
