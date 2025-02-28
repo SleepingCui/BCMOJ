@@ -7,8 +7,6 @@ import java.util.concurrent.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
 public class Judger {
 
     public static Logger LOGGER = LoggerFactory.getLogger(Judger.class);
@@ -20,12 +18,22 @@ public class Judger {
     public static final int SYSTEM_ERROR = 5;
     public static final int ACCEPTED = 1;
 
-    // 判题机
-    public static int judge(File programPath, File inFile, File outFile, int timeMs) {
+    // 封装状态码和运行时间的类
+    public static class JudgeResult {
+        public final int statusCode;
+        public final double timeMs;
 
+        public JudgeResult(int statusCode, double timeMs) {
+            this.statusCode = statusCode;
+            this.timeMs = timeMs;
+        }
+    }
+
+    // 判题机
+    public static JudgeResult judge(File programPath, File inFile, File outFile, int timeMs) {
         Random random = new Random();
         String programName = "c_" + random.nextInt(1000000);
-        LOGGER.info("compiling program: " + programName);
+        LOGGER.info("Compiling program: " + programName);
 
         // 如果是 Windows 系统，添加 .exe 后缀
         if (isWindows()) {
@@ -34,53 +42,55 @@ public class Judger {
 
         File executableFile = new File(programName);
 
-        // 编译
         try {
+            // 编译
             if (compileProgram(programPath, executableFile) != 0) {
-                LOGGER.info("Result: COMPILE_ERROR", COMPILE_ERROR);
-                return COMPILE_ERROR; // 编译失败
+                return new JudgeResult(COMPILE_ERROR, 0.0); // 编译失败
             }
-        } catch (IOException | InterruptedException e) {
-            LOGGER.error("Result: SYSTEM_ERROR",SYSTEM_ERROR,"\n",e.getMessage());
-            return SYSTEM_ERROR; // 系统错误
-        }
 
-        // 运行程序
-        Process runProcess;
-        try {
-            runProcess = runProgram(executableFile, inFile, timeMs);
-        } catch (IOException | InterruptedException | TimeoutException e) {
-            LOGGER.info("Ressult: REAL_TIME_LIMIT_EXCEEDED",REAL_TIME_LIMIT_EXCEEDED);
-            return REAL_TIME_LIMIT_EXCEEDED; // 超时或系统错误
-        }
+            // 运行程序
+            Process runProcess;
+            long startTime = System.nanoTime();
+            try {
+                runProcess = runProgram(executableFile, inFile, timeMs);
+            } catch (IOException | InterruptedException | TimeoutException e) {
+                long endTime = System.nanoTime();
+                double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
+                return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, elapsedTimeMs); // 超时或系统错误
+            }
 
-        // 检查运行结果
-        if (runProcess.exitValue() != 0) {
-            LOGGER.info("Result: RUNTIME_ERROR", RUNTIME_ERROR);
-            return RUNTIME_ERROR; // 运行时错误
-        }
+            // 检查运行结果
+            if (runProcess.exitValue() != 0) {
+                long endTime = System.nanoTime();
+                double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
+                return new JudgeResult(RUNTIME_ERROR, elapsedTimeMs); // 运行时错误
+            }
 
-        // 验证输出
-        try {
+            // 验证输出
             if (!compareOutput(runProcess.getInputStream(), outFile)) {
-                LOGGER.info("Result: WRONG_ANSWER", WRONG_ANSWER);
-                return WRONG_ANSWER; // 答案错误
+                long endTime = System.nanoTime();
+                double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
+                return new JudgeResult(WRONG_ANSWER, elapsedTimeMs); // 答案错误
             }
-        } catch (IOException e) {
-            LOGGER.error("Result: SYSTEM_ERROR",SYSTEM_ERROR,"\n",e.getMessage());
-            return SYSTEM_ERROR; // 系统错误
+
+            long endTime = System.nanoTime();
+            double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
+            return new JudgeResult(ACCEPTED, elapsedTimeMs); // 答案正确
+
+        } catch (IOException | InterruptedException e) {
+            LOGGER.error("IO error occurred: " + e.getMessage());
+            return new JudgeResult(SYSTEM_ERROR, 0.0); // 系统错误
         } finally {
-            // 删除临时文件
+            // 无论结果如何，最后都删除编译文件
             if (executableFile.exists()) {
                 boolean isDeleted = executableFile.delete();
-                LOGGER.debug("Deleted executable file: " + executableFile.getAbsolutePath());
-                if (!isDeleted) {
+                if (isDeleted) {
+                    LOGGER.debug("Deleted executable file: " + executableFile.getAbsolutePath());
+                } else {
                     LOGGER.error("Failed to delete the executable file: " + executableFile.getAbsolutePath());
                 }
             }
         }
-        LOGGER.info("Result: Accepted", ACCEPTED);
-        return ACCEPTED; // 答案正确
     }
 
     // 判断是否是 Windows 系统

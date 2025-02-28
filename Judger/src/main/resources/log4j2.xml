@@ -1,34 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!--
-    status="warn" 日志框架本身的输出日志级别，可以修改为debug
-    monitorInterval="5" 自动加载配置文件的间隔时间，不低于 5秒；生产环境中修改配置文件，是热更新，无需重启应用
- -->
-<configuration status="OFF">
-    <!--
-    集中配置属性进行管理
-    使用时通过:${name}
-    -->
+<configuration status="OFF" monitorInterval="25">
+
     <properties>
         <property name="LOG_HOME">logs</property>
     </properties>
 
     <!-- 日志处理 -->
     <Appenders>
-        <!-- 控制台输出 appender，SYSTEM_OUT输出黑色，SYSTEM_ERR输出红色 -->
-<!--        <Console name="Console" target="SYSTEM_OUT">-->
-<!--            <PatternLayout pattern="[%d] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%c{36}%L] %m%n" />-->
-<!--        </Console>-->
         <Console name="Console" target="SYSTEM_OUT">
-            <!--<PatternLayout pattern="%d %-5level [%t] %c{1.}.%M(%L): %msg%n"/>-->
             <PatternLayout pattern="[%d] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{36}}{cyan}] %m%n"/>
-<!--            <PatternLayout pattern="%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White} %msg%n"/>-->
-        </Console>
+       </Console>
 
 
         <!-- 按照一定规则拆分的日志文件的appender -->  <!-- 拆分后的文件 -->
-        <!-- filePattern="${LOG_HOME}/$${date:yyyy-MM-dd}/myrollog-%d{yyyy-MM-dd-HH-mm}-%i.log"> -->
         <RollingFile name="rollingFile" fileName="${LOG_HOME}/log.log"
-                     filePattern="${LOG_HOME}/$${date:yyyy-MM-dd}/myrollog-%d{yyyy-MM-dd}-%i.log">
+                     filePattern="${LOG_HOME}/$${date:yyyy-MM-dd}/log-%d{yyyy-MM-dd}-%i.log">
             <!-- 日志级别过滤器 -->
             <ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY" />
             <!-- 日志消息格式 -->
@@ -48,17 +34,6 @@
 
     </Appenders>
 
-    <!-- logger 定义 -->
-<!--    <Loggers>-->
-<!--        &lt;!&ndash; 使用 rootLogger 配置 日志级别 level="trace" &ndash;&gt;-->
-<!--        <Root level="trace">-->
-<!--            &lt;!&ndash; 指定日志使用的处理器 &ndash;&gt;-->
-<!--            <AppenderRef ref="Console" />-->
-<!--&lt;!&ndash;            <AppenderRef ref="file" />&ndash;&gt;-->
-<!--&lt;!&ndash;            <AppenderRef ref="rollingFile" />&ndash;&gt;-->
-<!--            <AppenderRef ref="accessFile" />-->
-<!--        </Root>-->
-<!--    </Loggers>-->
     <!-- logger 定义 -->
     <Loggers>
         <!-- 使用 rootLogger 配置 日志级别 level="trace" -->
