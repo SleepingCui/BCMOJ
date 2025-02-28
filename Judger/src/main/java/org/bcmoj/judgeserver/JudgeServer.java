@@ -21,7 +21,7 @@ public class JudgeServer {
     public static final int SYSTEM_ERROR = 5;
     public static final int ACCEPTED = 1;
 
-    public static void JudgeServer(File programPath, File inFile, File outFile, int timeLimit, int Checkpoints) {
+    public static void JServer(File programPath, File inFile, File outFile, int timeLimit, int Checkpoints) {
         // 线程池
         ExecutorService executor = Executors.newFixedThreadPool(Checkpoints);
 
@@ -78,6 +78,6 @@ public class JudgeServer {
 
     @Test
     public void test() throws Exception {
-        JudgeServer(new File("D:\\UserData\\Mxing\\Desktop\\aa.cpp"), new File("D:\\UserData\\Mxing\\Desktop\\in.txt"), new File("D:\\UserData\\Mxing\\Desktop\\out.txt"), 1000, 4);
+        JServer(new File("D:\\UserData\\Mxing\\Desktop\\aa.cpp"), new File("D:\\UserData\\Mxing\\Desktop\\in.txt"), new File("D:\\UserData\\Mxing\\Desktop\\out.txt"), 1000, 4);
     }
 }
