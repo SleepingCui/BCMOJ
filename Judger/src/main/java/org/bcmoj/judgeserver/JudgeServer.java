@@ -1,7 +1,6 @@
 package org.bcmoj.judgeserver;
 
 import org.bcmoj.judger.Judger;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +41,7 @@ public class JudgeServer {
                 Judger.JudgeResult result = future.get();
                 results.add(result);
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+                LOGGER.error(e.getMessage());
                 results.add(new Judger.JudgeResult(SYSTEM_ERROR, 0.0)); // 如果出现异常，默认返回 SYSTEM_ERROR
             }
         }
@@ -52,32 +51,21 @@ public class JudgeServer {
         for (int i = 0; i < results.size(); i++) {
             Judger.JudgeResult result = results.get(i);
             String status = getStatusDescription(result.statusCode);
-            LOGGER.info("Checkpoint " + (i + 1) + " result: " + result.statusCode + " (" + status + "), Time: " + result.timeMs + "ms");
+            LOGGER.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.timeMs);
         }
     }
 
     // 根据状态码返回对应的描述
     private static String getStatusDescription(int statusCode) {
-        switch (statusCode) {
-            case COMPILE_ERROR:
-                return "Compile Error";
-            case WRONG_ANSWER:
-                return "Wrong Answer";
-            case REAL_TIME_LIMIT_EXCEEDED:
-                return "Real Time Limit Exceeded";
-            case RUNTIME_ERROR:
-                return "Runtime Error";
-            case SYSTEM_ERROR:
-                return "System Error";
-            case ACCEPTED:
-                return "Accepted";
-            default:
-                return "Unknown Status";
-        }
+        return switch (statusCode) {
+            case COMPILE_ERROR -> "Compile Error";
+            case WRONG_ANSWER -> "Wrong Answer";
+            case REAL_TIME_LIMIT_EXCEEDED -> "Real Time Limit Exceeded";
+            case RUNTIME_ERROR -> "Runtime Error";
+            case SYSTEM_ERROR -> "System Error";
+            case ACCEPTED -> "Accepted";
+            default -> "Unknown Status";
+        };
     }
 
-    @Test
-    public void test() throws Exception {
-        JServer(new File("D:\\UserData\\Mxing\\Desktop\\aa.cpp"), new File("D:\\UserData\\Mxing\\Desktop\\in.txt"), new File("D:\\UserData\\Mxing\\Desktop\\out.txt"), 1000, 4);
-    }
 }
