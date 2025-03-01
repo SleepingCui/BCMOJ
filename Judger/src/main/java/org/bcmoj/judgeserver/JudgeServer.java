@@ -53,6 +53,7 @@ public class JudgeServer {
             String status = getStatusDescription(result.statusCode);
             LOGGER.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.timeMs);
         }
+
     }
 
     // 根据状态码返回对应的描述

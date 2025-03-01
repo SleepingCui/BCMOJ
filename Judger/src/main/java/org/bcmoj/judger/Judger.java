@@ -50,13 +50,16 @@ public class Judger {
 
             // 运行程序
             Process runProcess;
-            double elapsedTimeMs;
+            double elapsedTimeMs = 0.0;
             try {
                 RunResult runResult = runProgram(executableFile, inFile, timeMs);
                 runProcess = runResult.process;
                 elapsedTimeMs = runResult.elapsedTimeMs;
-            } catch (IOException | InterruptedException | TimeoutException e) {
-                return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, 0.0); // 超时或系统错误
+            } catch (TimeoutException e) {
+                // 超时情况下，仍然返回实际的运行时间
+                return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, elapsedTimeMs); // 超时
+            } catch (IOException | InterruptedException e) {
+                return new JudgeResult(SYSTEM_ERROR, 0.0); // 系统错误
             }
 
             // 检查运行结果
@@ -103,11 +106,10 @@ public class Judger {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                LOGGER.info(line); // 打印编译错误信息
+                LOGGER.info(line);
             }
         }
-
-        return compileProcess.waitFor(); // 返回编译退出码
+        return compileProcess.waitFor();
     }
 
     // 封装运行结果
@@ -122,15 +124,11 @@ public class Judger {
     }
 
     // 运行程序
-    private static RunResult runProgram(File executableFile, File inFile, int timeMs)
-            throws IOException, InterruptedException, TimeoutException {
-        // 根据操作系统调整可执行文件的调用方式
+    private static RunResult runProgram(File executableFile, File inFile, int timeMs) throws IOException, InterruptedException, TimeoutException {
         String command = isWindows() ? executableFile.getName() : "./" + executableFile.getName();
         ProcessBuilder runBuilder = new ProcessBuilder(command);
         runBuilder.redirectErrorStream(true); // 合并标准输出和错误输出
         Process runProcess = runBuilder.start();
-
-        // 记录程序开始运行的时间
         long startTime = System.nanoTime();
 
         // 输入重定向
@@ -145,15 +143,24 @@ public class Judger {
 
         // 设置超时
         if (!runProcess.waitFor(timeMs, TimeUnit.MILLISECONDS)) {
-            runProcess.destroy(); // 超时，终止进程
-            throw new TimeoutException("Process timed out");
+            long endTime = System.nanoTime();
+            double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
+            runProcess.destroyForcibly(); // 强制终止进程
+
+            // 确保进程资源被释放
+            try {
+                LOGGER.debug("Waiting for process {} resources to be released...",runProcess.exitValue());
+                Thread.sleep(10); // 100ms 延迟
+            } catch (InterruptedException e) {
+                LOGGER.warn("Interrupted while waiting for process to terminate: {}", e.getMessage());
+            }
+
+            throw new TimeoutException("Process timed out after " + elapsedTimeMs + " ms");
         }
 
-        // 记录程序结束运行的时间
         long endTime = System.nanoTime();
         double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
 
-        // 返回运行结果
         return new RunResult(runProcess, elapsedTimeMs);
     }
 
@@ -168,7 +175,7 @@ public class Judger {
                     return false; // 输出不匹配
                 }
             }
-            return actualReader.readLine() == null; // 检查是否有额外输出
+            return actualReader.readLine() == null;
         }
     }
 }

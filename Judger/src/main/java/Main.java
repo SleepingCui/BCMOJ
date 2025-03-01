@@ -1,6 +1,4 @@
 import org.bcmoj.judgeserver.JudgeServer;
-import org.junit.Test;
-
 import java.io.File;
 
 public class Main {
@@ -21,15 +19,14 @@ public class Main {
                 |  _ \\| |   | |\\/| | | | |_  | |  _  | | | | |/ _` |/ _` |/ _ \\ '__|
                 | |_) | |___| |  | | |_| | |_| | | |_| | |_| | (_| | (_| |  __/ |  \s
                 |____/ \\____|_|  |_|\\___/ \\___/   \\___/ \\__,_|\\__,_|\\__, |\\___|_|  \s
-                                                                    |___/          \s
-                """;
+                                                                    |___/          \s""";
         System.out.println(logo);
-        System.out.println("Developed by SleepingCui\n");
-//        JudgeServer.JServer(new File(cppFile), new File(inFile), new File(outFile), timeLimit, checkpoints);
-        JudgeServer.JServer(new File("D:\\UserData\\Mxing\\Desktop\\aa.cpp"), new File("D:\\UserData\\Mxing\\Desktop\\in.txt"), new File("D:\\UserData\\Mxing\\Desktop\\out.txt"), 1000, 4);
-    }
+        System.out.println("            Developed by SleepingCui   ver1.0-SNAPSHOT \n");
+        JudgeServer.JServer(new File(cppFile), new File(inFile), new File(outFile), timeLimit, checkpoints);
+//        JudgeServer.JServer(new File("D:\\UserData\\Mxing\\Desktop\\aa.cpp"), new File("D:\\UserData\\Mxing\\Desktop\\in.txt"), new File("D:\\UserData\\Mxing\\Desktop\\out.txt"), 100, 4);
+ }
     private static void printHelp() {
-        System.out.println("Usage: java -DcppFile=<cppFile> -DinFile=<inFile> -DoutFile=<outFile> -DtimeLimit=<timeLimit> -Dcheckpoints=<checkpoints>");
+        System.out.println("Usage: -DcppFile=<cppFile> -DinFile=<inFile> -DoutFile=<outFile> -DtimeLimit=<timeLimit> -Dcheckpoints=<checkpoints>");
         System.out.println();
         System.out.println("Options:");
         System.out.println("  -DcppFile=<cppFile>       Path to the C++ source file to be judged.");
