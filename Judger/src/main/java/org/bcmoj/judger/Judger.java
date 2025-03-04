@@ -84,7 +84,7 @@ public class Judger {
                 if (isDeleted) {
                     LOGGER.debug("Deleted executable file: {}", executableFile.getAbsolutePath());
                 } else {
-                    LOGGER.error("Failed to delete the executable file: {}", executableFile.getAbsolutePath());
+                    LOGGER.warn("Failed to delete the executable file: {}", executableFile.getAbsolutePath());
                 }
             }
         }
