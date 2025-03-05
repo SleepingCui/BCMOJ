@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration status="OFF" monitorInterval="25">
+
+    <properties>
+        <property name="LOG_HOME">logs</property>
+    </properties>
+
+    <!-- 日志处理 -->
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{36}}{cyan}] %m%n"/>
+        </Console>
+
+
+        <!-- 按照一定规则拆分的日志文件的appender -->  <!-- 拆分后的文件 -->
+        <RollingFile name="rollingFile" fileName="${LOG_HOME}/log.log"
+                     filePattern="${LOG_HOME}/$${date:yyyy-MM-dd}/log-%d{yyyy-MM-dd}-%i.log">
+            <!-- 日志级别过滤器 -->
+            <ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY" />
+            <!-- 日志消息格式 -->
+            <PatternLayout pattern="[%d] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{36}}{cyan}] %m%n"/>
+            <Policies>
+                <!-- 在系统启动时，出发拆分规则，生产一个新的日志文件 -->
+                <OnStartupTriggeringPolicy />
+                <!-- 按照文件大小拆分，10MB -->
+                <SizeBasedTriggeringPolicy size="2MB" />
+                <!-- 按照时间节点拆分，规则根据filePattern定义的 -->
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+            <!-- 在同一个目录下，文件的个限定为 30个，超过进行覆盖 -->
+            <DefaultRolloverStrategy max="10" />
+        </RollingFile>
+
+
+    </Appenders>
+
+    <!-- logger 定义 -->
+    <Loggers>
+        <!-- 使用 rootLogger 配置 日志级别 level="trace" -->
+        <Root level="trace">
+            <!-- 指定日志使用的处理器 -->
+            <AppenderRef ref="Console"/>
+            <!-- 使用异步 appender -->
+            <AppenderRef ref="rollingFile" />
+        </Root>
+    </Loggers>
+
+</configuration>
