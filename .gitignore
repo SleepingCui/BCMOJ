@@ -1,0 +1,4 @@
+/Judger/target/
+/logs/
+*.exe
+/Judger/logs/
