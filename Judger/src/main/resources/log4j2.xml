@@ -3,12 +3,14 @@
 
     <properties>
         <property name="LOG_HOME">logs</property>
+
+        <Property name="log4j.skipJansi" value="false"/>
     </properties>
 
     <!-- 日志处理 -->
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%d] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{36}}{cyan}] %m%n"/>
+            <PatternLayout pattern="[%d] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{36}}{cyan}] %m%n" disableAnsi="false"/>
        </Console>
 
 

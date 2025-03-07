@@ -7,10 +7,8 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="QSManager" />
+        <module name="Judger" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="Judger" target="15" />
-    </bytecodeTargetLevel>
   </component>
 </project>
