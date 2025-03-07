@@ -1,7 +1,6 @@
 package org.bcmoj.quesmm.ques_sub;
 
 import org.bcmoj.db.DBConfig;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +13,7 @@ public class SubmitQuestion {
     public Logger LOGGER = LoggerFactory.getLogger(getClass());
     //从数据库获取题目数据
     public void GetDBQuestions(int problemId) {
-        try (Connection conn = DBConfig.db_questions_get_connction()) {
+        try (Connection conn = DBConfig.db_questions_get_connection()) {
             // 查询题目基本信息
             String problemQuery = "SELECT title, description FROM problems WHERE problem_id = ?";
             PreparedStatement problemStmt = conn.prepareStatement(problemQuery);
@@ -26,9 +25,9 @@ public class SubmitQuestion {
                 String description = problemRs.getString("description");
 
                 // 输出题目基本信息
-                LOGGER.info("题目ID: " + problemId);
-                LOGGER.info("题目名称: " + title);
-                LOGGER.info("题目介绍: " + description);
+                LOGGER.info("题目ID: {}", problemId);
+                LOGGER.info("题目名称: {}", title);
+                LOGGER.info("题目介绍: {}", description);
                 LOGGER.info("------------------------");
 
                 // 查询检查点及其示例输入输出
@@ -47,23 +46,20 @@ public class SubmitQuestion {
                     String output = checkpointRs.getString("output");
 
                     // 输出检查点及其示例
-                    LOGGER.info("检查点 " + checkpointNumber + ": " + checkpoint);
-                    LOGGER.info("示例输入: " + input);
-                    LOGGER.info("示例输出: " + output);
+                    LOGGER.info("检查点 {}: {}", checkpointNumber, checkpoint);
+                    LOGGER.info("示例输入: {}", input);
+                    LOGGER.info("示例输出: {}", output);
                     LOGGER.info("------------------------");
                     checkpointNumber++;
                 }
             } else {
-                LOGGER.info("未找到题目ID为 " + problemId + " 的题目。");
+                LOGGER.info("未找到题目ID为 {} 的题目。", problemId);
             }
         } catch (SQLException | ClassNotFoundException e) {
             LOGGER.error(e.getMessage());
         }
     }
-    @Test
-    public void test(){
-        GetDBQuestions(1);
-    }
+
 
     //TODO:提交给判题机
 }

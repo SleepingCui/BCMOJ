@@ -3,3 +3,4 @@
 *.exe
 /Judger/logs/
 config.properties
+QSManager/logs/

@@ -18,24 +18,24 @@ public class DBConfig {
     public static String db_results_password = ConfigProcess.GetConfig("db_results_password");
 
 
-    public static Connection db_questions_get_connction() throws ClassNotFoundException {
+    public static Connection db_questions_get_connection() throws ClassNotFoundException {
         Connection conn_questions;
         Class.forName("com.mysql.cj.jdbc.Driver");
         try{
             conn_questions = DriverManager.getConnection("jdbc:mysql://localhost:3306/coding_problems",db_questions_user,db_questions_password);
-            LOGGER.info("Connected to database: coding_problems - " + conn_questions.getMetaData().getURL());
+            LOGGER.info("Connected to database: coding_problems - {}", conn_questions.getMetaData().getURL());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return conn_questions;
 
     }
-    public Connection db_results_get_connction() throws ClassNotFoundException {
+    public Connection db_results_get_connection() throws ClassNotFoundException {
         Connection conn_results;
         Class.forName("com.mysql.cj.jdbc.Driver");
         try {
             conn_results = DriverManager.getConnection("jdbc:mysql://localhost:3306/results",db_results_user,db_results_password);
-            LOGGER.info("Connected to database."+conn_results.getMetaData());
+            LOGGER.info("Connected to database: results - {}", conn_results.getMetaData().getURL());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
