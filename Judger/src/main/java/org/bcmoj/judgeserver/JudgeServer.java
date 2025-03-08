@@ -1,13 +1,18 @@
 package org.bcmoj.judgeserver;
 
 import org.bcmoj.judger.Judger;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode; // 用于动态解析JSON
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+
 public class JudgeServer {
     public static Logger LOGGER = LoggerFactory.getLogger(JudgeServer.class);
 
@@ -19,40 +24,59 @@ public class JudgeServer {
     public static final int SYSTEM_ERROR = 5;
     public static final int ACCEPTED = 1;
 
-    public static void JServer(File programPath, File inFile, File outFile, int timeLimit, int Checkpoints) {
-        // 线程池
-        ExecutorService executor = Executors.newFixedThreadPool(Checkpoints);
+    // 配置文件结构
+    public static class Config {
+        public int timeLimit;
+        public JsonNode checkpoints;
+    }
+    public static void JServer(String jsonConfig, File cppFilePath) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            // 解析JSON文本
+            Config config = mapper.readValue(jsonConfig, Config.class);
+            // 获取检查点数量
+            JsonNode checkpoints = config.checkpoints;
+            int checkpointsCount = checkpoints.size() / 2;
+            // 线程池
+            ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
+            List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
 
-        // 获取线程的返回结果
-        List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
+            // 动态生成检查点任务
+            for (int i = 1; i <= checkpointsCount; i++) {
+                String inputKey = i + "_in";
+                String outputKey = i + "_out";
+                String inputContent = checkpoints.get(inputKey).asText();
+                String outputContent = checkpoints.get(outputKey).asText();
 
-        for (int i = 0; i < Checkpoints; i++) {
-            Callable<Judger.JudgeResult> task = () -> Judger.judge(programPath, inFile, outFile, timeLimit);
-            Future<Judger.JudgeResult> future = executor.submit(task);
-            futures.add(future);
-        }
-        executor.shutdown();
-
-        // 收集所有线程的结果
-        List<Judger.JudgeResult> results = new ArrayList<>();
-        for (Future<Judger.JudgeResult> future : futures) {
-            try {
-                Judger.JudgeResult result = future.get();
-                results.add(result);
-            } catch (InterruptedException | ExecutionException e) {
-                LOGGER.error(e.getMessage());
-                results.add(new Judger.JudgeResult(SYSTEM_ERROR, 0.0)); // 如果出现异常，默认返回 SYSTEM_ERROR
+                Callable<Judger.JudgeResult> task = () -> Judger.judge(cppFilePath, inputContent, outputContent, config.timeLimit);
+                Future<Judger.JudgeResult> future = executor.submit(task);
+                futures.add(future);
             }
-        }
+            executor.shutdown();
 
-        // 输出所有线程的结果
-        LOGGER.info("========== Results ==========");
-        for (int i = 0; i < results.size(); i++) {
-            Judger.JudgeResult result = results.get(i);
-            String status = getStatusDescription(result.statusCode);
-            LOGGER.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.timeMs);
-        }
+            // 收集所有线程的结果
+            List<Judger.JudgeResult> results = new ArrayList<>();
+            for (Future<Judger.JudgeResult> future : futures) {
+                try {
+                    Judger.JudgeResult result = future.get();
+                    results.add(result);
+                } catch (InterruptedException | ExecutionException e) {
+                    LOGGER.error(e.getMessage());
+                    results.add(new Judger.JudgeResult(SYSTEM_ERROR, 0.0)); // 如果出现异常，默认返回 SYSTEM_ERROR
+                }
+            }
 
+            // 输出所有线程的结果
+            LOGGER.info("========== Results ==========");
+            for (int i = 0; i < results.size(); i++) {
+                Judger.JudgeResult result = results.get(i);
+                String status = getStatusDescription(result.statusCode);
+                LOGGER.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.timeMs);
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse JSON config or execute judge tasks: {}", e.getMessage());
+        }
     }
 
     // 根据状态码返回对应的描述

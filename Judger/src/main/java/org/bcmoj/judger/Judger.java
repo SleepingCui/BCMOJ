@@ -29,8 +29,8 @@ public class Judger {
         }
     }
 
-    // 判题机
-    public static JudgeResult judge(File programPath, File inFile, File outFile, int timeMs) {
+    // 判题机（支持字符串输入输出）
+    public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int timeMs) {
         Random random = new Random();
         String programName = "c_" + random.nextInt(1000000);
         LOGGER.info("Compiling program: {}", programName);
@@ -52,7 +52,7 @@ public class Judger {
             Process runProcess;
             double elapsedTimeMs = 0.0;
             try {
-                RunResult runResult = runProgram(executableFile, inFile, timeMs);
+                RunResult runResult = runProgram(executableFile, inputContent, timeMs);
                 runProcess = runResult.process;
                 elapsedTimeMs = runResult.elapsedTimeMs;
             } catch (TimeoutException e) {
@@ -68,7 +68,7 @@ public class Judger {
             }
 
             // 验证输出
-            if (!compareOutput(runProcess.getInputStream(), outFile)) {
+            if (!compareOutput(runProcess.getInputStream(), expectedOutputContent)) {
                 return new JudgeResult(WRONG_ANSWER, elapsedTimeMs); // 答案错误
             }
 
@@ -123,8 +123,8 @@ public class Judger {
         }
     }
 
-    // 运行程序
-    private static RunResult runProgram(File executableFile, File inFile, int timeMs) throws IOException, InterruptedException, TimeoutException {
+    // 运行程序（支持字符串输入）
+    private static RunResult runProgram(File executableFile, String inputContent, int timeMs) throws IOException, InterruptedException, TimeoutException {
         String command = isWindows() ? executableFile.getName() : "./" + executableFile.getName();
         ProcessBuilder runBuilder = new ProcessBuilder(command);
         runBuilder.redirectErrorStream(true); // 合并标准输出和错误输出
@@ -132,13 +132,9 @@ public class Judger {
         long startTime = System.nanoTime();
 
         // 输入重定向
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(runProcess.getOutputStream()));
-             BufferedReader inputReader = new BufferedReader(new FileReader(inFile))) {
-            String line;
-            while ((line = inputReader.readLine()) != null) {
-                writer.write(line);
-                writer.newLine();
-            }
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(runProcess.getOutputStream()))) {
+            writer.write(inputContent);
+            writer.flush();
         }
 
         // 设置超时
@@ -149,7 +145,7 @@ public class Judger {
 
             // 确保进程资源被释放
             try {
-                LOGGER.debug("Waiting for process {} resources to be released...",runProcess.exitValue());
+                LOGGER.debug("Waiting for process {} resources to be released...", runProcess.exitValue());
                 Thread.sleep(10); // 100ms 延迟
             } catch (InterruptedException e) {
                 LOGGER.warn("Interrupted while waiting for process to terminate: {}", e.getMessage());
@@ -164,18 +160,21 @@ public class Judger {
         return new RunResult(runProcess, elapsedTimeMs);
     }
 
-    // 比较输出
-    private static boolean compareOutput(InputStream actualOutput, File expectedOutputFile) throws IOException {
-        try (BufferedReader expectedReader = new BufferedReader(new FileReader(expectedOutputFile));
-             BufferedReader actualReader = new BufferedReader(new InputStreamReader(actualOutput))) {
-            String expectedLine, actualLine;
-            while ((expectedLine = expectedReader.readLine()) != null) {
-                actualLine = actualReader.readLine();
-                if (!expectedLine.equals(actualLine)) {
-                    return false; // 输出不匹配
-                }
+    // 比较输出（支持字符串输出）
+    private static boolean compareOutput(InputStream actualOutput, String expectedOutputContent) throws IOException {
+        try (BufferedReader actualReader = new BufferedReader(new InputStreamReader(actualOutput))) {
+            StringBuilder actualOutputContent = new StringBuilder();
+            String line;
+            while ((line = actualReader.readLine()) != null) {
+                actualOutputContent.append(line).append("\n");
             }
-            return actualReader.readLine() == null;
+
+            // 去除最后一个换行符
+            if (actualOutputContent.length() > 0) {
+                actualOutputContent.setLength(actualOutputContent.length() - 1);
+            }
+
+            return expectedOutputContent.contentEquals(actualOutputContent);
         }
     }
 }
