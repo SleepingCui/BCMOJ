@@ -18,7 +18,7 @@
             <!-- 日志级别过滤器 -->
             <ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY" />
             <!-- 日志消息格式 -->
-            <PatternLayout pattern="[%d] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{36}}{cyan}] %m%n"/>
+            <PatternLayout pattern="[%d] [%t/{%-5level}] [{%c}] %m%n"/>
             <Policies>
                 <!-- 在系统启动时，出发拆分规则，生产一个新的日志文件 -->
                 <OnStartupTriggeringPolicy />
