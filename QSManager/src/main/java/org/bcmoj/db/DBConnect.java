@@ -9,8 +9,8 @@ import java.sql.SQLException;
 
 import org.bcmoj.config.ConfigProcess;
 
-public class DBConfig {
-    public static Logger LOGGER = LoggerFactory.getLogger(DBConfig.class);
+public class DBConnect {
+    public static Logger LOGGER = LoggerFactory.getLogger(DBConnect.class);
 
     public static String db_questions_user = ConfigProcess.GetConfig("db_questions_user");
     public static String db_questions_password = ConfigProcess.GetConfig("db_questions_password");

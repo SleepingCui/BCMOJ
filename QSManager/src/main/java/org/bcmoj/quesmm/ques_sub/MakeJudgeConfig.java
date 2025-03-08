@@ -1,6 +1,6 @@
 package org.bcmoj.quesmm.ques_sub;
 
-import org.bcmoj.db.DBConfig;
+import org.bcmoj.db.DBConnect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +19,7 @@ public class MakeJudgeConfig {
         int timeLimit;
         Map<String, String> checkpoints = new HashMap<>();
 
-        try (Connection conn = DBConfig.db_questions_get_connection()) {
+        try (Connection conn = DBConnect.db_questions_get_connection()) {
             // 查询题目基本信息
             String problemQuery = "SELECT time_limit FROM problems WHERE problem_id = ?";
             PreparedStatement problemStmt = conn.prepareStatement(problemQuery);
