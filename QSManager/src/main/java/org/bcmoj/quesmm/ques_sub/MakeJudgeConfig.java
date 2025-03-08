@@ -16,7 +16,7 @@ public class MakeJudgeConfig {
 
     // 从数据库获取题目数据
     public String GetDBQuestions(int problemId) {
-        int timeLimit = 0;
+        int timeLimit;
         Map<String, String> checkpoints = new HashMap<>();
 
         try (Connection conn = DBConfig.db_questions_get_connection()) {
@@ -45,7 +45,7 @@ public class MakeJudgeConfig {
                     checkpointNumber++;
                 }
             } else {
-                LOGGER.error("未找到题目ID为 " + problemId + " 的题目。");
+                LOGGER.error("未找到题目ID为 {} 的题目。", problemId);
                 return null;
             }
         } catch (SQLException | ClassNotFoundException e) {

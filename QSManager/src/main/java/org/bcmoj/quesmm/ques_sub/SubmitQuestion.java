@@ -1,7 +1,6 @@
 package org.bcmoj.quesmm.ques_sub;
 
 import org.bcmoj.judgeserver.JudgeServer;
-import org.junit.Test;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import java.io.File;
@@ -16,7 +15,7 @@ public class SubmitQuestion {
             JudgeServer.JServer(jsonConfig, CppFilePath);
             LOGGER.info("判题结束");
         } else {
-            LOGGER.error("未找到题目ID为 " + ProblemId + " 的题目。");
+            LOGGER.error("未找到题目ID为 {} 的题目。", ProblemId);
         }
     }
 

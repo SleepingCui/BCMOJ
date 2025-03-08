@@ -1,12 +1,11 @@
 package org.bcmoj.judgeserver;
 
 import org.bcmoj.judger.Judger;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode; // 用于动态解析JSON
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.File;
 import java.util.ArrayList;
