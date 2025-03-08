@@ -19,7 +19,7 @@ public class MakeJudgeConfig {
         int timeLimit;
         Map<String, String> checkpoints = new HashMap<>();
 
-        try (Connection conn = DBConnect.db_questions_get_connection()) {
+        try (Connection conn = DBConnect.db_coding_questions_get_connection()) {
             // 查询题目基本信息
             String problemQuery = "SELECT time_limit FROM problems WHERE problem_id = ?";
             PreparedStatement problemStmt = conn.prepareStatement(problemQuery);

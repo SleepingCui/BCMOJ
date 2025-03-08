@@ -18,7 +18,7 @@ public class DBConnect {
     public static String db_results_password = ConfigProcess.GetConfig("db_results_password");
 
 
-    public static Connection db_questions_get_connection() throws ClassNotFoundException {
+    public static Connection db_coding_questions_get_connection() throws ClassNotFoundException {
         Connection conn_questions;
         Class.forName("com.mysql.cj.jdbc.Driver");
         try{
