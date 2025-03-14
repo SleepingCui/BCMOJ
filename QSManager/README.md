@@ -31,3 +31,25 @@
 | `problem_id`   | INT            | 题目ID (外键)         |
 | `input`        | TEXT           | 示例输入              |
 | `output`       | TEXT           | 示例输出              |
+
+
+### 数据库名称: `judge_results`
+
+#### 表1: `judge_results`
+存储用户和题目的基本信息。
+
+| 字段名      | 数据类型 | 描述                  |
+|-------------|----------|-----------------------|
+| `result_id` | INT      | 结果ID (主键, 自增)   |
+| `userid`    | INT      | 用户ID                |
+| `problemid` | INT      | 题目ID                |
+
+#### 表2: `checkpoint_results`
+存储每个检查点的结果和时间。
+
+| 字段名          | 数据类型 | 描述            |
+|-----------------|----------|-----------------|
+| `result_id`     | INT      | 结果ID (外键)   |
+| `checkpoint_id` | INT      | 检查点ID        |
+| `result`        | INT      | 检查点结果      |
+| `time`          | FLOAT    | 检查点时间（ms）|

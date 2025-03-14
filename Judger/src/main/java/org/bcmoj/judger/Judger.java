@@ -106,7 +106,7 @@ public class Judger {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                LOGGER.info(line);
+                LOGGER.debug(line);
             }
         }
         return compileProcess.waitFor();
@@ -146,7 +146,7 @@ public class Judger {
             // 确保进程资源被释放
             try {
                 LOGGER.debug("Waiting for process {} resources to be released...", runProcess.exitValue());
-                Thread.sleep(10); // 100ms 延迟
+                Thread.sleep(10); // 10ms 延迟
             } catch (InterruptedException e) {
                 LOGGER.warn("Interrupted while waiting for process to terminate: {}", e.getMessage());
             }

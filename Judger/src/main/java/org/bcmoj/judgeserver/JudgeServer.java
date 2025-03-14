@@ -28,14 +28,17 @@ public class JudgeServer {
         public int timeLimit;
         public JsonNode checkpoints;
     }
-    public static void JServer(String jsonConfig, File cppFilePath) {
+
+    public static String JServer(String jsonConfig, File cppFilePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             // 解析JSON文本
             Config config = mapper.readValue(jsonConfig, Config.class);
+
             // 获取检查点数量
             JsonNode checkpoints = config.checkpoints;
             int checkpointsCount = checkpoints.size() / 2;
+
             // 线程池
             ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
             List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
@@ -65,7 +68,7 @@ public class JudgeServer {
                 }
             }
 
-            // 输出所有线程的结果
+            // 输出结果
             LOGGER.info("========== Results ==========");
             for (int i = 0; i < results.size(); i++) {
                 Judger.JudgeResult result = results.get(i);
@@ -73,12 +76,26 @@ public class JudgeServer {
                 LOGGER.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.timeMs);
             }
 
+            // 构建判题结果
+            StringBuilder jsonResult = new StringBuilder();
+            jsonResult.append("{");
+            for (int i = 0; i < results.size(); i++) {
+                Judger.JudgeResult result = results.get(i);
+                if (i > 0) {
+                    jsonResult.append(",");
+                }
+                jsonResult.append("\"").append(i + 1).append("_res\":").append(result.statusCode)
+                        .append(",\"").append(i + 1).append("_time\":").append(result.timeMs);
+            }
+            jsonResult.append("}");
+            return jsonResult.toString();
+
         } catch (Exception e) {
-            LOGGER.error("Failed to parse JSON config or execute judge tasks: {}", e.getMessage());
+            LOGGER.error("Failed to execute judge tasks: {}", e.getMessage());
+            return "{}";
         }
     }
 
-    // 根据状态码返回对应的描述
     private static String getStatusDescription(int statusCode) {
         return switch (statusCode) {
             case COMPILE_ERROR -> "Compile Error";
@@ -90,5 +107,4 @@ public class JudgeServer {
             default -> "Unknown Status";
         };
     }
-
 }

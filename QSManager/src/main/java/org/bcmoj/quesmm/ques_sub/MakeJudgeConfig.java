@@ -45,11 +45,11 @@ public class MakeJudgeConfig {
                     checkpointNumber++;
                 }
             } else {
-                LOGGER.error("未找到题目ID为 {} 的题目。", problemId);
+                LOGGER.error("Question {} not found.", problemId);
                 return null;
             }
         } catch (SQLException | ClassNotFoundException e) {
-            LOGGER.error("数据库操作失败: {}", e.getMessage());
+            LOGGER.error("Unable to manage database: {}", e.getMessage());
             return null;
         }
 
