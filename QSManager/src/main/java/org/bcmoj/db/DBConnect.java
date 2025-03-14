@@ -31,13 +31,13 @@ public class DBConnect {
 
     }
     public static Connection db_judge_results_get_connection() throws ClassNotFoundException {
-        Connection conn_results;
+        Connection conn_results = null;
         Class.forName("com.mysql.cj.jdbc.Driver");
         try {
             conn_results = DriverManager.getConnection("jdbc:mysql://localhost:3306/judge_results",db_results_user,db_results_password);
             LOGGER.info("Connected to database: judge_results - {}", conn_results.getMetaData().getURL());
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            LOGGER.error(e.getMessage());
         }
         return conn_results;
     }
