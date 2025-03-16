@@ -10,7 +10,16 @@ import java.sql.ResultSet;
 
 public class GetJudgeResult {
     public static Logger LOGGER = LoggerFactory.getLogger(GetJudgeResult.class);
-    // 读取判题结果并输出
+
+    // 状态码
+    public static final int COMPILE_ERROR = -4;
+    public static final int WRONG_ANSWER = -3;
+    public static final int REAL_TIME_LIMIT_EXCEEDED = 2;
+    public static final int RUNTIME_ERROR = 4;
+    public static final int SYSTEM_ERROR = 5;
+    public static final int ACCEPTED = 1;
+
+
     public static void readAndPrintJudgeResult(int userid, int problemid, int judgeid) {
         try (Connection conn = DBConnect.db_judge_results_get_connection()) {
             String querySQL;
@@ -49,11 +58,23 @@ public class GetJudgeResult {
                         LOGGER.info("Judge ID: {}", resultId);
                         currentJudgeId = resultId;
                     }
-                    LOGGER.info("Checkpoint {}: Result = {}, Time = {:.2f} ms", checkpointId, result, time);
+                    LOGGER.info("Checkpoint {}: Result = {}, Time = {} ms", checkpointId, getStatusDescription(result), time);
                 }
             }
         } catch (Exception e) {
             LOGGER.error("Failed to read judge results: {}", e.getMessage());
         }
+    }
+
+    private static String getStatusDescription(int statusCode) {
+        return switch (statusCode) {
+            case COMPILE_ERROR -> "Compile Error";
+            case WRONG_ANSWER -> "Wrong Answer";
+            case REAL_TIME_LIMIT_EXCEEDED -> "Real Time Limit Exceeded";
+            case RUNTIME_ERROR -> "Runtime Error";
+            case SYSTEM_ERROR -> "System Error";
+            case ACCEPTED -> "Accepted";
+            default -> "Unknown Status";
+        };
     }
 }

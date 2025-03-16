@@ -14,6 +14,8 @@ import java.util.Map;
 public class MakeJudgeConfig {
     public Logger LOGGER = LoggerFactory.getLogger(getClass());
 
+
+
     // 从数据库获取题目数据
     public String GetDBQuestions(int problemId) {
         int timeLimit;

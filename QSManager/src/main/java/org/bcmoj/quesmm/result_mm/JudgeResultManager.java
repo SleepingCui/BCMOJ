@@ -12,6 +12,7 @@ import java.sql.*;
 public class JudgeResultManager {
     public static Logger LOGGER = LoggerFactory.getLogger(JudgeResultManager.class);
 
+
     // 解析判题结果并存入数据库
     public static void saveJudgeResult(int userid, int problemid, String jsonResult) {
         ObjectMapper mapper = new ObjectMapper();
@@ -40,11 +41,11 @@ public class JudgeResultManager {
             // 插入检查点结果
             String insertCheckpointSQL = "INSERT INTO checkpoint_results (result_id, checkpoint_id, result, time) VALUES (?, ?, ?, ?)";
             try (PreparedStatement pstmt = conn.prepareStatement(insertCheckpointSQL)) {
+                LOGGER.info("Inserting checkpoint result into database...");
                 for (int i = 1; rootNode.has(i + "_res"); i++) {
                     int result = rootNode.get(i + "_res").asInt();
                     float time = (float) rootNode.get(i + "_time").asDouble();
 
-                    LOGGER.info("Inserting checkpoint result into database...");
                     pstmt.setInt(1, resultId);
                     pstmt.setInt(2, i); // checkpoint_id
                     pstmt.setInt(3, result);
@@ -57,7 +58,9 @@ public class JudgeResultManager {
         } catch (Exception e) {
             LOGGER.error("Unable to manage database: {}", e.getMessage());
         }
+
     }
 
 
 }
+
