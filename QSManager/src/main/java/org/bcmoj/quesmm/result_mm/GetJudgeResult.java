@@ -18,25 +18,23 @@ public class GetJudgeResult {
     public static final int RUNTIME_ERROR = 4;
     public static final int SYSTEM_ERROR = 5;
     public static final int ACCEPTED = 1;
+    public static final int SECURITY_CHECK_FAILED = -5;
 
 
     public static void readAndPrintJudgeResult(int userid, int problemid, int judgeid) {
         try (Connection conn = DBConnect.db_judge_results_get_connection()) {
             String querySQL;
             if (judgeid == 0) {
-                // 查询所有结果
                 querySQL = "SELECT j.result_id, c.checkpoint_id, c.result, c.time " +
                         "FROM judge_results j " +
                         "JOIN checkpoint_results c ON j.result_id = c.result_id " +
                         "WHERE j.userid = ? AND j.problemid = ?";
             } else {
-                // 查询指定 judgeid 的结果
                 querySQL = "SELECT j.result_id, c.checkpoint_id, c.result, c.time " +
                         "FROM judge_results j " +
                         "JOIN checkpoint_results c ON j.result_id = c.result_id " +
                         "WHERE j.userid = ? AND j.problemid = ? AND j.result_id = ?";
             }
-
             try (PreparedStatement pstmt = conn.prepareStatement(querySQL)) {
                 pstmt.setInt(1, userid);
                 pstmt.setInt(2, problemid);
@@ -74,6 +72,7 @@ public class GetJudgeResult {
             case RUNTIME_ERROR -> "Runtime Error";
             case SYSTEM_ERROR -> "System Error";
             case ACCEPTED -> "Accepted";
+            case SECURITY_CHECK_FAILED -> "Security Check Failed";
             default -> "Unknown Status";
         };
     }
