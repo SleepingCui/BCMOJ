@@ -12,17 +12,19 @@ import java.util.regex.Pattern;
 public class SecurityCheck {
     public static Logger LOGGER = LoggerFactory.getLogger(SecurityCheck.class);
 
-    private static final String[] DANGEROUS_KEYWORDS = {
+    private static final String[] KEYWORDS = {
             "system", "exec", "fork", "popen", "pclose", "chmod", "chown",
             "rmdir", "unlink", "kill", "shutdown", "reboot", "sudo", "su"
     };
-    public static int SecurityCheck(File fileName) {
+    public static int CodeSecurityCheck(File fileName) {
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line;
+            int lineNumber = 0;
             while ((line = reader.readLine()) != null) {
-                for (String keyword : DANGEROUS_KEYWORDS) {
+                lineNumber++;
+                for (String keyword : KEYWORDS) {
                     if (containsKeyword(line, keyword)) {
-                        LOGGER.warn("Dangerous keyword: {}", keyword);
+                        LOGGER.warn("Dangerous keyword: '{}' in line {}", keyword, lineNumber);
                         return -5;
                     }
                 }

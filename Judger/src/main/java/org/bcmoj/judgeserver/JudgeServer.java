@@ -22,7 +22,7 @@ public class JudgeServer {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
-            int securityCheckResult = SecurityCheck.SecurityCheck(cppFilePath);
+            int securityCheckResult = SecurityCheck.CodeSecurityCheck(cppFilePath);
             if (securityCheckResult == -5) {
                 return buildSecurityCheckFailedResult(config.checkpoints);
             }
