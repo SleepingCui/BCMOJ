@@ -14,26 +14,20 @@ import java.util.concurrent.*;
 
 public class JudgeServer {
     public static Logger LOGGER = LoggerFactory.getLogger(JudgeServer.class);
-
-    // 配置文件结构
     public static class Config {
         public int timeLimit;
         public JsonNode checkpoints;
     }
-
     public static String JServer(String jsonConfig, File cppFilePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
-
             int securityCheckResult = SecurityCheck.SecurityCheck(cppFilePath);
             if (securityCheckResult == -5) {
                 return buildSecurityCheckFailedResult(config.checkpoints);
             }
-
             JsonNode checkpoints = config.checkpoints;
             int checkpointsCount = checkpoints.size() / 2;
-
             ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
             List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
 
@@ -49,7 +43,6 @@ public class JudgeServer {
                 futures.add(future);
             }
             executor.shutdown();
-
             List<Judger.JudgeResult> results = new ArrayList<>();
             for (Future<Judger.JudgeResult> future : futures) {
                 try {
@@ -60,7 +53,6 @@ public class JudgeServer {
                     results.add(new Judger.JudgeResult(5, 0.0));
                 }
             }
-
             LOGGER.info("========== Results ==========");
             for (int i = 0; i < results.size(); i++) {
                 Judger.JudgeResult result = results.get(i);
@@ -77,7 +69,6 @@ public class JudgeServer {
     private static String buildSecurityCheckFailedResult(JsonNode checkpoints) {
         StringBuilder jsonResult = new StringBuilder();
         jsonResult.append("{");
-
         int checkpointsCount = checkpoints.size() / 2;
         for (int i = 1; i <= checkpointsCount; i++) {
             if (i > 1) {
@@ -86,11 +77,9 @@ public class JudgeServer {
             jsonResult.append("\"").append(i).append("_res\":").append(-5)
                     .append(",\"").append(i).append("_time\":").append(0);
         }
-
         jsonResult.append("}");
         return jsonResult.toString();
     }
-
     // 构建判题结果
     private static String buildJudgeResult(List<Judger.JudgeResult> results) {
         StringBuilder jsonResult = new StringBuilder();
