@@ -16,7 +16,6 @@ public class SubmitQuestion {
             String result_cfg = JudgeServer.JServer(jsonConfig, CppFilePath);
             JudgeResultManager.saveJudgeResult(UserId,ProblemId, result_cfg);
             LOGGER.info("========== Done ==========");
-
         } else {
             LOGGER.error("Unknown Question ID :{}", ProblemId);
         }

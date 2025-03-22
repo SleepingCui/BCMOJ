@@ -28,14 +28,13 @@ public class Judger {
             this.timeMs = timeMs;
         }
     }
-
     // 判题机
     public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int timeMs) {
         Random random = new Random();
         String programName = "c_" + random.nextInt(1000000);
         LOGGER.info("Compiling program: {}", programName);
 
-        if (isWindows()) {
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
             programName += ".exe";
         }
         File executableFile = new File(programName);
@@ -79,10 +78,6 @@ public class Judger {
             }
         }
     }
-    private static boolean isWindows() {
-        String os = System.getProperty("os.name").toLowerCase();
-        return os.contains("win");
-    }
     // 编译程序
     private static int compileProgram(File programPath, File executableFile) throws IOException, InterruptedException {
         ProcessBuilder compileBuilder = new ProcessBuilder("g++", "-o", executableFile.getName(), programPath.getAbsolutePath(), "-std=c++11");
@@ -107,7 +102,7 @@ public class Judger {
     }
     // 运行程序
     private static RunResult runProgram(File executableFile, String inputContent, int timeMs) throws IOException, InterruptedException, TimeoutException {
-        String command = isWindows() ? executableFile.getName() : "./" + executableFile.getName();
+        String command = System.getProperty("os.name").toLowerCase().contains("win") ? executableFile.getName() : "./" + executableFile.getName();
         ProcessBuilder runBuilder = new ProcessBuilder(command);
         runBuilder.redirectErrorStream(true);
         Process runProcess = runBuilder.start();
