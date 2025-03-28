@@ -1,6 +1,5 @@
 package org.bcmoj.db;
 
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +29,4 @@ public class DBConnect {
         return conn;
 
     }
-    @Test
-    public void test() throws ClassNotFoundException {
-        db_connection("judge_results");
-
-    }
-
 }
