@@ -12,7 +12,7 @@ public class JudgeResultManager {
     public static Logger LOGGER = LoggerFactory.getLogger(JudgeResultManager.class);
     public static void saveJudgeResult(int userid, int problemid, String jsonResult) {
         ObjectMapper mapper = new ObjectMapper();
-        try (Connection conn = DBConnect.db_judge_results_get_connection()) {
+        try (Connection conn = DBConnect.db_connection("judge_results")) {
             JsonNode rootNode = mapper.readTree(jsonResult);
             String insertJudgeResultSQL = "INSERT INTO judge_results (userid, problemid) VALUES (?, ?)";
             int resultId;

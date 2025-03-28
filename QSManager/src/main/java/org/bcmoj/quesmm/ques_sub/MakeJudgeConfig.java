@@ -14,10 +14,10 @@ import java.util.Map;
 public class MakeJudgeConfig {
     public Logger LOGGER = LoggerFactory.getLogger(getClass());
     // 从数据库获取题目数据
-    public String GetDBQuestions(int problemId) {
+    public String GetDBQuestions(int problemId,boolean securityCheck) {
         int timeLimit;
         Map<String, String> checkpoints = new HashMap<>();
-        try (Connection conn = DBConnect.db_coding_questions_get_connection()) {
+        try (Connection conn = DBConnect.db_connection("coding_problems")) {
             String problemQuery = "SELECT time_limit FROM problems WHERE problem_id = ?";
             PreparedStatement problemStmt = conn.prepareStatement(problemQuery);
             problemStmt.setInt(1, problemId);
@@ -44,9 +44,10 @@ public class MakeJudgeConfig {
             LOGGER.error("Unable to manage database: {}", e.getMessage());
             return null;
         }
-        return buildJsonConfig(timeLimit, checkpoints);
+        return buildJsonConfig(timeLimit, checkpoints, securityCheck);
     }
-    private String buildJsonConfig(int timeLimit, Map<String, String> checkpoints) {
+
+    private String buildJsonConfig(int timeLimit, Map<String, String> checkpoints, boolean securityCheck) {
         StringBuilder jsonBuilder = new StringBuilder();
         jsonBuilder.append("{");
         jsonBuilder.append("\"timeLimit\": ").append(timeLimit).append(",");
@@ -60,9 +61,12 @@ public class MakeJudgeConfig {
                     .append(escapeJson(entry.getValue())).append("\"");
             count++;
         }
-        jsonBuilder.append("}}");
+        jsonBuilder.append("},");  // Close checkpoints object and add comma
+        jsonBuilder.append("\"securityCheck\": ").append(securityCheck);
+        jsonBuilder.append("}");
         return jsonBuilder.toString();
     }
+
     private String escapeJson(String value) {
         return value.replace("\\", "\\\\")
                 .replace("\"", "\\\"")

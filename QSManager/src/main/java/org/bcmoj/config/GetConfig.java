@@ -19,7 +19,6 @@ public class GetConfig {
         } catch (IOException e) {
             LOGGER.error("Error reading config file", e);
         }
-
         return value;
     }
 

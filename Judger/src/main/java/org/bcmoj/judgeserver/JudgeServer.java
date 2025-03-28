@@ -17,20 +17,23 @@ public class JudgeServer {
     public static class Config {
         public int timeLimit;
         public JsonNode checkpoints;
+        public boolean securityCheck;
     }
     public static String JServer(String jsonConfig, File cppFilePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
-            int securityCheckResult = SecurityCheck.CodeSecurityCheck(cppFilePath);
-            if (securityCheckResult == -5) {
-                return buildSecurityCheckFailedResult(config.checkpoints);
+            LOGGER.debug(String.valueOf(config.securityCheck));
+            if (config.securityCheck) {
+                int securityCheckResult = SecurityCheck.CodeSecurityCheck(cppFilePath);
+                if (securityCheckResult == -5) {
+                    return buildJudgeResult(new ArrayList<>(), true);
+                }
             }
             JsonNode checkpoints = config.checkpoints;
             int checkpointsCount = checkpoints.size() / 2;
             ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
             List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
-
             // 生成检查点
             for (int i = 1; i <= checkpointsCount; i++) {
                 String inputKey = i + "_in";
@@ -59,43 +62,32 @@ public class JudgeServer {
                 String status = getStatusDescription(result.statusCode);
                 LOGGER.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.timeMs);
             }
-            return buildJudgeResult(results);
+            return buildJudgeResult(results,false);
 
         } catch (Exception e) {
             LOGGER.error("Failed to execute judge tasks: {}", e.getMessage());
             return "{}";
         }
     }
-    private static String buildSecurityCheckFailedResult(JsonNode checkpoints) {
-        StringBuilder jsonResult = new StringBuilder();
-        jsonResult.append("{");
-        int checkpointsCount = checkpoints.size() / 2;
-        for (int i = 1; i <= checkpointsCount; i++) {
-            if (i > 1) {
-                jsonResult.append(",");
-            }
-            jsonResult.append("\"").append(i).append("_res\":").append(-5)
-                    .append(",\"").append(i).append("_time\":").append(0);
-        }
-        jsonResult.append("}");
-        return jsonResult.toString();
-    }
-    // 构建判题结果
-    private static String buildJudgeResult(List<Judger.JudgeResult> results) {
+    private static String buildJudgeResult(List<Judger.JudgeResult> results, boolean isSecurityCheckFailed) {
         StringBuilder jsonResult = new StringBuilder();
         jsonResult.append("{");
         for (int i = 0; i < results.size(); i++) {
-            Judger.JudgeResult result = results.get(i);
             if (i > 0) {
                 jsonResult.append(",");
             }
-            jsonResult.append("\"").append(i + 1).append("_res\":").append(result.statusCode)
-                    .append(",\"").append(i + 1).append("_time\":").append(result.timeMs);
+            if (isSecurityCheckFailed) {
+                jsonResult.append("\"").append(i + 1).append("_res\":").append(-5)
+                        .append(",\"").append(i + 1).append("_time\":").append(0);
+            } else {
+                Judger.JudgeResult result = results.get(i);
+                jsonResult.append("\"").append(i + 1).append("_res\":").append(result.statusCode)
+                        .append(",\"").append(i + 1).append("_time\":").append(result.timeMs);
+            }
         }
         jsonResult.append("}");
         return jsonResult.toString();
     }
-
     private static String getStatusDescription(int statusCode) {
         return switch (statusCode) {
             case -4 -> "Compile Error";

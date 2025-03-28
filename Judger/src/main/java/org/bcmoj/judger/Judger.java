@@ -39,11 +39,9 @@ public class Judger {
         }
         File executableFile = new File(programName);
         try {
-
             if (compileProgram(programPath, executableFile) != 0) {
                 return new JudgeResult(COMPILE_ERROR, 0.0);
             }
-
             // 运行程序
             Process runProcess;
             double elapsedTimeMs = 0.0;

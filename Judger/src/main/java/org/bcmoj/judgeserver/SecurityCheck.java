@@ -14,7 +14,7 @@ public class SecurityCheck {
 
     private static final String[] KEYWORDS = {
             "system", "exec", "fork", "popen", "pclose", "chmod", "chown",
-            "rmdir", "unlink", "kill", "shutdown", "reboot", "sudo", "su"
+            "rmdir", "unlink", "kill", "shutdown", "reboot", "sudo", "su","rm"
     };
     public static int CodeSecurityCheck(File fileName) {
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {

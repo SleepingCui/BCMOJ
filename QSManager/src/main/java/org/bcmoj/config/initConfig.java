@@ -15,10 +15,11 @@ public class initConfig {
 
         try {
             outputStream = new FileOutputStream("config.properties");
-            properties.setProperty("db_questions_user", "root");
-            properties.setProperty("db_questions_password", "yourpassword");
-            properties.setProperty("db_results_user", "root");
-            properties.setProperty("db_results_password", "yourpassword");
+            properties.setProperty("db_user", "root");
+            properties.setProperty("db_password", "secret");
+            properties.setProperty("db_port", "3306");
+            properties.setProperty("db_host", "localhost");
+            properties.setProperty("CodeSecurityCheck","false");
             properties.store(outputStream, "Database Configuration");
 
         } catch (IOException e) {

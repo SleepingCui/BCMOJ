@@ -20,9 +20,8 @@ public class GetJudgeResult {
     public static final int ACCEPTED = 1;
     public static final int SECURITY_CHECK_FAILED = -5;
 
-
     public static void readAndPrintJudgeResult(int userid, int problemid, int judgeid) {
-        try (Connection conn = DBConnect.db_judge_results_get_connection()) {
+        try (Connection conn = DBConnect.db_connection("judge_results")) {
             String querySQL;
             if (judgeid == 0) {
                 querySQL = "SELECT j.result_id, c.checkpoint_id, c.result, c.time " +
