@@ -23,17 +23,17 @@ public class JudgeServer {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
-            LOGGER.debug(String.valueOf(config.securityCheck));
-            if (config.securityCheck) {
-                int securityCheckResult = SecurityCheck.CodeSecurityCheck(cppFilePath);
-                if (securityCheckResult == -5) {
-                    return buildJudgeResult(new ArrayList<>(), true);
-                }
-            }
             JsonNode checkpoints = config.checkpoints;
             int checkpointsCount = checkpoints.size() / 2;
             ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
             List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
+            if (config.securityCheck) {
+                int securityCheckResult = SecurityCheck.CodeSecurityCheck(cppFilePath);
+                if (securityCheckResult == -5) {
+                    return buildJudgeResult(null, true, checkpointsCount);
+                }
+            }
+            else {LOGGER.info("Code Security Check is not enabled");}
             // 生成检查点
             for (int i = 1; i <= checkpointsCount; i++) {
                 String inputKey = i + "_in";
@@ -62,17 +62,18 @@ public class JudgeServer {
                 String status = getStatusDescription(result.statusCode);
                 LOGGER.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.timeMs);
             }
-            return buildJudgeResult(results,false);
+            return buildJudgeResult(results, false, 0);
 
         } catch (Exception e) {
             LOGGER.error("Failed to execute judge tasks: {}", e.getMessage());
             return "{}";
         }
     }
-    private static String buildJudgeResult(List<Judger.JudgeResult> results, boolean isSecurityCheckFailed) {
+    private static String buildJudgeResult(List<Judger.JudgeResult> results, boolean isSecurityCheckFailed, int checkpointsCount) {
         StringBuilder jsonResult = new StringBuilder();
         jsonResult.append("{");
-        for (int i = 0; i < results.size(); i++) {
+        int actualCount = isSecurityCheckFailed ? checkpointsCount : results.size();
+        for (int i = 0; i < actualCount; i++) {
             if (i > 0) {
                 jsonResult.append(",");
             }
