@@ -12,11 +12,10 @@ import org.bcmoj.config.ConfigProcess;
 public class DBConnect {
     public static Logger LOGGER = LoggerFactory.getLogger(DBConnect.class);
 
-    public static String db_user = ConfigProcess.GetConfig("db_user");
-    public static String db_password = ConfigProcess.GetConfig("db_password");
-    public static String db_port = ConfigProcess.GetConfig("db_port");
-
     public static Connection db_connection(String db_name) throws ClassNotFoundException {
+        String db_user = ConfigProcess.GetConfig("db_user");
+        String db_password = ConfigProcess.GetConfig("db_password");
+        String db_port = ConfigProcess.GetConfig("db_port");
         Connection conn = null;
         Class.forName("com.mysql.cj.jdbc.Driver");
         try {

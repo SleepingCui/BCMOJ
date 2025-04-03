@@ -76,7 +76,7 @@ public class SecurityCheck {
                     keywords.add(line);
                 }
             }
-            LOGGER.info("Loaded {} security keywords", keywords.size());
+            LOGGER.info("Loaded {} keywords", keywords.size());
         } catch (IOException e) {
             LOGGER.error("Failed to read keywords file", e);
         }

@@ -46,7 +46,6 @@ public class MakeJudgeConfig {
         }
         return buildJsonConfig(timeLimit, checkpoints, securityCheck);
     }
-
     private String buildJsonConfig(int timeLimit, Map<String, String> checkpoints, boolean securityCheck) {
         StringBuilder jsonBuilder = new StringBuilder();
         jsonBuilder.append("{");
@@ -61,12 +60,11 @@ public class MakeJudgeConfig {
                     .append(escapeJson(entry.getValue())).append("\"");
             count++;
         }
-        jsonBuilder.append("},");  // Close checkpoints object and add comma
+        jsonBuilder.append("},");
         jsonBuilder.append("\"securityCheck\": ").append(securityCheck);
         jsonBuilder.append("}");
         return jsonBuilder.toString();
     }
-
     private String escapeJson(String value) {
         return value.replace("\\", "\\\\")
                 .replace("\"", "\\\"")

@@ -68,9 +68,7 @@ public class Judger {
         } finally {
             if (executableFile.exists()) {
                 boolean isDeleted = executableFile.delete();
-                if (isDeleted) {
-                    LOGGER.debug("Deleted executable file: {}", executableFile.getAbsolutePath());
-                } else {
+                if (!isDeleted) {
                     LOGGER.warn("Failed to delete the executable file: {}", executableFile.getAbsolutePath());
                 }
             }
@@ -84,7 +82,7 @@ public class Judger {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                LOGGER.debug(line);
+                LOGGER.info("[Compiler] {}",line);
             }
         }
         return compileProcess.waitFor();
