@@ -20,10 +20,11 @@ public class SecurityCheck {
             "rmdir", "unlink", "kill", "shutdown", "reboot", "sudo", "su", "rm"
     };
     private static final String KEYWORDS_FILE = "keywords.txt";
+    private static final String REGEX_PREFIX = "regex:";
 
     public static int CodeSecurityCheck(File fileName) {
-        List<String> keywords = loadKeywords();
-        if (keywords.isEmpty()) {
+        List<Pattern> keywordPatterns = loadKeywords();
+        if (keywordPatterns.isEmpty()) {
             LOGGER.error("No security keywords loaded");
             return -5;
         }
@@ -32,54 +33,63 @@ public class SecurityCheck {
             int lineNumber = 0;
             while ((line = reader.readLine()) != null) {
                 lineNumber++;
-                for (String keyword : keywords) {
-                    if (containsKeyword(line, keyword)) {
-                        LOGGER.warn("Dangerous keyword: '{}' in line {}", keyword, lineNumber);
+                for (Pattern pattern : keywordPatterns) {
+                    if (pattern.matcher(line).find()) {
+                        LOGGER.warn("Dangerous pattern detected: '{}' in line {}", pattern.pattern(), lineNumber);
                         return -5;
                     }
                 }
             }
         } catch (IOException e) {
-            LOGGER.error("Failed to read file {}", fileName, e);
+            LOGGER.error("Failed to read file: {}", fileName, e);
             return -5;
         }
         LOGGER.info("Security check passed");
         return 0;
     }
-    private static boolean containsKeyword(String line, String keyword) {
-        return Pattern.compile("\\b" + keyword + "\\b", Pattern.CASE_INSENSITIVE)
-                .matcher(line)
-                .find();
-    }
-    private static List<String> loadKeywords() {
-        List<String> keywords = new ArrayList<>();
+    private static List<Pattern> loadKeywords() {
+        List<Pattern> patterns = new ArrayList<>();
         File keywordsFile = new File(KEYWORDS_FILE);
+
         if (!keywordsFile.exists()) {
             try (FileWriter writer = new FileWriter(keywordsFile)) {
                 writer.write("# Security check keywords list" + System.lineSeparator());
                 writer.write("# Lines starting with # are ignored" + System.lineSeparator());
+                writer.write("# Use 'regex:' prefix for regular expressions" + System.lineSeparator());
                 writer.write(System.lineSeparator());
+
                 for (String keyword : DEFAULT_KEYWORDS) {
                     writer.write(keyword + System.lineSeparator());
                 }
                 LOGGER.info("Created default keywords file");
             } catch (IOException e) {
                 LOGGER.error("Failed to create keywords file", e);
-                return keywords;
+                return patterns;
             }
         }
         try (BufferedReader reader = new BufferedReader(new FileReader(keywordsFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
-                if (!line.isEmpty() && !line.startsWith("#")) { //忽略#
-                    keywords.add(line);
+                if (!line.isEmpty() && !line.startsWith("#")) {
+                    if (line.startsWith(REGEX_PREFIX)) {
+                        String regex = line.substring(REGEX_PREFIX.length()).trim();
+                        try {
+                            patterns.add(Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
+                            LOGGER.debug("Loaded regex pattern: {}", regex);
+                        } catch (Exception e) {
+                            LOGGER.warn("Invalid regex pattern: {}, skipped", regex);
+                        }
+                    } else {
+                        patterns.add(Pattern.compile("\\b" + Pattern.quote(line) + "\\b", Pattern.CASE_INSENSITIVE));
+                    }
                 }
             }
-            LOGGER.info("Loaded {} keywords", keywords.size());
+            LOGGER.info("Loaded {} keyword patterns ({} regex)", patterns.size(),
+                    patterns.stream().filter(p -> p.pattern().startsWith("\\b")).count());
         } catch (IOException e) {
             LOGGER.error("Failed to read keywords file", e);
         }
-        return keywords;
+        return patterns;
     }
 }

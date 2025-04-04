@@ -19,8 +19,8 @@ public class initConfig {
             properties.setProperty("db_password", "secret");
             properties.setProperty("db_port", "3306");
             properties.setProperty("db_host", "localhost");
-            properties.setProperty("CodeSecurityCheck","false");
-            properties.store(outputStream, "Database Configuration");
+            properties.setProperty("enableCodeSecurityCheck","false");
+            properties.store(outputStream, "Judge Configuration");
 
         } catch (IOException e) {
             LOGGER.error("Error writing properties file", e);

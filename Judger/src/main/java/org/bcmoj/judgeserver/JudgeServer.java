@@ -27,21 +27,29 @@ public class JudgeServer {
             int checkpointsCount = checkpoints.size() / 2;
             ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
             List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
+            boolean securityCheckFailed;
             if (config.securityCheck) {
                 int securityCheckResult = SecurityCheck.CodeSecurityCheck(cppFilePath);
-                if (securityCheckResult == -5) {
-                    return buildJudgeResult(null, true, checkpointsCount);
-                }
+                securityCheckFailed = (securityCheckResult == -5);
             }
-            else {LOGGER.info("Code Security Check is not enabled");}
+            else {
+                securityCheckFailed = false;
+                LOGGER.info("Code Security Check is not enabled");
+            }
             // 生成检查点
             for (int i = 1; i <= checkpointsCount; i++) {
-                String inputKey = i + "_in";
-                String outputKey = i + "_out";
-                String inputContent = checkpoints.get(inputKey).asText();
-                String outputContent = checkpoints.get(outputKey).asText();
-
-                Callable<Judger.JudgeResult> task = () -> Judger.judge(cppFilePath, inputContent, outputContent, config.timeLimit);
+                final int checkpointIndex = i;
+                Callable<Judger.JudgeResult> task = () -> {
+                    if (securityCheckFailed) {
+                        return new Judger.JudgeResult(-5, 0.0);
+                    } else {
+                        String inputKey = checkpointIndex + "_in";
+                        String outputKey = checkpointIndex + "_out";
+                        String inputContent = checkpoints.get(inputKey).asText();
+                        String outputContent = checkpoints.get(outputKey).asText();
+                        return Judger.judge(cppFilePath, inputContent, outputContent, config.timeLimit);
+                    }
+                };
                 Future<Judger.JudgeResult> future = executor.submit(task);
                 futures.add(future);
             }
@@ -60,30 +68,34 @@ public class JudgeServer {
             for (int i = 0; i < results.size(); i++) {
                 Judger.JudgeResult result = results.get(i);
                 String status = getStatusDescription(result.statusCode);
-                LOGGER.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.timeMs);
+                LOGGER.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.time);
             }
-            return buildJudgeResult(results, false, 0);
-
+            return buildJudgeResult(results, securityCheckFailed, false, checkpointsCount);
         } catch (Exception e) {
             LOGGER.error("Failed to execute judge tasks: {}", e.getMessage());
-            return "{}";
+            return buildJudgeResult(null, false, true, 0);
         }
     }
-    private static String buildJudgeResult(List<Judger.JudgeResult> results, boolean isSecurityCheckFailed, int checkpointsCount) {
+    private static String buildJudgeResult(List<Judger.JudgeResult> results,boolean isSecurityCheckFailed,boolean isSystemError,int checkpointsCount) {
         StringBuilder jsonResult = new StringBuilder();
         jsonResult.append("{");
-        int actualCount = isSecurityCheckFailed ? checkpointsCount : results.size();
+        int actualCount = isSecurityCheckFailed || isSystemError ? checkpointsCount : (results != null ? results.size() : 0);
         for (int i = 0; i < actualCount; i++) {
             if (i > 0) {
                 jsonResult.append(",");
             }
             if (isSecurityCheckFailed) {
                 jsonResult.append("\"").append(i + 1).append("_res\":").append(-5)
-                        .append(",\"").append(i + 1).append("_time\":").append(0);
-            } else {
+                        .append(",\"").append(i + 1).append("_time\":").append(0.0);
+            }
+            else if (isSystemError) {
+                jsonResult.append("\"").append(i + 1).append("_res\":").append(5)
+                        .append(",\"").append(i + 1).append("_time\":").append(0.0);
+            }
+            else {
                 Judger.JudgeResult result = results.get(i);
                 jsonResult.append("\"").append(i + 1).append("_res\":").append(result.statusCode)
-                        .append(",\"").append(i + 1).append("_time\":").append(result.timeMs);
+                        .append(",\"").append(i + 1).append("_time\":").append(result.time);
             }
         }
         jsonResult.append("}");
@@ -91,13 +103,13 @@ public class JudgeServer {
     }
     private static String getStatusDescription(int statusCode) {
         return switch (statusCode) {
+            case -5 -> "Security Check Failed";
             case -4 -> "Compile Error";
             case -3 -> "Wrong Answer";
             case 2 -> "Real Time Limit Exceeded";
             case 4 -> "Runtime Error";
             case 5 -> "System Error";
             case 1 -> "Accepted";
-            case -5 -> "Security Check Failed";
             default -> "Unknown Status";
         };
     }

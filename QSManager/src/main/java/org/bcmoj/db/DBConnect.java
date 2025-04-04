@@ -9,6 +9,8 @@ import java.sql.SQLException;
 
 import org.bcmoj.config.ConfigProcess;
 
+import static java.lang.System.exit;
+
 public class DBConnect {
     public static Logger LOGGER = LoggerFactory.getLogger(DBConnect.class);
 
@@ -24,6 +26,7 @@ public class DBConnect {
             LOGGER.info("Connected to database: {} - {}", db_name, conn.getMetaData().getURL());
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
+            exit(1);
         }
         return conn;
 

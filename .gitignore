@@ -1,7 +1,6 @@
 /Judger/target/
 /logs/
 *.exe
-/Judger/logs/
 config.properties
-QSManager/logs/
-/QSManager/keywords.txt
+keywords.txt
+/QSManager/src/test/

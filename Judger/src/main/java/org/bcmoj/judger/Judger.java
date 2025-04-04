@@ -21,15 +21,15 @@ public class Judger {
     // 封装状态码和运行时间的类
     public static class JudgeResult {
         public final int statusCode;
-        public final double timeMs;
+        public final double time;
 
-        public JudgeResult(int statusCode, double timeMs) {
+        public JudgeResult(int statusCode, double time) {
             this.statusCode = statusCode;
-            this.timeMs = timeMs;
+            this.time = time;
         }
     }
     // 判题机
-    public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int timeMs) {
+    public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int time) {
         Random random = new Random();
         String programName = "c_" + random.nextInt(1000000);
         LOGGER.info("Compiling program: {}", programName);
@@ -44,23 +44,23 @@ public class Judger {
             }
             // 运行程序
             Process runProcess;
-            double elapsedTimeMs = 0.0;
+            double elapsedTime = 0.0;
             try {
-                RunResult runResult = runProgram(executableFile, inputContent, timeMs);
+                RunResult runResult = runProgram(executableFile, inputContent, time);
                 runProcess = runResult.process;
-                elapsedTimeMs = runResult.elapsedTimeMs;
+                elapsedTime = runResult.elapsedTime;
             } catch (TimeoutException e) {
-                return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, elapsedTimeMs);
+                return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, elapsedTime);
             } catch (IOException | InterruptedException e) {
                 return new JudgeResult(SYSTEM_ERROR, 0.0);
             }
             if (runProcess.exitValue() != 0) {
-                return new JudgeResult(RUNTIME_ERROR, elapsedTimeMs);
+                return new JudgeResult(RUNTIME_ERROR, elapsedTime);
             }
             if (!compareOutput(runProcess.getInputStream(), expectedOutputContent)) {
-                return new JudgeResult(WRONG_ANSWER, elapsedTimeMs);
+                return new JudgeResult(WRONG_ANSWER, elapsedTime);
             }
-            return new JudgeResult(ACCEPTED, elapsedTimeMs);
+            return new JudgeResult(ACCEPTED, elapsedTime);
 
         } catch (IOException | InterruptedException e) {
             LOGGER.error("IO error occurred: {}", e.getMessage());
@@ -89,15 +89,15 @@ public class Judger {
     }
     private static class RunResult {
         public final Process process;
-        public final double elapsedTimeMs;
+        public final double elapsedTime;
 
-        public RunResult(Process process, double elapsedTimeMs) {
+        public RunResult(Process process, double elapsedTime) {
             this.process = process;
-            this.elapsedTimeMs = elapsedTimeMs;
+            this.elapsedTime = elapsedTime;
         }
     }
     // 运行程序
-    private static RunResult runProgram(File executableFile, String inputContent, int timeMs) throws IOException, InterruptedException, TimeoutException {
+    private static RunResult runProgram(File executableFile, String inputContent, int time) throws IOException, InterruptedException, TimeoutException {
         String command = System.getProperty("os.name").toLowerCase().contains("win") ? executableFile.getName() : "./" + executableFile.getName();
         ProcessBuilder runBuilder = new ProcessBuilder(command);
         runBuilder.redirectErrorStream(true);
@@ -107,9 +107,9 @@ public class Judger {
             writer.write(inputContent);
             writer.flush();
         }
-        if (!runProcess.waitFor(timeMs, TimeUnit.MILLISECONDS)) {
+        if (!runProcess.waitFor(time, TimeUnit.MILLISECONDS)) {
             long endTime = System.nanoTime();
-            double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
+            double elapsedTime = (endTime - startTime) / 1_000_000.0;
             runProcess.destroyForcibly();
             try {
                 LOGGER.debug("Waiting for process {} resources to be released...", runProcess.exitValue());
@@ -117,11 +117,11 @@ public class Judger {
             } catch (InterruptedException e) {
                 LOGGER.warn("Interrupted while waiting for process to terminate: {}", e.getMessage());
             }
-            throw new TimeoutException("Process timed out after " + elapsedTimeMs + " ms");
+            throw new TimeoutException("Process timed out after " + elapsedTime + " ms");
         }
         long endTime = System.nanoTime();
-        double elapsedTimeMs = (endTime - startTime) / 1_000_000.0;
-        return new RunResult(runProcess, elapsedTimeMs);
+        double elapsedTime = (endTime - startTime) / 1_000_000.0;
+        return new RunResult(runProcess, elapsedTime);
     }
     // 比较输出
     private static boolean compareOutput(InputStream actualOutput, String expectedOutputContent) throws IOException {
