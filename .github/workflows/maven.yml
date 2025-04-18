@@ -47,6 +47,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: judger-artifact
-        path: ${{ steps.find-jar.outputs.JAR_PATH }}
+        path: ${{ env.JAR_PATH }}  # 直接引用环境变量
         compression-level: 0
         if-no-files-found: error
