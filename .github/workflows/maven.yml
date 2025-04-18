@@ -43,8 +43,10 @@ jobs:
           echo "JAR_PATH=$(pwd)/${new_name}" >> $GITHUB_ENV
         done
         
-    - name: Upload Judger artifact
+    - name: Upload JAR Artifact
       uses: actions/upload-artifact@v4
       with:
         name: judger-artifact
-        path: ${{ env.JAR_PATH }}
+        path: ${{ steps.find-jar.outputs.JAR_PATH }}
+        compression-level: 0
+        if-no-files-found: error
