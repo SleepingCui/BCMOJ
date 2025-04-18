@@ -1,0 +1,50 @@
+name: Java CI with Maven
+
+on:
+  push:
+    branches: '*'
+  pull_request:
+    branches: '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # 获取完整的提交历史，以便获取短提交ID
+    
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'maven'
+    
+    - name: Build Judger project
+      working-directory: ./Judger
+      run: mvn -B package --file pom.xml
+      
+    - name: Get timestamp and commit info
+      id: vars
+      run: |
+        echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+        echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        
+    - name: Find and rename JAR file
+      working-directory: ./Judger/target
+      run: |
+        for f in *.jar; do
+          original_name="$f"
+          new_name="Judger-CI-${{ steps.vars.outputs.DATE }}-${{ steps.vars.outputs.SHORT_SHA }}-${original_name}"
+          mv "$f" "$new_name"
+          echo "Renamed ${original_name} to ${new_name}"
+          echo "JAR_PATH=$(pwd)/${new_name}" >> $GITHUB_ENV
+        done
+        
+    - name: Upload Judger artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: judger-artifact
+        path: ${{ env.JAR_PATH }}
