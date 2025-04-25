@@ -1,16 +1,18 @@
 package org.bcmoj.netserver;
 
 import org.bcmoj.config.ConfigProcess;
+import org.bcmoj.judgeserver.JudgeServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.*;
-import java.net.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static org.bcmoj.judgeserver.JudgeServer.JServer;
 
 public class JCFSocketServer {
     private static final Logger logger = LoggerFactory.getLogger(JCFSocketServer.class);
@@ -119,7 +121,7 @@ public class JCFSocketServer {
                 // 5. Process with JServer
                 clientLogger.info("[{}] Calling JServer with config and file: {}", clientAddress, newFileName);
                 File KWFilePath = new File(ConfigProcess.GetConfig("KeywordsFilePath"));
-                String jserverResponse = JServer(jsonConfig, outputFile, KWFilePath);
+                String jserverResponse = JudgeServer.JServer(jsonConfig, outputFile, KWFilePath);
                 clientLogger.info("[{}] JServer response: {}", clientAddress, jserverResponse);
 
                 // 6. Delete the uploaded .cpp file
