@@ -1,21 +1,28 @@
-# Judger
-> 判题机部分
+# Judge Server
+> 判题服务器
 
 - ### 示例配置
-```json{
-    "timeLimit": 3000,
-    "checkpoints": {
-        "1_in": "10\n1 2 4 5 6 7 8 9 0",
-        "1_out": "1 2 4 5 6 7 8 9 0",
-        "2_in": "2\n1 3",
-        "2_out": "1 3",
-        "3_in": "5\n10 20 30 40 50",
-        "3_out": "10 20 30 40 50"
-    }
-}
+```json
+{"timeLimit": 2000,"checkpoints": {"1_in": "[2, 7, 11, 15], 9","2_in": "[3, 2, 4], 6","2_out": "[1, 2]","1_out": "[0, 1]"},"securityCheck": false}
 ```
+- ### 示例输出
+```json
+{"1_res":-4,"1_time":0.0,"2_res":-4,"2_time":0.0}
+```
+#### 其中
+```
+-5 -> Security Check Failed
+-4 -> Compile Error
+-3 -> Wrong Answer
+2 -> Real Time Limit Exceeded
+4 -> Runtime Error
+5 -> System Error
+1 -> Accepted
+```
+##### tip:支持`\n`等转义字符
+
 - ### 代码安全检查
-通过匹配关键字来确保递交代码的安全性
+通过匹配关键字来确保递交代码的安全性,支持正则
 
 ### 配置文件```keywords.txt```
 ```text
