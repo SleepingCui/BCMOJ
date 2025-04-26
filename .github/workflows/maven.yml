@@ -26,7 +26,7 @@ jobs:
 
     - name: Build with Maven
       working-directory: ./Judger
-      run: mvn clean install
+      run: mvn clean package
 
     - name: Rename artifact
       run: |
