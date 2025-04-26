@@ -26,7 +26,14 @@ jobs:
 
     - name: Build with Maven
       working-directory: ./Judger
-      run: mvn clean package
+      run: |
+        mvn clean package
+
+    - name: List target directory
+      working-directory: ./Judger
+      run: |
+        echo "Contents of target/:"
+        ls -lh target/
 
     - name: Find and Rename JAR
       working-directory: ./Judger
@@ -34,10 +41,9 @@ jobs:
         COMMIT_ID=$(git rev-parse --short HEAD)
         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
         
-        echo "Searching for JAR file in target/..."
-        ls -lh target || true
+        echo "Searching for jar-with-dependencies.jar..."
+        JAR_PATH=$(find target -maxdepth 1 -name "*-jar-with-dependencies.jar" | head -n 1)
         
-        JAR_PATH=$(find target -maxdepth 1 -name "*.jar" | head -n 1)
         if [ -z "$JAR_PATH" ]; then
           echo "::error::No JAR file found in target/. Build may have failed."
           exit 1
@@ -47,8 +53,8 @@ jobs:
         echo "Renaming $JAR_PATH to $NEW_NAME"
         mv "$JAR_PATH" "target/$NEW_NAME"
 
-    - name: Upload JAR artifact
+    - name: Upload JAR Artifact
       uses: actions/upload-artifact@v4
       with:
         name: judger-jar
-        path: target/Judger-*.jar
+        path: Judger/target/Judger-*.jar
