@@ -22,17 +22,27 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
+        java-version: '21' 
 
     - name: Build with Maven
       working-directory: ./Judger
       run: mvn clean package
 
-    - name: Rename artifact
+    - name: Find and Rename JAR
+      working-directory: ./Judger
       run: |
         COMMIT_ID=$(git rev-parse --short HEAD)
         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-        JAR_PATH=$(find target -name "*.jar" | head -n 1)
+        
+        echo "Searching for JAR file in target/..."
+        ls -lh target || true
+        
+        JAR_PATH=$(find target -maxdepth 1 -name "*.jar" | head -n 1)
+        if [ -z "$JAR_PATH" ]; then
+          echo "::error::No JAR file found in target/. Build may have failed."
+          exit 1
+        fi
+        
         NEW_NAME="Judger-${COMMIT_ID}-${VERSION}.jar"
         echo "Renaming $JAR_PATH to $NEW_NAME"
         mv "$JAR_PATH" "target/$NEW_NAME"
