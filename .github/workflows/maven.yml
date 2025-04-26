@@ -25,6 +25,7 @@ jobs:
         java-version: '21'
 
     - name: Build with Maven
+      working-directory: ./Judger
       run: mvn clean install
 
     - name: Rename artifact
