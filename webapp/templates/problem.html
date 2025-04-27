@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ problem.title }} - 提交代码</title>
+  <style>
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+    }
+    .description {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .examples {
+      margin-bottom: 20px;
+    }
+    .examples pre {
+      background: #eee;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .upload-area {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .result-area {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .result-pass {
+      color: green;
+      font-weight: bold;
+    }
+    .result-fail {
+      color: red;
+      font-weight: bold;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+<h1>{{ problem.title }}</h1>
+
+<div class="description">
+  <h2>题目描述</h2>
+  <p>{{ problem.description }}</p>
+  <p><strong>时间限制:</strong> {{ problem.time_limit }} ms</p>
+</div>
+
+<div class="examples">
+  <h2>示例</h2>
+  {% for example in examples %}
+    <div>
+      <h4>输入示例 {{ loop.index }}:</h4>
+      <pre>{{ example.input }}</pre>
+      <h4>输出示例 {{ loop.index }}:</h4>
+      <pre>{{ example.output }}</pre>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="upload-area">
+  <h2>提交你的代码</h2>
+  <form id="submitForm" method="post" enctype="multipart/form-data">
+    <input type="file" name="code" required>
+    <button type="submit">提交</button>
+  </form>
+</div>
+
+<div id="resultArea" class="result-area" style="display:none;">
+  <h2>评测结果</h2>
+  <div id="results"></div>
+</div>
+
+<script>
+const resultMapping = {
+  "-5": "Security Check Failed",
+  "-4": "Compile Error",
+  "-3": "Wrong Answer",
+  "2": "Real Time Limit Exceeded",
+  "4": "Runtime Error",
+  "5": "System Error",
+  "1": "Accepted"
+};
+
+// 修改 resultMapping 中的状态码对应关系，如果 `result` 字段是字符串 "Accepted"。
+const resultMappingStr = {
+  "Accepted": "Accepted",
+  "Security Check Failed": "Security Check Failed",
+  "Compile Error": "Compile Error",
+  "Wrong Answer": "Wrong Answer",
+  "Real Time Limit Exceeded": "Real Time Limit Exceeded",
+  "Runtime Error": "Runtime Error",
+  "System Error": "System Error"
+};
+
+document.getElementById('submitForm').addEventListener('submit', async function(event) {
+  event.preventDefault();
+  const formData = new FormData(this);
+  console.log(formData);
+
+  const response = await fetch(window.location.pathname.replace('/problem/', '/submit/'), {
+    method: 'POST',
+    body: formData
+  });
+
+  const resultArea = document.getElementById('resultArea');
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '';
+
+  if (response.ok) {
+    const data = await response.json();
+    console.log(data)
+    resultArea.style.display = 'block';
+
+    if (data.status === 'ok') {
+      data.results.forEach(res => {
+        const p = document.createElement('p');
+        console.log(resultMappingStr[res.result]);
+        const resultText = resultMappingStr[res.result] || '未知错误';
+        p.innerHTML = `测试点 ${res.checkpoint}: <span class="${res.result === 'Accepted' ? 'result-pass' : 'result-fail'}">${resultText}</span> (用时 ${res.time})`;
+        resultsDiv.appendChild(p);
+      });
+    } else {
+      resultsDiv.innerHTML = '<p class="result-fail">评测失败: ' + (data.error || '未知错误') + '</p>';
+    }
+  } else {
+    resultArea.style.display = 'block';
+    resultsDiv.innerHTML = '<p class="result-fail">提交失败，请稍后再试。</p>';
+  }
+});
+</script>
+
+</body>
+</html>

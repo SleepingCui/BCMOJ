@@ -4,3 +4,5 @@
 config.properties
 keywords.txt
 /QSManager/src/test/
+/tmp/
+/QSManager/
