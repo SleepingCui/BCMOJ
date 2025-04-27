@@ -13,7 +13,7 @@ DB_CONFIG = {
     'host': 'localhost',
     'port': 3306,
     'user': 'root',
-    'password': 'sino22',
+    'password': 'password',
     'database': 'coding_problems'
 }
 
@@ -91,7 +91,7 @@ def submit(problem_id):
         config = {
             "timeLimit": problem['time_limit'],
             "checkpoints": checkpoints,
-            "securityCheck": False
+            "securityCheck": True
         }
 
         json_data = json.dumps(config, indent=2)
