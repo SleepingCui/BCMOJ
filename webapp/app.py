@@ -1,27 +1,231 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
+from urllib.parse import urlparse, urljoin
 import mysql.connector
 import os
 import socket
 import json
+import hashlib
+import random
+import smtplib
+from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
+from functools import wraps
+
+import config 
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'tmp'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = 'your_secret_key_here'
+config = config.load_config()
 
-DB_CONFIG = {
-    'host': 'localhost',
-    'port': 3306,
-    'user': 'root',
-    'password': 'password',
-    'database': 'coding_problems'
-}
+app.secret_key = config['SECRET_KEY']
+app.config['UPLOAD_FOLDER'] = config['UPLOAD_FOLDER']
+app.config['AVATAR_FOLDER'] = config['AVATAR_FOLDER']
+EMAIL_CONFIG = config['EMAIL_CONFIG']
+DB_CONFIG = config['DB_CONFIG']
+SERVER_HOST = config['SERVER_CONFIG']['host']
+SERVER_PORT = config['SERVER_CONFIG']['port']
 
-SERVER_HOST = 'localhost'
-SERVER_PORT = 5000
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['AVATAR_FOLDER'], exist_ok=True)
+
+def is_logged_in():
+    return 'user_id' in session
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
 def get_db_connection():
     return mysql.connector.connect(**DB_CONFIG)
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' in session:
+            print(f"[LOGIN CHECK] User logged in: {session.get('username')}")
+        else:
+            print("[LOGIN CHECK] User not logged in")
+
+        if 'user_id' not in session:
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': 'unauthorized', 'message': 'Please login first'}), 401
+            else:
+                return redirect(url_for('login', next=request.url))
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def send_verification_email(email, verification_code):
+    try:
+        msg = MIMEText(f'Your verification code is: {verification_code}')
+        msg['Subject'] = 'Password Recovery Verification Code'
+        msg['From'] = EMAIL_CONFIG['sender']
+        msg['To'] = email
+
+        with smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['smtp_port']) as server:
+            server.starttls()
+            server.login(EMAIL_CONFIG['sender'], EMAIL_CONFIG['password'])
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return False
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username_or_email = request.form.get('username_or_email')
+        password = request.form.get('password')
+        hashed_password = hashlib.sha1(password.encode()).hexdigest()
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('''
+            SELECT * FROM users 
+            WHERE (username = %s OR email = %s) AND passwd = %s
+        ''', (username_or_email, username_or_email, hashed_password))
+        
+        user = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if user:
+            session.clear()
+            session['user_id'] = user['userid']
+            session['username'] = user['username']
+            next_page = request.args.get('next')
+            if next_page and is_safe_url(next_page):
+                return redirect(next_page)
+            return redirect(url_for('problems'))
+        else:
+            flash('Invalid username/email or password', 'error')
+
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        avatar = request.files.get('avatar')
+
+        if password != confirm_password:
+            flash('Passwords do not match', 'error')
+            return redirect(url_for('register'))
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', (username, email))
+        existing_user = cursor.fetchone()
+        
+        if existing_user:
+            cursor.close()
+            conn.close()
+            flash('Username or email already exists', 'error')
+            return redirect(url_for('register'))
+        
+        hashed_password = hashlib.sha1(password.encode()).hexdigest()
+
+        cursor.execute('''
+            INSERT INTO users (username, email, passwd, avatar)
+            VALUES (%s, %s, %s, %s)
+        ''', (username, email, hashed_password, ''))
+        user_id = cursor.lastrowid
+
+        if avatar and avatar.filename:
+            user_folder = os.path.join(app.config['AVATAR_FOLDER'], str(user_id))
+            os.makedirs(user_folder, exist_ok=True)
+            
+            avatar_path = os.path.join(user_folder, 'avatar.png')
+            avatar.save(avatar_path)
+            
+            cursor.execute('UPDATE users SET avatar = %s WHERE userid = %s', (avatar_path, user_id))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        flash('Registration successful! Please login.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+@app.route('/forgotpasswd', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        if 'email' in request.form:
+            # 验证码发送
+            email = request.form.get('email')
+            
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+            user = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if not user:
+                flash('Email not found', 'error')
+                return redirect(url_for('forgot_password'))
+            
+            verification_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+            session['verification_code'] = verification_code
+            session['verification_email'] = email
+            
+            if send_verification_email(email, verification_code):
+                flash('Verification code sent to your email', 'success')
+                return render_template('forgot_password.html', step=2)
+            else:
+                flash('Failed to send verification code. Please try again.', 'error')
+                return redirect(url_for('forgot_password'))
+        
+        elif 'verification_code' in request.form:
+
+            user_code = request.form.get('verification_code')
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            if new_password != confirm_password:
+                flash('Passwords do not match', 'error')
+                return render_template('forgot_password.html', step=2)
+            
+            if 'verification_code' not in session or 'verification_email' not in session:
+                flash('Session expired. Please start again.', 'error')
+                return redirect(url_for('forgot_password'))
+            
+            if user_code != session['verification_code']:
+                flash('Invalid verification code', 'error')
+                return render_template('forgot_password.html', step=2)
+            
+            # 更新密码
+            hashed_password = hashlib.sha1(new_password.encode()).hexdigest()
+            email = session['verification_email']
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('UPDATE users SET passwd = %s WHERE email = %s', (hashed_password, email))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            session.pop('verification_code', None)
+            session.pop('verification_email', None)
+            
+            flash('Password updated successfully. Please login.', 'success')
+            return redirect(url_for('login'))
+
+    return render_template('forgot_password.html', step=1)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('problems'))
 
 @app.route('/')
 def index():
@@ -35,18 +239,26 @@ def problems():
     problems = cursor.fetchall()
     cursor.close()
     conn.close()
-    return render_template('problems.html', problems=problems)
+
+    username = session.get('username')
+    user_id = session.get('user_id')
+    if not is_logged_in():
+        username = "未登录"
+    return render_template('problems.html', problems=problems, username=username, user_id=user_id)
 
 @app.route('/problem/<int:problem_id>')
 def problem(problem_id):
+    if not is_logged_in():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': 'unauthorized'}), 401
+        else:
+            return redirect(url_for('login', next=request.url))
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # 获取题目
     cursor.execute('SELECT * FROM problems WHERE problem_id = %s', (problem_id,))
     problem = cursor.fetchone()
 
-    # 获取前两个示例
     cursor.execute('SELECT * FROM examples WHERE problem_id = %s ORDER BY example_id LIMIT 2', (problem_id,))
     examples = cursor.fetchall()
 
@@ -59,7 +271,10 @@ def problem(problem_id):
     return render_template('problem.html', problem=problem, examples=examples)
 
 @app.route('/submit/<int:problem_id>', methods=['POST'])
+@login_required
 def submit(problem_id):
+    print(f"[LOGIN CHECK] User {'logged in' if is_logged_in() else 'not logged in'}")
+    
     cpp_file = request.files.get('code')
     if not cpp_file:
         return jsonify({'error': 'No file uploaded'}), 400
@@ -69,7 +284,6 @@ def submit(problem_id):
     cpp_file.save(temp_path)
 
     try:
-        # 从数据库取题目信息
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -82,7 +296,6 @@ def submit(problem_id):
         cursor.close()
         conn.close()
 
-        # 生成配置
         checkpoints = {}
         for idx, example in enumerate(examples, 1):
             checkpoints[f"{idx}_in"] = example['input']
@@ -96,7 +309,6 @@ def submit(problem_id):
 
         json_data = json.dumps(config, indent=2)
 
-        # 连接评测服务器
         results = []
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(30)
@@ -130,7 +342,6 @@ def submit(problem_id):
                         break
                     received.extend(part)
 
-                # 解析每条响应
                 try:
                     data = json.loads(received.decode('utf-8'))
                     for key in data:
@@ -139,7 +350,6 @@ def submit(problem_id):
                             result_code = data.get(f"{idx}_res", "Unknown")
                             time_used = data.get(f"{idx}_time", 0.0)
 
-                            # 结果映射
                             result_mapping = {
                                 -5: "Security Check Failed",
                                 -4: "Compile Error",
@@ -159,7 +369,6 @@ def submit(problem_id):
                                 'time': f"{time_used:.2f} ms"
                             })
                 except json.JSONDecodeError:
-                    # 不是有效的JSON，直接存原文
                     results.append({
                         'checkpoint': 'Unknown',
                         'result': 'Invalid JSON response',
@@ -169,6 +378,7 @@ def submit(problem_id):
         return jsonify({
             'status': 'ok',
             'results': results
+
         })
 
     except Exception as e:
@@ -177,6 +387,5 @@ def submit(problem_id):
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
-
 if __name__ == '__main__':
-    app.run(debug=True,port=4949)
+    app.run(debug=True,port=SERVER_PORT,host=SERVER_HOST)

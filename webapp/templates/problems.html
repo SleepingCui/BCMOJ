@@ -15,13 +15,20 @@
         header {
             background-color: #007bff;
             color: white;
-            padding: 15px 0;
-            text-align: center;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         h1 {
             margin: 0;
             font-size: 36px;
+        }
+
+        .user-info {
+            font-size: 16px;
+            cursor: pointer;
         }
 
         .container {
@@ -67,21 +74,43 @@
 </head>
 <body>
 
-    <header>
-        <h1>题目列表</h1>
-    </header>
+<header>
+    <h1>题目列表</h1>
+    <div class="user-info" id="userInfo"></div>
+</header>
 
-    <div class="container">
-        <ul>
-            {% for p in problems %}
-                <li><a href="{{ url_for('problem', problem_id=p['problem_id']) }}">{{ p['title'] }}</a></li>
-            {% endfor %}
-        </ul>
-    </div>
+<div class="container">
+    <ul>
+        {% for p in problems %}
+            <li><a href="{{ url_for('problem', problem_id=p['problem_id']) }}">{{ p['title'] }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
 
-    <div class="footer">
-        <p>&copy; 2025 BCMOJ. All rights reserved.</p>
-    </div>
+<div class="footer">
+    <p>&copy; 2025 BCMOJ. All rights reserved.</p>
+</div>
+
+<script>
+    const username = "{{ username|default('') }}";
+    const userId = "{{ user_id|default('') }}";
+    const userInfoDiv = document.getElementById('userInfo');
+
+    if (username && userId) {
+        userInfoDiv.textContent = `${username} UserID: ${userId}`;
+        userInfoDiv.onclick = async function() {
+            const confirmLogout = confirm('确定要登出吗？');
+            if (confirmLogout) {
+                window.location.href = '/logout';
+            }
+        }
+    } else {
+        userInfoDiv.textContent = '未登录';
+        userInfoDiv.onclick = function() {
+            window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
+        }
+    }
+</script>
 
 </body>
 </html>
