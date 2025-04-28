@@ -96,7 +96,13 @@
     const userId = "{{ user_id|default('') }}";
     const userInfoDiv = document.getElementById('userInfo');
 
-    if (username && userId) {
+    if (username == "None" && userId == "None") {
+        userInfoDiv.textContent = '未登录';
+        userInfoDiv.onclick = function() {
+            window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
+        }
+        
+    } else if (username && userId){
         userInfoDiv.textContent = `${username} UserID: ${userId}`;
         userInfoDiv.onclick = async function() {
             const confirmLogout = confirm('确定要登出吗？');
@@ -104,12 +110,15 @@
                 window.location.href = '/logout';
             }
         }
-    } else {
+    }
+    else {
         userInfoDiv.textContent = '未登录';
         userInfoDiv.onclick = function() {
             window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
         }
     }
+    
+
 </script>
 
 </body>

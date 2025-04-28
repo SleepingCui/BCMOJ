@@ -243,7 +243,8 @@ def problems():
     username = session.get('username')
     user_id = session.get('user_id')
     if not is_logged_in():
-        username = "未登录"
+        username = "None"
+        user_id = "None"
     return render_template('problems.html', problems=problems, username=username, user_id=user_id)
 
 @app.route('/problem/<int:problem_id>')
