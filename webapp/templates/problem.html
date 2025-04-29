@@ -60,6 +60,10 @@
     button:hover {
       background-color: #0056b3;
     }
+    .loading {
+      color: #007bff;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -98,55 +102,75 @@
 </div>
 
 <script>
-const resultMappingStr = {
-  "Accepted": "Accepted",
-  "Security Check Failed": "Security Check Failed",
-  "Compile Error": "Compile Error",
-  "Wrong Answer": "Wrong Answer",
-  "Real Time Limit Exceeded": "Real Time Limit Exceeded",
-  "Runtime Error": "Runtime Error",
-  "System Error": "System Error"
+  const resultMapping = {
+  "-5": "Security Check Failed",
+  "-4": "Compile Error",
+  "-3": "Wrong Answer",
+  "2": "Real Time Limit Exceeded",
+  "4": "Runtime Error",
+  "5": "System Error",
+  "1": "Accepted",
+  "default": "Unknown Status"
 };
 
-document.getElementById('submitForm').addEventListener('submit', async function(event) {
-  event.preventDefault();
-  const formData = new FormData(this);
-
-  const response = await fetch(window.location.pathname.replace('/problem/', '/submit/'), {
-    method: 'POST',
-    body: formData
-  });
-
-  if (response.status === 401) {
-    alert('未登录，请先登录');
-    window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
-    return;
-  }
-
-  const resultArea = document.getElementById('resultArea');
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = '';
-
-  if (response.ok) {
-    const data = await response.json();
+  
+  const resultColorMapping = {
+    "Accepted": "result-pass",  // Green
+    "Security Check Failed": "result-fail",  // Red
+    "Compile Error": "result-fail",  // Red
+    "Wrong Answer": "result-fail",  // Red
+    "Real Time Limit Exceeded": "result-purple",  // Purple
+    "Runtime Error": "result-fail",  // Red
+    "System Error": "result-fail",  // Red
+    "Unknown Status": "result-default"  // Black
+  };
+  
+  document.getElementById('submitForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+  
+    const resultArea = document.getElementById('resultArea');
+    const resultsDiv = document.getElementById('results');
+    
+    // Displaying waiting message while processing
+    resultsDiv.innerHTML = '<p class="loading">Waiting...</p>';
     resultArea.style.display = 'block';
-
-    if (data.status === 'ok') {
-      data.results.forEach(res => {
-        const p = document.createElement('p');
-        const resultText = resultMappingStr[res.result] || '未知错误';
-        p.innerHTML = `测试点 ${res.checkpoint}: <span class="${res.result === 'Accepted' ? 'result-pass' : 'result-fail'}">${resultText}</span> (用时 ${res.time})`;
-        resultsDiv.appendChild(p);
-      });
-    } else {
-      resultsDiv.innerHTML = '<p class="result-fail">评测失败: ' + (data.error || '未知错误') + '</p>';
+  
+    const response = await fetch(window.location.pathname.replace('/problem/', '/submit/'), {
+      method: 'POST',
+      body: formData
+    });
+  
+    if (response.status === 401) {
+      alert('未登录，请先登录');
+      window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
+      return;
     }
-  } else {
-    resultArea.style.display = 'block';
-    resultsDiv.innerHTML = '<p class="result-fail">提交失败，请稍后再试。</p>';
-  }
-});
-</script>
+  
+    if (response.ok) {
+      const data = await response.json();
+      console.log(data);
+      resultsDiv.innerHTML = '';
+  
+      if (data.status === 'ok') {
+        data.results.forEach(res => {
+          const p = document.createElement('p');
+          const resultText = resultMapping[res.result] || resultMapping["default"];
+          const resultClass = resultColorMapping[resultText] || resultColorMapping["Unknown Status"];
+  
+          p.innerHTML = `测试点 ${res.checkpoint}: <span class="${resultClass}">${resultText}</span> (用时 ${res.time} ms)`;
+          resultsDiv.appendChild(p);
+        });
+      } else {
+        resultsDiv.innerHTML = '<p class="result-fail">评测失败: ' + (data.error || '未知错误') + '</p>';
+      }
+    } else {
+      resultsDiv.innerHTML = '<p class="result-fail">提交失败，请稍后再试。</p>';
+    }
+  });
+  </script>
+  
+  
 
 </body>
 </html>

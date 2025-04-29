@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>评测结果</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            padding: 30px;
+            background-color: #f0f2f5;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin: auto;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 18px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .result-pass {
+            color: green;
+            font-weight: bold;
+        }
+        .result-fail {
+            color: red;
+            font-weight: bold;
+        }
+        .result-warning {
+            color: purple;
+            font-weight: bold;
+        }
+        .result-other {
+            color: black;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1 align="center">评测结果</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>测试点</th>
+            <th>结果</th>
+            <th>时间</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set result_mapping = {
+            -5: "Security Check Failed",
+            -4: "Compile Error",
+            -3: "Wrong Answer",
+            2: "Real Time Limit Exceeded",
+            4: "Runtime Error",
+            5: "System Error",
+            1: "Accepted"
+        } %}
+        {% for checkpoint in checkpoint_results %}
+        {% set result_str = result_mapping.get(checkpoint.result, 'Unknown Status') %}
+        {% if checkpoint.result == 1 %}
+            {% set result_class = 'result-pass' %}
+        {% elif checkpoint.result in [-3, -4, -5] %}
+            {% set result_class = 'result-fail' %}
+        {% elif checkpoint.result == 2 %}
+            {% set result_class = 'result-warning' %}
+        {% else %}
+            {% set result_class = 'result-other' %}
+        {% endif %}
+        <tr>
+            <td>{{ checkpoint.checkpoint_id }}</td>
+            <td class="{{ result_class }}">{{ result_str }}</td>
+            <td>{{ checkpoint.time }} ms</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

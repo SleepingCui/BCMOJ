@@ -6,5 +6,5 @@ keywords.txt
 /QSManager/src/test/
 /tmp/
 /QSManager/
-/userdata/
 config.yml
+/userdata/*
