@@ -290,39 +290,30 @@ def submit(problem_id):
     cpp_file.save(temp_path)
 
     try:
-        # 连接数据库
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-
-        # 查询问题和示例
         cursor.execute('SELECT * FROM problems WHERE problem_id = %s', (problem_id,))
         problem = cursor.fetchone()
-
         cursor.execute('SELECT * FROM examples WHERE problem_id = %s ORDER BY example_id', (problem_id,))
         examples = cursor.fetchall()
 
-        # 构造检查点配置
         checkpoints = {}
         for idx, example in enumerate(examples, 1):
             checkpoints[f"{idx}_in"] = example['input']
             checkpoints[f"{idx}_out"] = example['output']
-
         config = {
             "timeLimit": problem['time_limit'],
             "checkpoints": checkpoints,
             "securityCheck": ENABLE_SECURITY_CHECK
         }
-
         json_data = json.dumps(config, indent=2)
 
         results = []
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(30)
             sock.connect((SERVER_HOST, SERVER_PORT))
-
             sock.sendall(len(filename).to_bytes(4, 'big'))
             sock.sendall(filename.encode('utf-8'))
-
             filesize = os.path.getsize(temp_path)
             sock.sendall(filesize.to_bytes(8, 'big'))
 
@@ -353,10 +344,8 @@ def submit(problem_id):
                     for key in data:
                         if key.endswith('_res'):
                             idx = key.split('_')[0]
-                            result_code = data.get(f"{idx}_res", 5)  # 默认为 -1
+                            result_code = data.get(f"{idx}_res", 5)
                             time_used = data.get(f"{idx}_time", 0.0)
-
-                            # 修改映射为整数
                             result_mapping = {
                                 -5: "Security Check Failed",
                                 -4: "Compile Error",
@@ -367,35 +356,31 @@ def submit(problem_id):
                                 1: "Accepted",
                             }
 
-                            # 记录结果并将 result_code 插入到数据库中
                             results.append({
                                 'checkpoint': idx,
-                                'result': result_code,  # 使用整数
-                                'time': time_used  # 保持时间原始格式为 float
+                                'result': result_code, 
+                                'time': time_used
                             })
 
-                    # 获取当前用户ID
+                
                     user_id = session.get('user_id')
-                    print(f'USERID {user_id}')  # 假设你有通过 Flask-Login 获取到用户信息
+                    print(f'USERID {user_id}')
 
-                    # 插入到 judge_results 表
+                
                     cursor.execute("""
                         INSERT INTO judge_results (userid, problemid) 
                         VALUES (%s, %s)
                     """, (user_id, problem_id))
 
-                    judge_result_id = cursor.lastrowid  # 获取插入的 result_id
+                    judge_result_id = cursor.lastrowid
                     print(f"Inserted judge result with ID: {judge_result_id}")
-
-                    # 插入到 checkpoint_results 表
                     for result in results:
                         cursor.execute("""
                             INSERT INTO checkpoint_results (result_id, checkpoint_id, result, time) 
                             VALUES (%s, %s, %s, %s)
                         """, (judge_result_id, result['checkpoint'], result['result'], result['time']))
                     print("Inserted checkpoint results.")
-
-                    conn.commit()  # 提交事务
+                    conn.commit()
                     print("Transaction committed successfully.")
 
                 except json.JSONDecodeError as e:
@@ -405,11 +390,11 @@ def submit(problem_id):
                         'result': 'Invalid JSON response',
                         'time': 'N/A'
                     })
-                    conn.rollback()  # 回滚事务
+                    conn.rollback() 
                     return jsonify({'error': 'Invalid JSON response'}), 500
                 except Exception as e:
                     print(f"Error during database insertion: {e}")
-                    conn.rollback()  # 回滚事务
+                    conn.rollback()  
                     return jsonify({'error': str(e)}), 500
 
         return jsonify({
@@ -433,17 +418,14 @@ def result(result_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # 查询 judge_results
+
     cursor.execute('SELECT * FROM judge_results WHERE result_id = %s', (result_id,))
     judge_result = cursor.fetchone()
 
     if not judge_result:
         return "结果未找到", 404
-
-    # 查询 checkpoint_results
     cursor.execute('SELECT * FROM checkpoint_results WHERE result_id = %s ORDER BY checkpoint_id', (result_id,))
     checkpoint_results = cursor.fetchall()
-
     cursor.close()
     conn.close()
 

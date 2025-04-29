@@ -8,3 +8,5 @@ keywords.txt
 /QSManager/
 config.yml
 /userdata/*
+/webapp/__pycache__/
+
