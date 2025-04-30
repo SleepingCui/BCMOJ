@@ -117,7 +117,6 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
-        avatar = request.files.get('avatar')
 
         if password != confirm_password:
             flash('Passwords do not match', 'error')
@@ -143,14 +142,8 @@ def register():
         ''', (username, email, hashed_password, ''))
         user_id = cursor.lastrowid
 
-        if avatar and avatar.filename:
-            user_folder = os.path.join(app.config['AVATAR_FOLDER'], str(user_id))
-            os.makedirs(user_folder, exist_ok=True)
             
-            avatar_path = os.path.join(user_folder, 'avatar.png')
-            avatar.save(avatar_path)
-            
-            cursor.execute('UPDATE users SET avatar = %s WHERE userid = %s', (avatar_path, user_id))
+        cursor.execute('UPDATE users SET avatar = %s WHERE userid = %s', (0, user_id))
 
         conn.commit()
         cursor.close()
