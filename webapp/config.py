@@ -20,7 +20,7 @@ class ConfigManager:
                 'app_port': 80
             },
             'UPLOAD_FOLDER': 'tmp',
-            'AVATAR_FOLDER': 'userdata',
+            'USERDATA_FOLDER': 'userdata',
             'SECRET_KEY': 'your_secret_key_here',
             'EMAIL_CONFIG': {
                 'sender': 'your_email@example.com',

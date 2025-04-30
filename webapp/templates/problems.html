@@ -10,6 +10,7 @@
             color: #333;
             margin: 0;
             padding: 0;
+            position: relative; 
         }
 
         header {
@@ -107,6 +108,59 @@
             color: #888;
             font-size: 14px;
         }
+
+        .go-to-records-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-decoration: none;
+            z-index: 1000; 
+        }
+
+        .go-to-records-btn:hover {
+            background-color: #0056b3;
+        }
+
+        
+        .admin-console-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-decoration: none;
+            z-index: 1000;
+        }
+
+        .admin-console-btn:hover {
+            background-color: #218838;
+        }
+
+      
+        .problem-manage-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #ffc107;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-decoration: none;
+            z-index: 1000;
+        }
+
+        .problem-manage-btn:hover {
+            background-color: #e0a800;
+        }
     </style>
 </head>
 <body>
@@ -152,9 +206,27 @@
     <p>&copy; 2025 BCMOJ. All rights reserved.</p>
 </div>
 
+{% if user_id not in ['None', ''] %}
+    {% if usergroup in ['admin', 'teacher'] %}
+        <a href="/admin_results" class="go-to-records-btn">所有评测记录</a>
+    {% else %}
+        <a href="{{ url_for('results', userid=user_id) }}" class="go-to-records-btn">评测记录</a>
+    {% endif %}
+
+    {% if usergroup == 'admin' %}
+        <a href="{{ url_for('admin_page') }}" class="admin-console-btn">管理员控制台</a>
+    {% elif usergroup == 'teacher' %}
+>
+        <a href="{{ url_for('teacher_problem_manage') }}" class="problem-manage-btn">题目管理</a>
+    {% endif %}
+{% endif %}
+
+
 <script>
     const username = "{{ username|default('') }}";
     const userId = "{{ user_id|default('') }}";
+    const usergroup = "{{ usergroup|default('') }}";  
+    console.log(usergroup);
     const userInfoDiv = document.getElementById('userInfo');
 
     if (username === "None" && userId === "None") {

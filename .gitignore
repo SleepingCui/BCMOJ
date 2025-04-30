@@ -7,7 +7,5 @@ keywords.txt
 /tmp/
 /QSManager/
 config.yml
-/userdata/*
+/userdata/
 /webapp/__pycache__/
-
-webapp/__pycache__/config.cpython-313.pyc

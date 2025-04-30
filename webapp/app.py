@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort
 from urllib.parse import urlparse, urljoin
 import mysql.connector
 import os
@@ -7,10 +7,16 @@ import json
 import hashlib
 import random
 import smtplib
+import shutil
+import functools
+import subprocess
+from datetime import datetime
 from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
 from functools import wraps
-
+from pygments import highlight
+from pygments.lexers import CppLexer
+from pygments.formatters import HtmlFormatter
 import config 
 
 config = config.get_config()
@@ -19,7 +25,7 @@ print(f"CONFIG: {config}")
 app = Flask(__name__)
 app.secret_key = config['SECRET_KEY']
 app.config['UPLOAD_FOLDER'] = config['UPLOAD_FOLDER']
-app.config['AVATAR_FOLDER'] = config['AVATAR_FOLDER']
+app.config['USERDATA_FOLDER'] = config['USERDATA_FOLDER']
 app.secret_key = 'your_secret_key_here'
 app_port = config['APP_CONFIG']['app_port']
 app_host = config['APP_CONFIG']['app_host']
@@ -29,13 +35,25 @@ DB_CONFIG = config['DB_CONFIG']
 SERVER_HOST = config['JUDGE_CONFIG']['host']
 SERVER_PORT = config['JUDGE_CONFIG']['port']
 ENABLE_SECURITY_CHECK = config['JUDGE_CONFIG']['enableCodeSecurityCheck']
+USERDATA_PATH = config['USERDATA_FOLDER']
+CONFIG_YML_PATH = './config.yml'
+CONFIG_PROPERTIES_PATH = './config.properties'
 
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['AVATAR_FOLDER'], exist_ok=True)
+os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
 
 def is_logged_in():
     return 'user_id' in session
+
+def admin_required(f):
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "usergroup" not in session or session["usergroup"] != "admin":
+            return redirect(url_for("login")) 
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
@@ -101,14 +119,23 @@ def login():
             session.clear()
             session['user_id'] = user['userid']
             session['username'] = user['username']
-            next_page = request.args.get('next')
-            if next_page and is_safe_url(next_page):
-                return redirect(next_page)
-            return redirect(url_for('problems'))
+            session['usergroup'] = user['usergroup']
+
+           
+            if user['usergroup'] == 'admin':
+                next_page = request.args.get('next')
+                if next_page and is_safe_url(next_page):
+                    return redirect(next_page)
+                return redirect(url_for('problems')) 
+            else:
+                
+                return redirect(url_for('problems'))
+
         else:
             flash('Invalid username/email or password', 'error')
 
     return render_template('login.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -137,12 +164,11 @@ def register():
         hashed_password = hashlib.sha1(password.encode()).hexdigest()
 
         cursor.execute('''
-            INSERT INTO users (username, email, passwd, avatar)
-            VALUES (%s, %s, %s, %s)
-        ''', (username, email, hashed_password, ''))
+            INSERT INTO users (username, email, passwd, avatar, usergroup)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (username, email, hashed_password, '', 'user'))
         user_id = cursor.lastrowid
 
-            
         cursor.execute('UPDATE users SET avatar = %s WHERE userid = %s', (0, user_id))
 
         conn.commit()
@@ -158,7 +184,7 @@ def register():
 def forgot_password():
     if request.method == 'POST':
         if 'email' in request.form:
-            # 验证码发送
+    
             email = request.form.get('email')
             
             conn = get_db_connection()
@@ -200,8 +226,7 @@ def forgot_password():
             if user_code != session['verification_code']:
                 flash('Invalid verification code', 'error')
                 return render_template('forgot_password.html', step=2)
-            
-            # 更新密码
+        
             hashed_password = hashlib.sha1(new_password.encode()).hexdigest()
             email = session['verification_email']
             
@@ -255,14 +280,22 @@ def problems():
     cursor.execute(select_sql + where_clause + ' LIMIT %s OFFSET %s', params + [per_page, offset])
     problems = cursor.fetchall()
 
+    user_id = session.get('user_id')
+    usergroup = None
+    if user_id:
+        cursor.execute('SELECT usergroup FROM users WHERE userid = %s', (user_id,))
+        user_data = cursor.fetchone()
+        if user_data:
+            usergroup = user_data['usergroup']
+
     cursor.close()
     conn.close()
 
     username = session.get('username') or "None"
-    user_id = session.get('user_id') or "None"
+    user_id = user_id or "None"
 
     return render_template('problems.html', problems=problems, username=username, user_id=user_id,
-                           query=query, page=page, total_pages=total_pages)
+                           query=query, page=page, total_pages=total_pages, usergroup=usergroup)
 
 
 @app.route('/problem/<int:problem_id>')
@@ -302,6 +335,7 @@ def submit(problem_id):
     temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     cpp_file.save(temp_path)
 
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -359,34 +393,35 @@ def submit(problem_id):
                             idx = key.split('_')[0]
                             result_code = data.get(f"{idx}_res", 5)
                             time_used = data.get(f"{idx}_time", 0.0)
-                            result_mapping = {
-                                -5: "Security Check Failed",
-                                -4: "Compile Error",
-                                -3: "Wrong Answer",
-                                2: "Real Time Limit Exceeded",
-                                4: "Runtime Error",
-                                5: "System Error",
-                                1: "Accepted",
-                            }
-
                             results.append({
                                 'checkpoint': idx,
-                                'result': result_code, 
+                                'result': result_code,
                                 'time': time_used
                             })
 
-                
                     user_id = session.get('user_id')
                     print(f'USERID {user_id}')
-
                 
-                    cursor.execute("""
-                        INSERT INTO judge_results (userid, problemid) 
-                        VALUES (%s, %s)
-                    """, (user_id, problem_id))
+                    submit_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+
+                    cursor.execute("""
+                        INSERT INTO judge_results (userid, problemid, time, filepath) 
+                        VALUES (%s, %s, %s, %s)
+                    """, (user_id, problem_id, submit_time, ''))
                     judge_result_id = cursor.lastrowid
                     print(f"Inserted judge result with ID: {judge_result_id}")
+                    target_dir = os.path.join(
+                        USERDATA_PATH, str(user_id), "upload_problem_answers", 
+                        str(problem_id), str(judge_result_id)
+                    )
+                    os.makedirs(target_dir, exist_ok=True)
+                    cpp_target_path = os.path.join(target_dir, "answer.cpp")
+                    shutil.copy(temp_path, cpp_target_path)
+
+                    cursor.execute("""
+                        UPDATE judge_results SET filepath = %s WHERE result_id = %s
+                    """, (cpp_target_path, judge_result_id))
                     for result in results:
                         cursor.execute("""
                             INSERT INTO checkpoint_results (result_id, checkpoint_id, result, time) 
@@ -398,16 +433,11 @@ def submit(problem_id):
 
                 except json.JSONDecodeError as e:
                     print(f"Error decoding JSON: {e}")
-                    results.append({
-                        'checkpoint': 'Unknown',
-                        'result': 'Invalid JSON response',
-                        'time': 'N/A'
-                    })
-                    conn.rollback() 
+                    conn.rollback()
                     return jsonify({'error': 'Invalid JSON response'}), 500
                 except Exception as e:
                     print(f"Error during database insertion: {e}")
-                    conn.rollback()  
+                    conn.rollback()
                     return jsonify({'error': str(e)}), 500
 
         return jsonify({
@@ -425,27 +455,380 @@ def submit(problem_id):
             conn.close()
 
 
-@app.route('/result/<int:result_id>')
+@app.route('/results/<int:userid>/', defaults={'resultid': None, 'page': 1})
+@app.route('/results/<int:userid>/<int:resultid>', defaults={'page': 1})
+@app.route('/results/<int:userid>/page/<int:page>', defaults={'resultid': None})
 @login_required
-def result(result_id):
+def results(userid, resultid, page):
+    current_user_id = session.get('user_id')
+    current_user_group = session.get('usergroup') 
+    if userid != current_user_id and current_user_group not in ['admin', 'teacher']:
+        return "Unauthorized access", 403
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
+    results_per_page = 20
+    offset = (page - 1) * results_per_page
 
-    cursor.execute('SELECT * FROM judge_results WHERE result_id = %s', (result_id,))
-    judge_result = cursor.fetchone()
+    if resultid is None:
+        cursor.execute('SELECT COUNT(*) FROM judge_results WHERE userid = %s', (userid,))
+        total_results = cursor.fetchone()['COUNT(*)']
+        total_pages = (total_results + results_per_page - 1) // results_per_page
+        cursor.execute('SELECT * FROM judge_results WHERE userid = %s ORDER BY time DESC LIMIT %s OFFSET %s', (userid, results_per_page, offset))
+        results = cursor.fetchall()
 
-    if not judge_result:
-        return "结果未找到", 404
-    cursor.execute('SELECT * FROM checkpoint_results WHERE result_id = %s ORDER BY checkpoint_id', (result_id,))
-    checkpoint_results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        return render_template('result_list.html', results=results, userid=userid, page=page, total_pages=total_pages)
+    else:
+        cursor.execute('SELECT * FROM judge_results WHERE result_id = %s AND userid = %s', (resultid, userid))
+        judge_result = cursor.fetchone()
+
+        if not judge_result:
+            return "评测结果不存在", 404
+
+        cursor.execute('SELECT * FROM checkpoint_results WHERE result_id = %s ORDER BY checkpoint_id', (resultid,))
+        checkpoint_results = cursor.fetchall()
+
+        cpp_code = ""
+        if judge_result['filepath'] and os.path.exists(judge_result['filepath']):
+            with open(judge_result['filepath'], 'r', encoding='utf-8', errors='ignore') as f:
+                cpp_code = f.read()
+
+        formatter = HtmlFormatter(style="friendly", linenos=True, full=False, cssclass="codehilite")
+        highlighted_code = highlight(cpp_code, CppLexer(), formatter)
+        style_defs = formatter.get_style_defs('.codehilite')
+
+        cursor.close()
+        conn.close()
+
+        return render_template('result_detail.html',
+                               judge_result=judge_result,
+                               checkpoint_results=checkpoint_results,
+                               highlighted_code=highlighted_code,
+                               style_defs=style_defs,
+                               userid=userid)
+
+#admin
+@app.route('/admin')
+def admin_page():
+    if 'usergroup' not in session or session['usergroup'] != 'admin':
+        abort(403) 
+    
+    return send_file("templates/admin.html")
+@app.route("/admin/api")
+@admin_required
+def admin_api():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    with open("config.yml", encoding='utf-8') as f:
+        config_yml = f.read()
+    with open("config.properties", encoding='utf-8') as f:
+        config_properties = f.read()
+
+    cursor.execute("SELECT userid, username, email, passwd, 'user' AS usergroup FROM users")
+    users = cursor.fetchall()
+    cursor.execute("SELECT * FROM problems")
+    problems_raw = cursor.fetchall()
+    problems = []
+    for p in problems_raw:
+        cursor.execute("SELECT input, output FROM examples WHERE problem_id = %s", (p["problem_id"],))
+        examples = cursor.fetchall()
+        p["examples"] = examples
+        problems.append(p)
+
     cursor.close()
     conn.close()
 
-    return render_template('result.html', judge_result=judge_result, checkpoint_results=checkpoint_results)
+    return jsonify({
+        "config_yml": config_yml,
+        "config_properties": config_properties,
+        "users": users,
+        "problems": problems
+    })
+
+@app.route("/admin/api/save_config_yml", methods=["POST"])
+@admin_required
+def save_config_yml():
+    content = request.json.get("content", "")
+    with open("config.yml", "w", encoding="utf-8") as f:
+        f.write(content)
+
+    subprocess.Popen(["pkill", "-f", "flask"])
+    return "OK"
+
+@app.route("/admin/api/save_config_properties", methods=["POST"])
+@admin_required
+def save_config_properties():
+    content = request.json.get("content", "")
+    with open("config.properties", "w", encoding="utf-8") as f:
+        f.write(content)
+    return "OK"
+
+@app.route("/admin/api/update_user", methods=["POST"])
+@admin_required
+def update_user():
+    data = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE users SET username=%s, passwd=%s, email=%s, usergroup=%s WHERE userid=%s
+    """, (data["username"], data["passwd"], data["email"], data["usergroup"], data["userid"]))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print("用户信息已更新！")
+    return "OK"
+
+@app.route("/admin/api/delete_user", methods=["POST"])
+@admin_required
+def delete_user():
+    userid = request.json.get("userid")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE userid=%s", (userid,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return "OK"
+
+@app.route("/admin/api/create_problem", methods=["POST"])
+@admin_required
+def create_problem():
+    data = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO problems (title, description, time_limit) VALUES (%s, %s, %s)",
+                   (data["title"], data["description"], data["time_limit"]))
+    problem_id = cursor.lastrowid
+    for ex in data["examples"]:
+        cursor.execute("INSERT INTO examples (problem_id, input, output) VALUES (%s, %s, %s)",
+                       (problem_id, ex["input"], ex["output"]))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return "OK"
+
+@app.route("/admin/api/update_problem", methods=["POST"])
+@admin_required
+def update_problem():
+    data = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE problems SET title=%s, description=%s, time_limit=%s WHERE problem_id=%s",
+                   (data["title"], data["description"], data["time_limit"], data["problem_id"]))
+    cursor.execute("DELETE FROM examples WHERE problem_id=%s", (data["problem_id"],))
+    for ex in data["examples"]:
+        cursor.execute("INSERT INTO examples (problem_id, input, output) VALUES (%s, %s, %s)",
+                       (data["problem_id"], ex["input"], ex["output"]))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return "OK"
+
+@app.route("/admin/api/delete_problem", methods=["POST"])
+@admin_required
+def delete_problem():
+    problem_id = request.json.get("problem_id")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM problems WHERE problem_id=%s", (problem_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return "OK"
 
 
 
+#teacher
+@app.route('/teacher/_api', methods=['GET'])
+def get_teacher_data():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM problems')
+    problems = cursor.fetchall()
+    
+    result = []
+    for problem in problems:
+        problem_id = problem['problem_id']
+        
+        cursor.execute('SELECT * FROM examples WHERE problem_id = %s', (problem_id,))
+        examples = cursor.fetchall()
+        
+        result.append({
+            'problem_id': problem_id,
+            'title': problem['title'],
+            'description': problem['description'],
+            'time_limit': problem['time_limit'],
+            'examples': [{'input': ex['input'], 'output': ex['output']} for ex in examples]
+        })
+
+    cursor.close()
+    conn.close()
+    
+    return jsonify({'problems': result})
+
+@app.route('/teacher/api/teacher_create_problem', methods=['POST'])
+def teacher_create_problem():
+    data = request.get_json()
+    title = data.get('title')
+    description = data.get('description')
+    time_limit = data.get('time_limit')
+    examples = data.get('examples')
+
+    if not title or not description or not time_limit:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('INSERT INTO problems (title, description, time_limit) VALUES (%s, %s, %s)', 
+                   (title, description, time_limit))
+    conn.commit()
+
+    problem_id = cursor.lastrowid
+    for ex in examples:
+        cursor.execute('INSERT INTO examples (input, output, problem_id) VALUES (%s, %s, %s)', 
+                       (ex['input'], ex['output'], problem_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({'message': '问题创建成功'}), 201
+
+@app.route('/teacher/api/teacher_update_problem', methods=['POST'])
+def teacher_update_problem():
+    data = request.get_json()
+    problem_id = data.get('problem_id')
+    title = data.get('title')
+    description = data.get('description')
+    time_limit = data.get('time_limit')
+    examples = data.get('examples')
+
+    if not problem_id or not title or not description or not time_limit:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+
+    cursor.execute('UPDATE problems SET title = %s, description = %s, time_limit = %s WHERE problem_id = %s',
+                   (title, description, time_limit, problem_id))
+    conn.commit()
+    cursor.execute('DELETE FROM examples WHERE problem_id = %s', (problem_id,))
+    conn.commit()
+
+    for ex in examples:
+        cursor.execute('INSERT INTO examples (input, output, problem_id) VALUES (%s, %s, %s)', 
+                       (ex['input'], ex['output'], problem_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({'message': '问题更新成功'}), 200
+
+@app.route('/teacher/api/teacher_delete_problem', methods=['POST'])
+def teacher_delete_problem():
+    data = request.get_json()
+    problem_id = data.get('problem_id')
+
+    if not problem_id:
+        return jsonify({'error': 'Missing problem_id'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM examples WHERE problem_id = %s', (problem_id,))
+    cursor.execute('DELETE FROM problems WHERE problem_id = %s', (problem_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({'message': '问题已删除'}), 200
+@app.route('/teacher/problem_manage', methods=['GET', 'POST'])
+@login_required
+def teacher_problem_manage():
+    usergroup = session.get('usergroup')
+    if usergroup not in ['admin', 'teacher']:
+        return "Unauthorized access", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM problems")
+    problems = cursor.fetchall()
+    if request.method == 'POST':
+        if 'create_problem' in request.form:
+            title = request.form['title']
+            description = request.form['description']
+            time_limit = request.form['time_limit']
+
+            cursor.execute("INSERT INTO problems (title, description, time_limit) VALUES (%s, %s, %s)",
+                           (title, description, time_limit))
+            problem_id = cursor.lastrowid
+
+            examples = request.form.getlist('examples')
+            for example in examples:
+                input_data, output_data = example.split('|')
+                cursor.execute("INSERT INTO examples (problem_id, input, output) VALUES (%s, %s, %s)",
+                               (problem_id, input_data, output_data))
+
+            conn.commit()
+            flash("题目创建成功", "success")
+
+    cursor.close()
+    conn.close()
+
+    return render_template('teacher_problem_manage.html', problems=problems)
+
+
+#admin results
+@app.route('/admin_results', defaults={'page': 1, 'search': ''}, methods=['GET'])
+@app.route('/admin_results/page/<int:page>', methods=['GET'])
+@app.route('/admin_results/search/<search>', defaults={'page': 1}, methods=['GET'])
+@login_required
+def admin_results(page, search):
+    current_user_group = session.get('usergroup')
+    if current_user_group not in ['admin', 'teacher']:
+        return "Unauthorized access", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    results_per_page = 20
+    offset = (page - 1) * results_per_page
+
+    query = 'SELECT * FROM judge_results WHERE 1=1'
+    params = []
+    if search:
+        query += ' AND (result_id LIKE %s OR problemid LIKE %s OR title LIKE %s)'
+        search_pattern = f'%{search}%'
+        params = [search_pattern, search_pattern, search_pattern]
+
+    cursor.execute(query, params)
+    cursor.fetchall()
+    total_results = cursor.rowcount
+    total_pages = (total_results + results_per_page - 1) // results_per_page
+
+    query += f' ORDER BY time DESC LIMIT %s OFFSET %s'
+    params.extend([results_per_page, offset])
+    cursor.execute(query, params)
+    results = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('admin_result_list.html',
+                           results=results,
+                           page=page,
+                           total_pages=total_pages,
+                           search=search)
+    
+
+#run
 
 if __name__ == '__main__':
     app.run(debug=True,port=app_port,host=app_host)
