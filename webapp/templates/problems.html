@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>题目列表</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            position: relative; 
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 36px;
+        }
+
+        .user-info {
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .problem-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .problem-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e9ecef;
+            margin: 10px 0;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        .problem-title {
+            font-size: 18px;
+            color: #007bff;
+            text-decoration: none;
+            flex: 1;
+        }
+
+        .problem-id {
+            font-weight: bold;
+            color: #555;
+            margin-left: 20px;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            padding: 10px;
+            width: 97%;
+            font-size: 16px;
+        }
+
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .pagination button, .pagination a {
+            padding: 6px 12px;
+            margin: 0 5px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .pagination input {
+            width: 60px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .go-to-records-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-decoration: none;
+            z-index: 1000; 
+        }
+
+        .go-to-records-btn:hover {
+            background-color: #0056b3;
+        }
+
+        
+        .admin-console-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-decoration: none;
+            z-index: 1000;
+        }
+
+        .admin-console-btn:hover {
+            background-color: #218838;
+        }
+
+      
+        .problem-manage-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #ffc107;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-decoration: none;
+            z-index: 1000;
+        }
+
+        .problem-manage-btn:hover {
+            background-color: #e0a800;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>题目列表</h1>
+    <div class="user-info" id="userInfo"></div>
+</header>
+
+<div class="container">
+    <form class="search-box" method="get">
+        <input type="text" name="q" placeholder="按标题或题目编号搜索..." value="{{ query|default('') }}" id="searchInput">
+    </form>
+
+    <ul class="problem-list">
+        {% for p in problems %}
+            <li class="problem-item">
+                <a class="problem-title" href="{{ url_for('problem', problem_id=p['problem_id']) }}">{{ p['title'] }}</a>
+                <span class="problem-id">{{ p['problem_id'] }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="{{ url_for('problems', q=query, page=page-1) }}">&laquo; 上一页</a>
+        {% endif %}
+
+        <span>第 {{ page }} 页 / 共 {{ total_pages }} 页</span>
+
+        {% if page < total_pages %}
+            <a href="{{ url_for('problems', q=query, page=page+1) }}">下一页 &raquo;</a>
+        {% endif %}
+
+        <div style="margin-top: 10px;">
+            <input type="number" id="jumpPage" min="1" max="{{ total_pages }}" placeholder="页码">
+            <button onclick="jumpToPage()">跳转</button>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>&copy; 2025 BCMOJ. All rights reserved.</p>
+</div>
+
+{% if user_id not in ['None', ''] %}
+    {% if usergroup in ['admin', 'teacher'] %}
+        <a href="/admin_results" class="go-to-records-btn">所有评测记录</a>
+    {% else %}
+        <a href="{{ url_for('results', userid=user_id) }}" class="go-to-records-btn">评测记录</a>
+    {% endif %}
+
+    {% if usergroup == 'admin' %}
+        <a href="{{ url_for('admin_page') }}" class="admin-console-btn">管理员控制台</a>
+    {% elif usergroup == 'teacher' %}
+>
+        <a href="{{ url_for('teacher_problem_manage') }}" class="problem-manage-btn">题目管理</a>
+    {% endif %}
+{% endif %}
+
+
+<script>
+    const username = "{{ username|default('') }}";
+    const userId = "{{ user_id|default('') }}";
+    const usergroup = "{{ usergroup|default('') }}";  
+    console.log(usergroup);
+    const userInfoDiv = document.getElementById('userInfo');
+
+    if (username === "None" && userId === "None") {
+        userInfoDiv.textContent = '未登录';
+        userInfoDiv.onclick = function() {
+            window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
+        }
+    } else if (username && userId) {
+        userInfoDiv.textContent = `${username} UserID: ${userId}`;
+        userInfoDiv.onclick = function() {
+            const confirmLogout = confirm('确定要登出吗？');
+            if (confirmLogout) {
+                window.location.href = '/logout';
+            }
+        }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const query = this.value;
+        const url = new URL(window.location.href);
+        url.searchParams.set('q', query);
+        window.location.href = url.toString();
+    });
+
+    function jumpToPage() {
+        const input = document.getElementById('jumpPage');
+        const page = parseInt(input.value);
+        const maxPage = {{ total_pages }};
+        const query = "{{ query|default('') }}";
+
+        if (!page || page < 1 || page > maxPage) {
+            alert(`请输入有效页码（1 - ${maxPage}）`);
+            return;
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', page);
+        if (query) url.searchParams.set('q', query);
+        window.location.href = url.toString();
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>评测详情</title>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 20px;
+        }
+        h2, h3 {
+            color: #007bff;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .status-Accepted { color: green; font-weight: bold; }
+        .status-Wrong { color: #dc3545; font-weight: bold; }
+        .status-Time { color: #ffc107; font-weight: bold; }
+        .status-Runtime { color: #fd7e14; font-weight: bold; }
+        .status-Compile { color: #6f42c1; font-weight: bold; }
+        .status-Security { color: #17a2b8; font-weight: bold; }
+        .status-System { color: gray; font-weight: bold; }
+
+
+        {{ style_defs|safe }}
+
+        .codehilite {
+            background-color: #f0f0f0;
+            border-left: 5px solid #007bff;
+            padding: 16px;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>评测 ID: {{ judge_result.result_id }} | 时间: {{ judge_result.time }}</h2>
+
+    <h3>测试点结果</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>测试点编号</th>
+                <th>结果</th>
+                <th>耗时 (ms)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in checkpoint_results %}
+            <tr>
+                <td>{{ r.checkpoint_id }}</td>
+                <td>
+                    {% set code = r.result %}
+                    {% if code == 1 %}
+                        <span class="status-Accepted">Accepted</span>
+                    {% elif code == -3 %}
+                        <span class="status-Wrong">Wrong Answer</span>
+                    {% elif code == 2 %}
+                        <span class="status-Time">Real Time Limit Exceeded</span>
+                    {% elif code == 4 %}
+                        <span class="status-Runtime">Runtime Error</span>
+                    {% elif code == -4 %}
+                        <span class="status-Compile">Compile Error</span>
+                    {% elif code == -5 %}
+                        <span class="status-Security">Security Check Failed</span>
+                    {% else %}
+                        <span class="status-System">System Error</span>
+                    {% endif %}
+                </td>
+                <td>{{ "%.2f"|format(r.time) }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>源代码</h3>
+    <div class="codehilite">
+        {{ highlighted_code|safe }}
+    </div>
+</body>
+</html>

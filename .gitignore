@@ -4,3 +4,8 @@
 config.properties
 keywords.txt
 /QSManager/src/test/
+/tmp/
+/QSManager/
+config.yml
+/userdata/
+/webapp/__pycache__/
