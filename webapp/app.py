@@ -238,19 +238,39 @@ def index():
 
 @app.route('/problems')
 def problems():
+    query = request.args.get('q', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT * FROM problems')
+
+    count_sql = 'SELECT COUNT(*) as total FROM problems'
+    select_sql = 'SELECT * FROM problems'
+    where_clause = ''
+    params = []
+
+    if query:
+        where_clause = ' WHERE title LIKE %s OR problem_id LIKE %s'
+        params = [f'%{query}%', f'%{query}%']
+
+    cursor.execute(count_sql + where_clause, params)
+    total = cursor.fetchone()['total']
+    total_pages = (total + per_page - 1) // per_page
+
+    cursor.execute(select_sql + where_clause + ' LIMIT %s OFFSET %s', params + [per_page, offset])
     problems = cursor.fetchall()
+
     cursor.close()
     conn.close()
 
-    username = session.get('username')
-    user_id = session.get('user_id')
-    if not is_logged_in():
-        username = "None"
-        user_id = "None"
-    return render_template('problems.html', problems=problems, username=username, user_id=user_id)
+    username = session.get('username') or "None"
+    user_id = session.get('user_id') or "None"
+
+    return render_template('problems.html', problems=problems, username=username, user_id=user_id,
+                           query=query, page=page, total_pages=total_pages)
+
 
 @app.route('/problem/<int:problem_id>')
 def problem(problem_id):
