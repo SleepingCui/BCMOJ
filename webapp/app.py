@@ -644,7 +644,7 @@ def delete_problem():
 
 
 #teacher
-@app.route('/teacher/_api', methods=['GET'])
+@app.route('/teacher/teacher_api', methods=['GET'])
 def get_teacher_data():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
