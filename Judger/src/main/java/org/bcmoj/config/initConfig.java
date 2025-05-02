@@ -14,7 +14,6 @@ public class initConfig {
 
         try (OutputStream outputStream = new FileOutputStream("config.properties")) {
             properties.setProperty("ServerPort", "12402");
-            properties.setProperty("enableCodeSecurityCheck", "false");
             properties.setProperty("KeywordsFilePath", "keywords.txt");
             properties.store(outputStream, "Judger Configuration");
 
