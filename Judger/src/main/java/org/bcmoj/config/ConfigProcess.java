@@ -14,7 +14,7 @@ public class ConfigProcess {
         if (!ConfigFilePath.exists()) {
             LOGGER.info("Config file not exist! Generating new one...");
             initConfig.writeProperties();
-            exit(0);
+            return GetConfig.getProperties(key);
         }
         return GetConfig.getProperties(key);
 
