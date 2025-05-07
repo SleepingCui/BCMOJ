@@ -9,3 +9,4 @@ keywords.txt
 config.yml
 /userdata/
 /webapp/__pycache__/
+webapp/__pycache__/config.cpython-313.pyc

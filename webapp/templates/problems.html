@@ -161,6 +161,12 @@
         .problem-manage-btn:hover {
             background-color: #e0a800;
         }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -203,8 +209,9 @@
 </div>
 
 <div class="footer">
-    <p>&copy; 2025 BCMOJ. All rights reserved.</p>
+    <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.</p>
 </div>
+
 
 {% if user_id not in ['None', ''] %}
     {% if usergroup in ['admin', 'teacher'] %}

@@ -76,6 +76,12 @@
             background-color: #e0e0e0;
             cursor: not-allowed;
         }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -123,5 +129,9 @@
             <a href="{{ url_for('admin_results', page=page+1, search=search) }}" {% if page == total_pages %}class="disabled"{% endif %}>下一页</a>
         </li>
     </ul>
+    <div class="footer">
+        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.</p>
+    </div>
+    
 </body>
 </html>
