@@ -855,4 +855,4 @@ def get_contributors():
 #run
 
 if __name__ == '__main__':
-    app.run(debug=True,port=app_port,host=app_host)
+    app.run(port=app_port,host=app_host)
