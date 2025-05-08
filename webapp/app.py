@@ -98,6 +98,8 @@ def send_verification_email(email, verification_code):
         return False
 
 
+
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),

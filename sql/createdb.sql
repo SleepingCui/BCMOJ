@@ -48,3 +48,11 @@ CREATE TABLE IF NOT EXISTS examples (
     FOREIGN KEY (problem_id) REFERENCES problems(problem_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 初始用户admin 密码123456
+INSERT INTO users (username, email, passwd, avatar)
+VALUES (
+    'admin',
+    'admin@example.com',
+    SHA1('123456'),
+    NULL
+);
