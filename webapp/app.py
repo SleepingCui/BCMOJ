@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, send_from_directory
 from urllib.parse import urlparse, urljoin
 import mysql.connector
 import os
@@ -96,6 +96,12 @@ def send_verification_email(email, verification_code):
     except Exception as e:
         print(f"Error sending email: {e}")
         return False
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
