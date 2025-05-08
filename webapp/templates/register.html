@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>注册</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -97,7 +97,7 @@
 <body>
     <div class="page-wrapper">
         <div class="register-container">
-            <h1>Register</h1>
+            <h1>注册</h1>
             
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -109,31 +109,31 @@
             
             <form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="username">Username</label>
+                    <label for="username">用户名</label>
                     <input type="text" id="username" name="username" required>
                 </div>
                 <div class="form-group">
-                    <label for="email">Email</label>
+                    <label for="email">邮箱</label>
                     <input type="email" id="email" name="email" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="password">密码</label>
                     <input type="password" id="password" name="password" required>
                 </div>
                 <div class="form-group">
-                    <label for="confirm_password">Confirm Password</label>
+                    <label for="confirm_password">二次确认密码</label>
                     <input type="password" id="confirm_password" name="confirm_password" required>
                 </div>
-                <button type="submit">Register</button>
+                <button type="submit">注册</button>
             </form>
             <div class="links">
-                Already have an account? <a href="{{ url_for('login') }}">Login</a>
+                已经有账户了? <a href="{{ url_for('login') }}">登录</a>
             </div>
         </div>
     </div>
 
     <div class="footer">
-        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.</p>
+        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
     </div>
 </body>
 </html>

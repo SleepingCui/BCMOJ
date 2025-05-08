@@ -828,6 +828,30 @@ def admin_results(page, search):
                            total_pages=total_pages,
                            search=search)
     
+#about
+GITHUB_REPO = "SleepingCui/BCMOJ"
+
+@app.route("/about")
+def about():
+    return render_template("about.html", repo=GITHUB_REPO)
+
+@app.route("/api/contributors")
+def get_contributors():
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contributors"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        contributors = [
+            {
+                "login": user["login"],
+                "avatar_url": user["avatar_url"],
+                "html_url": user["html_url"]
+            }
+            for user in data
+        ]
+        return jsonify(contributors)
+    else:
+        return jsonify([]), response.status_code
 #run
 
 if __name__ == '__main__':

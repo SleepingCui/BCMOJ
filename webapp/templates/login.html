@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>用户登录</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -99,7 +99,7 @@
 <body>
     <div class="page-wrapper">
         <div class="login-container">
-            <h1>Login</h1>
+            <h1>用户登录</h1>
             
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -111,24 +111,24 @@
             
             <form method="POST" action="{{ url_for('login') }}">
                 <div class="form-group">
-                    <label for="username_or_email">Username or Email</label>
+                    <label for="username_or_email">用户名或邮箱</label>
                     <input type="text" id="username_or_email" name="username_or_email" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="password">密码</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <button type="submit">Login</button>
+                <button type="submit">登录</button>
             </form>
             <div class="links">
-                <a href="{{ url_for('register') }}">Register</a>
-                <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
+                <a href="{{ url_for('register') }}">注册</a>
+                <a href="{{ url_for('forgot_password') }}">忘记密码?</a>
             </div>
         </div>
     </div>
 
     <div class="footer">
-        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.</p>
+        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
     </div>
 </body>
 </html>

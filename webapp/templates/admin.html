@@ -110,18 +110,12 @@
             width: 100%;
         }
 
- 
-        button {
-            padding: 6px 12px;
-            font-size: 14px;
-        }
         .footer {
             text-align: center;
             margin-top: 30px;
             color: #888;
             font-size: 14px;
         }
-
     </style>
 </head>
 <body>
@@ -149,13 +143,11 @@
                     <th>Email</th>
                     <th>用户组</th>
                     <th>操作</th>
-                    <th>更新</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
     </div>
-    
 
     <div class="section">
         <h2>题目管理</h2>
@@ -168,9 +160,8 @@
         <div id="problemEditor"></div>
     </div>
     <div class="footer">
-        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.</p>
+        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
     </div>
-    
 
     <script>
         async function fetchAdminData() {
@@ -185,13 +176,25 @@
         function saveYml() {
             axios.post('/admin/api/save_config_yml', {
                 content: document.getElementById('configYmlContent').value
-            }).then(() => location.reload())
+            }).then(response => {
+                if (response.data === 'OK') {
+                    alert("操作成功!");
+                } else {
+                    alert("操作失败: " + response.data.reason);
+                }
+            })
         }
 
         function saveProperties() {
             axios.post('/admin/api/save_config_properties', {
                 content: document.getElementById('configPropertiesContent').value
-            }).then(() => alert("保存成功"))
+            }).then(response => {
+                if (response.data === 'OK') {
+                    alert("操作成功!");
+                } else {
+                    alert("操作失败: " + response.data.reason);
+                }
+            })
         }
 
         function renderUsers(users) {
@@ -211,12 +214,12 @@
                         </select>
                     </td>
                     <td><button onclick="deleteUser(${user.userid})">删除</button></td>
-                    <td><button onclick="updateUser(${user.userid})">更新</button></td>
                 `
                 row.querySelector('select').value = user.usergroup || 'user'
                 tbody.appendChild(row)
             })
         }
+
         function updateUser(userid) {
             const row = document.querySelector(`#userTable tbody tr:nth-child(${userid})`)
             const data = {
@@ -227,12 +230,16 @@
                 usergroup: row.querySelector('td:nth-child(4) select').value
             }
 
-         axios.post('/admin/api/update_user', data)
-                .then(() => alert("用户信息更新成功"))
+            axios.post('/admin/api/update_user', data)
+                .then(response => {
+                    if (response.data === 'OK') {
+                        alert("操作成功!");
+                    } else {
+                        alert("操作失败: " + response.data.reason);
+                    }
+                })
                 .catch(err => alert("更新失败: " + err.message))
         }
-
-
 
         function userChanged(input, id, field) {
             const row = input.parentElement.parentElement
@@ -244,11 +251,25 @@
                 usergroup: row.children[3].children[0].value
             }
             axios.post('/admin/api/update_user', data)
+                .then(response => {
+                    if (response.data === 'OK') {
+                        alert("操作成功!");
+                    } else {
+                        alert("操作失败: " + response.data.reason);
+                    }
+                })
         }
 
         function deleteUser(id) {
             axios.post('/admin/api/delete_user', { userid: id })
-                .then(() => fetchAdminData())
+                .then(response => {
+                    if (response.data === 'OK') {
+                        alert("操作成功!");
+                        fetchAdminData();
+                    } else {
+                        alert("操作失败: " + response.data.reason);
+                    }
+                })
         }
 
         function renderProblems(problems) {
@@ -329,14 +350,35 @@
             const data = { title, description, time_limit, examples }
             if (problem_id) {
                 data.problem_id = problem_id
-                axios.post('/admin/api/update_problem', data).then(fetchAdminData)
+                axios.post('/admin/api/update_problem', data).then(response => {
+                    if (response.data === 'OK') {
+                        alert("操作成功!");
+                        fetchAdminData();
+                    } else {
+                        alert("操作失败: " + response.data.reason);
+                    }
+                })
             } else {
-                axios.post('/admin/api/create_problem', data).then(fetchAdminData)
+                axios.post('/admin/api/create_problem', data).then(response => {
+                    if (response.data === 'OK') {
+                        alert("操作成功!");
+                        fetchAdminData();
+                    } else {
+                        alert("操作失败: " + response.data.reason);
+                    }
+                })
             }
         }
 
         function deleteProblem(id) {
-            axios.post('/admin/api/delete_problem', { problem_id: id }).then(fetchAdminData)
+            axios.post('/admin/api/delete_problem', { problem_id: id }).then(response => {
+                if (response.data === 'OK') {
+                    alert("操作成功!");
+                    fetchAdminData();
+                } else {
+                    alert("操作失败: " + response.data.reason);
+                }
+            })
         }
 
         fetchAdminData()
