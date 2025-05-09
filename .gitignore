@@ -2,7 +2,7 @@
 /logs/
 *.exe
 config.properties
-keywords.txt
+kkeywords.txt
 /QSManager/src/test/
 /tmp/
 /QSManager/

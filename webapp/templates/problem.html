@@ -5,114 +5,169 @@
   <title>{{ problem.title }} - 提交代码</title>
   <style>
     body {
-      font-family: "Microsoft YaHei", sans-serif;
-      padding: 20px;
-      background-color: #f5f5f5;
+        font-family: "Microsoft YaHei", sans-serif;
+        background-color: #f4f6f9;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        position: relative;
     }
+
+    header {
+        background-color: #007bff;
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
     h1 {
-      color: #333;
+        margin: 0;
+        font-size: 36px;
     }
-    .description {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+    .container {
+        max-width: 900px;
+        margin: 30px auto;
+        padding: 20px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
+
+    .description p {
+        margin: 8px 0;
+    }
+
     .examples {
-      margin-bottom: 20px;
+        margin-top: 30px;
     }
-    .examples pre {
-      background: #eee;
-      padding: 10px;
-      border-radius: 5px;
+
+    .example-pair {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
     }
-    .upload-area {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+
+    .example-half {
+        flex: 1;
     }
-    .result-area {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+    .example-half pre {
+        background: #eee;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: Consolas, monospace;
+        overflow-x: auto;
     }
-    .result-pass {
-      color: green;
-      font-weight: bold;
+
+    .upload-area, .result-area {
+        margin-top: 30px;
     }
-    .result-fail {
-      color: red;
-      font-weight: bold;
+
+    textarea {
+        width: 100%;
+        margin-top: 10px;
+        font-family: Consolas, monospace;
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        resize: vertical;
     }
+
     button {
-      padding: 8px 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
+        margin-top: 10px;
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
     }
+
     button:hover {
-      background-color: #0056b3;
+        background-color: #0056b3;
     }
+
+    .result-pass {
+        color: green;
+        font-weight: bold;
+    }
+
+    .result-fail {
+        color: red;
+        font-weight: bold;
+    }
+
     .loading {
-      color: #007bff;
-      font-weight: bold;
+        color: #007bff;
+        font-weight: bold;
     }
+
     .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #888;
-            font-size: 14px;
-        }
+        text-align: center;
+        margin-top: 30px;
+        color: #888;
+        font-size: 14px;
+    }
   </style>
 </head>
 <body>
 
-<h1>{{ problem.title }}</h1>
+<header>
+  <h1>{{ problem.title }}</h1>
+  <div class="user-info">
+    <a href="/problems" style="color: white;text-decoration: none;">
+      题目列表
+    </a>
+  </div>
+</header>
 
-<div class="description">
-  <h2>题目描述</h2>
-  <p>{{ problem.description }}</p>
-  <p><strong>时间限制:</strong> {{ problem.time_limit }} ms</p>
+
+<div class="container">
+  <div class="description">
+    <h2>题目描述</h2>
+    <p>{{ problem.description }}</p>
+    <p><strong>时间限制:</strong> {{ problem.time_limit }} ms</p>
+  </div>
+
+  <div class="examples">
+    <h2>示例</h2>
+    {% for example in examples %}
+      <div class="example-pair">
+        <div class="example-half">
+          <h4>输入 {{ loop.index }}:</h4>
+          <pre>{{ example.input }}</pre>
+        </div>
+        <div class="example-half">
+          <h4>输出 {{ loop.index }}:</h4>
+          <pre>{{ example.output }}</pre>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="upload-area">
+    <h2>提交你的代码</h2>
+    <form id="submitForm" method="post" enctype="multipart/form-data">
+      <input type="file" name="code" id="fileInput">
+      <textarea id="codePasteArea" placeholder="你也可以在这里粘贴代码..." rows="10"></textarea>
+      <p style="color: #888;">你可以拖动文件到页面任意位置，或将代码粘贴到上方文本框</p>
+      <button type="submit">提交</button>
+    </form>
+  </div>
+
+  <div id="resultArea" class="result-area" style="display:none;">
+    <h2>评测结果</h2>
+    <div id="results"></div>
+  </div>
 </div>
 
-<div class="examples">
-  <h2>示例</h2>
-  {% for example in examples %}
-    <div>
-      <h4>输入示例 {{ loop.index }}:</h4>
-      <pre>{{ example.input }}</pre>
-      <h4>输出示例 {{ loop.index }}:</h4>
-      <pre>{{ example.output }}</pre>
-    </div>
-  {% endfor %}
-</div>
-
-<div class="upload-area">
-  <h2>提交你的代码</h2>
-  <form id="submitForm" method="post" enctype="multipart/form-data">
-    <input type="file" name="code" id="fileInput">
-    <textarea id="codePasteArea" placeholder="你也可以在这里粘贴代码..." rows="10" style="width: 100%; margin-top: 10px;"></textarea>
-    <p style="color: #888;">你可以拖动文件到页面任意位置，或将代码粘贴到上方文本框</p>
-    <button type="submit">提交</button>
-  </form>
-</div>
-
-
-<div id="resultArea" class="result-area" style="display:none;">
-  <h2>评测结果</h2>
-  <div id="results"></div>
-</div>
 <div class="footer">
   <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
 </div>
-
 
 <script>
   const resultMapping = {
@@ -137,7 +192,6 @@
     "Unknown Status": "result-default"
   };
 
-  // 拖放上传支持
   document.addEventListener('dragover', e => e.preventDefault());
   document.addEventListener('drop', e => {
     e.preventDefault();
@@ -160,15 +214,20 @@
 
     const formData = new FormData();
 
-    if (fileInput.files.length > 0) {
-      formData.append('code', fileInput.files[0]);
-    } else if (codeText) {
-      const blob = new Blob([codeText], { type: 'text/x-c++src' });
-      formData.append('code', blob, 'pasted_code.cpp');
-    } else {
-      alert("请上传文件或粘贴代码后再提交。");
-      return;
-    }
+if (fileInput.files.length > 0) {
+  formData.append('code', fileInput.files[0]);
+} else if (codeText) {
+  const blob = new Blob([codeText], { type: 'text/x-c++src' });
+  formData.append('code', blob, 'pasted_code.cpp');
+} else {
+  alert("请上传文件或粘贴代码后再提交。");
+  return;
+}
+
+resultsDiv.innerHTML = '<p class="loading">Waiting...</p>';
+resultArea.style.display = 'block';
+window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
 
     const response = await fetch(window.location.pathname.replace('/problem/', '/submit/'), {
       method: 'POST',
@@ -200,9 +259,6 @@
     }
   });
 </script>
-
-  
-  
 
 </body>
 </html>

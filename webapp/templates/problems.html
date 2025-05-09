@@ -182,13 +182,18 @@
     </form>
 
     <ul class="problem-list">
+    {% if problems %}
         {% for p in problems %}
             <li class="problem-item">
                 <a class="problem-title" href="{{ url_for('problem', problem_id=p['problem_id']) }}">{{ p['title'] }}</a>
                 <span class="problem-id">{{ p['problem_id'] }}</span>
             </li>
         {% endfor %}
-    </ul>
+    {% else %}
+        <li style="text-align: center; padding: 20px; font-size: 18px; color: #888;">没有题目!</li>
+    {% endif %}
+</ul>
+
 
     <div class="pagination">
         {% if page > 1 %}

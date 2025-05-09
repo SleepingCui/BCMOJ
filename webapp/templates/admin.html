@@ -6,17 +6,31 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7fa;
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #f4f6f9;
             color: #333;
             margin: 0;
             padding: 0;
+            position: relative;
         }
 
-        h1 {
-            text-align: center;
-            color: #007bff;
-            margin: 20px 0;
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .user-info {
+            font-size: 16px;
+            cursor: pointer;
         }
 
         .section {
@@ -25,8 +39,8 @@
             border: 1px solid #ddd;
             padding: 20px;
             margin: 20px auto;
-            width: 80%;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .section h2 {
@@ -91,7 +105,7 @@
             width: 45%;
         }
 
-        .section .form-group {
+        .form-group {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -101,34 +115,46 @@
             width: 100px;
         }
 
-        #configYmlContent, #configPropertiesContent {
-            width: 100%;
-            height: 300px;
-        }
-
-        select {
-            width: 100%;
-        }
-
         .footer {
             text-align: center;
             margin-top: 30px;
             color: #888;
             font-size: 14px;
         }
+
+        #configYmlContent, #configPropertiesContent {
+            width: 100%;
+            height: 300px;
+        }
+
+        .back-button {
+            background-color: white;
+            color: #007bff;
+            border: 2px solid white;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #ffffffaa;
+            color: #0056b3;
+        }
     </style>
 </head>
 <body>
-    <h1>管理员控制台</h1>
+    <header>
+        <h1>管理员控制台</h1>
+        <a href="/problems" style="color: white; text-decoration: none;">返回</a>
+    </header>
 
     <div class="section">
-        <h2>编辑app设置（保存后重启应用）</h2>
+        <h2>编辑 app 设置（保存后重启应用）</h2>
         <textarea id="configYmlContent"></textarea><br>
-        <button onclick="saveYml()">保存并重启应用(目前无效)</button>
+        <button onclick="saveYml()">保存并重启应用（目前无效）</button>
     </div>
 
     <div class="section">
-        <h2>编辑 Judger设置</h2>
+        <h2>编辑 Judger 设置</h2>
         <textarea id="configPropertiesContent"></textarea><br>
         <button onclick="saveProperties()">保存</button>
     </div>
@@ -159,6 +185,7 @@
         </div>
         <div id="problemEditor"></div>
     </div>
+
     <div class="footer">
         <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
     </div>
@@ -176,25 +203,13 @@
         function saveYml() {
             axios.post('/admin/api/save_config_yml', {
                 content: document.getElementById('configYmlContent').value
-            }).then(response => {
-                if (response.data === 'OK') {
-                    alert("操作成功!");
-                } else {
-                    alert("操作失败: " + response.data.reason);
-                }
-            })
+            }).then(response => alert(response.data === 'OK' ? "操作成功!" : "操作失败: " + response.data.reason))
         }
 
         function saveProperties() {
             axios.post('/admin/api/save_config_properties', {
                 content: document.getElementById('configPropertiesContent').value
-            }).then(response => {
-                if (response.data === 'OK') {
-                    alert("操作成功!");
-                } else {
-                    alert("操作失败: " + response.data.reason);
-                }
-            })
+            }).then(response => alert(response.data === 'OK' ? "操作成功!" : "操作失败: " + response.data.reason))
         }
 
         function renderUsers(users) {
@@ -220,28 +235,7 @@
             })
         }
 
-        function updateUser(userid) {
-            const row = document.querySelector(`#userTable tbody tr:nth-child(${userid})`)
-            const data = {
-                userid: userid,
-                username: row.querySelector('td:nth-child(1) input').value,
-                passwd: row.querySelector('td:nth-child(2) input').value,
-                email: row.querySelector('td:nth-child(3) input').value,
-                usergroup: row.querySelector('td:nth-child(4) select').value
-            }
-
-            axios.post('/admin/api/update_user', data)
-                .then(response => {
-                    if (response.data === 'OK') {
-                        alert("操作成功!");
-                    } else {
-                        alert("操作失败: " + response.data.reason);
-                    }
-                })
-                .catch(err => alert("更新失败: " + err.message))
-        }
-
-        function userChanged(input, id, field) {
+        function userChanged(input, id) {
             const row = input.parentElement.parentElement
             const data = {
                 userid: id,
@@ -251,24 +245,14 @@
                 usergroup: row.children[3].children[0].value
             }
             axios.post('/admin/api/update_user', data)
-                .then(response => {
-                    if (response.data === 'OK') {
-                        alert("操作成功!");
-                    } else {
-                        alert("操作失败: " + response.data.reason);
-                    }
-                })
+                .then(response => alert(response.data === 'OK' ? "操作成功!" : "操作失败: " + response.data.reason))
         }
 
         function deleteUser(id) {
             axios.post('/admin/api/delete_user', { userid: id })
                 .then(response => {
-                    if (response.data === 'OK') {
-                        alert("操作成功!");
-                        fetchAdminData();
-                    } else {
-                        alert("操作失败: " + response.data.reason);
-                    }
+                    alert(response.data === 'OK' ? "操作成功!" : "操作失败: " + response.data.reason)
+                    fetchAdminData()
                 })
         }
 
@@ -332,9 +316,7 @@
         function addExample(btn) {
             const div = btn.parentElement.querySelector('.examples')
             const ex = document.createElement('div')
-            ex.innerHTML = `
-                输入: <input> 输出: <input>
-            `
+            ex.innerHTML = `输入: <input> 输出: <input>`
             div.appendChild(ex)
         }
 
@@ -348,36 +330,20 @@
                 output: e.querySelectorAll('input')[1].value
             }))
             const data = { title, description, time_limit, examples }
-            if (problem_id) {
-                data.problem_id = problem_id
-                axios.post('/admin/api/update_problem', data).then(response => {
-                    if (response.data === 'OK') {
-                        alert("操作成功!");
-                        fetchAdminData();
-                    } else {
-                        alert("操作失败: " + response.data.reason);
-                    }
-                })
-            } else {
-                axios.post('/admin/api/create_problem', data).then(response => {
-                    if (response.data === 'OK') {
-                        alert("操作成功!");
-                        fetchAdminData();
-                    } else {
-                        alert("操作失败: " + response.data.reason);
-                    }
-                })
-            }
+
+            const url = problem_id ? '/admin/api/update_problem' : '/admin/api/create_problem'
+            if (problem_id) data.problem_id = problem_id
+
+            axios.post(url, data).then(response => {
+                alert(response.data === 'OK' ? "操作成功!" : "操作失败: " + response.data.reason)
+                fetchAdminData()
+            })
         }
 
         function deleteProblem(id) {
             axios.post('/admin/api/delete_problem', { problem_id: id }).then(response => {
-                if (response.data === 'OK') {
-                    alert("操作成功!");
-                    fetchAdminData();
-                } else {
-                    alert("操作失败: " + response.data.reason);
-                }
+                alert(response.data === 'OK' ? "操作成功!" : "操作失败: " + response.data.reason)
+                fetchAdminData()
             })
         }
 

@@ -1,8 +1,5 @@
 import yaml
 from pathlib import Path
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-import time
 from threading import Lock
 
 class ConfigManager:
@@ -11,7 +8,6 @@ class ConfigManager:
         self.config = None
         self.lock = Lock()
         self.load_config()
-        self.setup_watcher()
 
     def get_default_config(self):
         return {
@@ -37,7 +33,7 @@ class ConfigManager:
             },
             'JUDGE_CONFIG': {
                 'host': 'localhost',
-                'port': 5000,
+                'port': 12345,
                 'enableCodeSecurityCheck': False
             }
         }
@@ -55,21 +51,6 @@ class ConfigManager:
     def get_config(self):
         with self.lock:
             return self.config
-
-    def setup_watcher(self):
-        event_handler = ConfigFileEventHandler(self)
-        observer = Observer()
-        observer.schedule(event_handler, path=str(self.config_path.parent), recursive=False)
-        observer.start()
-
-class ConfigFileEventHandler(FileSystemEventHandler):
-    def __init__(self, config_manager):
-        self.config_manager = config_manager
-
-    def on_modified(self, event):
-        if Path(event.src_path) == self.config_manager.config_path:
-            print("Config file modified, reloading...")
-            self.config_manager.load_config()
 
 config_manager = ConfigManager()
 
