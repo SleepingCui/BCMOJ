@@ -65,7 +65,7 @@ ENABLE_SECURITY_CHECK = config['JUDGE_CONFIG']['enableCodeSecurityCheck']
 USERDATA_PATH = config['USERDATA_FOLDER']
 CONFIG_YML_PATH = './config.yml'
 CONFIG_PROPERTIES_PATH = './config.properties'
-
+GITHUB_REPO = "SleepingCui/BCMOJ"
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
@@ -867,7 +867,6 @@ def admin_results(page, search):
                            search=search)
     
 #about
-GITHUB_REPO = "SleepingCui/BCMOJ"
 
 @app.route("/about")
 def about():
@@ -892,8 +891,8 @@ def get_contributors():
     else:
         app.logger.info(jsonify([]), response.status_code)
         return jsonify([]), response.status_code
+    
 #run
-
 if __name__ == '__main__':
     app.logger.info("Starting Flask app...")
     app.logger.info(f"App Config={config}")
