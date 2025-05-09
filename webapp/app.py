@@ -1,5 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, send_from_directory, current_app
 from urllib.parse import urlparse, urljoin
+from logging.handlers import RotatingFileHandler
+from datetime import datetime
+from email.mime.text import MIMEText
+from werkzeug.utils import secure_filename
+from functools import wraps
+from pygments import highlight
+from pygments.lexers import CppLexer
+from pygments.formatters import HtmlFormatter
+
 import mysql.connector
 import os
 import socket
@@ -11,23 +20,40 @@ import shutil
 import functools
 import subprocess
 import requests
-from datetime import datetime
-from email.mime.text import MIMEText
-from werkzeug.utils import secure_filename
-from functools import wraps
-from pygments import highlight
-from pygments.lexers import CppLexer
-from pygments.formatters import HtmlFormatter
+import logging
+
 import config 
 
 config = config.get_config()
-print(f"CONFIG: {config}")
 
 app = Flask(__name__)
+
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, f"web-{datetime.now().strftime('%Y-%m-%d')}.log")
+file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5, encoding='utf-8')
+formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+console_handler.setLevel(logging.INFO)
+
+file_handler.setFormatter(formatter)
+file_handler.setLevel(logging.INFO)
+
+app.logger.addHandler(file_handler)
+app.logger.addHandler(console_handler)
+app.logger.setLevel(logging.INFO)
+werkzeug_logger = logging.getLogger('werkzeug')
+werkzeug_logger.setLevel(logging.INFO)
+werkzeug_logger.addHandler(file_handler)
+werkzeug_logger.addHandler(console_handler)
+
+
 app.secret_key = config['SECRET_KEY']
 app.config['UPLOAD_FOLDER'] = config['UPLOAD_FOLDER']
 app.config['USERDATA_FOLDER'] = config['USERDATA_FOLDER']
-app.secret_key = 'your_secret_key_here'
+app.secret_key = 'secret'
 app_port = config['APP_CONFIG']['app_port']
 app_host = config['APP_CONFIG']['app_host']
 
@@ -68,9 +94,9 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' in session:
-            print(f"[LOGIN CHECK] User logged in: {session.get('username')}")
+            app.logger.info(f"[LOGIN CHECK] User logged in: {session.get('username')}")
         else:
-            print("[LOGIN CHECK] User not logged in")
+            app.logger.info("[LOGIN CHECK] User not logged in")
 
         if 'user_id' not in session:
             if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -94,7 +120,7 @@ def send_verification_email(email, verification_code):
             server.send_message(msg)
         return True
     except Exception as e:
-        print(f"Error sending email: {e}")
+        app.logger.info(f"Error sending email: {e}")
         return False
 
 
@@ -334,7 +360,7 @@ def problem(problem_id):
 @app.route('/submit/<int:problem_id>', methods=['POST'])
 @login_required
 def submit(problem_id):
-    print(f"[LOGIN CHECK] User {'logged in' if is_logged_in() else 'not logged in'}")
+    app.logger.info(f"[LOGIN CHECK] User {'logged in' if is_logged_in() else 'not logged in'}")
     
     cpp_file = request.files.get('code')
     if not cpp_file:
@@ -409,7 +435,7 @@ def submit(problem_id):
                             })
 
                     user_id = session.get('user_id')
-                    print(f'USERID {user_id}')
+                    app.logger.info(f'USERID {user_id}')
                 
                     submit_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -419,7 +445,7 @@ def submit(problem_id):
                         VALUES (%s, %s, %s, %s)
                     """, (user_id, problem_id, submit_time, ''))
                     judge_result_id = cursor.lastrowid
-                    print(f"Inserted judge result with ID: {judge_result_id}")
+                    app.logger.info(f"Inserted judge result with ID: {judge_result_id}")
                     target_dir = os.path.join(
                         USERDATA_PATH, str(user_id), "upload_problem_answers", 
                         str(problem_id), str(judge_result_id)
@@ -436,16 +462,16 @@ def submit(problem_id):
                             INSERT INTO checkpoint_results (result_id, checkpoint_id, result, time) 
                             VALUES (%s, %s, %s, %s)
                         """, (judge_result_id, result['checkpoint'], result['result'], result['time']))
-                    print("Inserted checkpoint results.")
+                    app.logger.info("Inserted checkpoint results.")
                     conn.commit()
-                    print("Transaction committed successfully.")
+                    app.logger.info("Transaction committed successfully.")
 
                 except json.JSONDecodeError as e:
-                    print(f"Error decoding JSON: {e}")
+                    app.logger.info(f"Error decoding JSON: {e}")
                     conn.rollback()
                     return jsonify({'error': 'Invalid JSON response'}), 500
                 except Exception as e:
-                    print(f"Error during database insertion: {e}")
+                    app.logger.info(f"Error during database insertion: {e}")
                     conn.rollback()
                     return jsonify({'error': str(e)}), 500
 
@@ -455,7 +481,7 @@ def submit(problem_id):
         })
 
     except Exception as e:
-        print(f"Error in submit function: {e}")
+        app.logger.info(f"Error in submit function: {e}")
         return jsonify({'error': str(e)}), 500
     finally:
         if os.path.exists(temp_path):
@@ -589,7 +615,7 @@ def update_user():
     conn.commit()
     cursor.close()
     conn.close()
-    print("用户信息已更新！")
+    app.logger.info("用户信息已更新！")
     return "OK"
 
 @app.route("/admin/api/delete_user", methods=["POST"])
@@ -777,6 +803,7 @@ def teacher_problem_manage():
 
             cursor.execute("INSERT INTO problems (title, description, time_limit) VALUES (%s, %s, %s)",
                            (title, description, time_limit))
+            app.logger.info(f"Insert[title={title} description={description} tlimit={time_limit}]")
             problem_id = cursor.lastrowid
 
             examples = request.form.getlist('examples')
@@ -784,8 +811,10 @@ def teacher_problem_manage():
                 input_data, output_data = example.split('|')
                 cursor.execute("INSERT INTO examples (problem_id, input, output) VALUES (%s, %s, %s)",
                                (problem_id, input_data, output_data))
+                app.logger.info(f"Insert[problemid={problem_id} input_data={input_data} output_data={output_data}]")
 
             conn.commit()
+            app.logger.info("Success")
             flash("题目创建成功", "success")
 
     cursor.close()
@@ -830,6 +859,7 @@ def admin_results(page, search):
     cursor.close()
     conn.close()
 
+    app.logger.info(f"Results={results} Page={page}/{total_pages}")
     return render_template('admin_result_list.html',
                            results=results,
                            page=page,
@@ -857,10 +887,14 @@ def get_contributors():
             }
             for user in data
         ]
+        app.logger.info(jsonify(contributors))
         return jsonify(contributors)
     else:
+        app.logger.info(jsonify([]), response.status_code)
         return jsonify([]), response.status_code
 #run
 
 if __name__ == '__main__':
+    app.logger.info("Starting Flask app...")
+    app.logger.info(f"App Config={config}")
     app.run(port=app_port,host=app_host)

@@ -1,0 +1,18 @@
+# Security check keywords list
+# Lines starting with # are ignored
+
+system
+exec
+fork
+popen
+pclose
+chmod
+chown
+rmdir
+unlink
+kill
+shutdown
+reboot
+sudo
+su
+rm

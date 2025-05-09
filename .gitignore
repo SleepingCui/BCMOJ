@@ -8,5 +8,5 @@ kkeywords.txt
 /QSManager/
 config.yml
 /userdata/
+/webapp/logs
 /webapp/__pycache__/
-webapp/__pycache__/config.cpython-313.pyc
