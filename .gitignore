@@ -9,4 +9,5 @@ kkeywords.txt
 config.yml
 /userdata/
 /webapp/logs
-/webapp/__pycache__/
+/webapp/__pycache__
+keywords.txt
