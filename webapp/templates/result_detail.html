@@ -3,60 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>评测详情</title>
-    <style>
-        body {
-            font-family: "Segoe UI", sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            padding: 20px;
-        }
-        h2, h3 {
-            color: #007bff;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-            background-color: white;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            border: 1px solid #dee2e6;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .status-Accepted { color: green; font-weight: bold; }
-        .status-Wrong { color: #dc3545; font-weight: bold; }
-        .status-Time { color: #ffc107; font-weight: bold; }
-        .status-Runtime { color: #fd7e14; font-weight: bold; }
-        .status-Compile { color: #6f42c1; font-weight: bold; }
-        .status-Security { color: #17a2b8; font-weight: bold; }
-        .status-System { color: gray; font-weight: bold; }
-
-
-        {{ style_defs|safe }}
-
-        .codehilite {
-            background-color: #f0f0f0;
-            border-left: 5px solid #007bff;
-            padding: 16px;
-            overflow-x: auto;
-            margin-top: 20px;
-            text-align: left;
-
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #888;
-            font-size: 14px;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/result_detail.css">
 </head>
 <body>
     <h2>评测 ID: {{ judge_result.result_id }} | 时间: {{ judge_result.time }}</h2>
