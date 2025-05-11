@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
-    public static String port = ConfigProcess.GetConfig("ServerPort");
     public static void on_start(){
+        String port = ConfigProcess.GetConfig("ServerPort");
         try {
             logger.info("Starting server on port {}...", port);
             JCFSocketServer server = new JCFSocketServer();
