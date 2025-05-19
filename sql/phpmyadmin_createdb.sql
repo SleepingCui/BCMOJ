@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     passwd VARCHAR(255) NOT NULL,
-    username VARCHAR(255) NOT NULL,
+    usergroup VARCHAR(255) NOT NULL,
     avatar VARCHAR(255)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

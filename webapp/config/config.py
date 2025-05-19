@@ -42,7 +42,6 @@ class ConfigManager:
     def load_config(self):
         with self.lock:
             if not self.config_path.exists():
-                current_app.logger.info("Writing config file...")
                 with open(self.config_path, 'w') as f:
                     yaml.dump(self.get_default_config(), f)
                 self.config = self.get_default_config()

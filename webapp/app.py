@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, send_from_directory, current_app
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, \
+    send_from_directory, current_app
 from urllib.parse import urlparse, urljoin
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
@@ -9,8 +10,10 @@ from pygments import highlight
 from pygments.lexers import CppLexer
 from pygments.formatters import HtmlFormatter
 
+import sys
 import mysql.connector
 import os
+import sys
 import socket
 import json
 import hashlib
@@ -22,7 +25,7 @@ import subprocess
 import requests
 import logging
 
-import config 
+from webapp.config import config
 
 config = config.get_config()
 
@@ -31,7 +34,7 @@ app = Flask(__name__)
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
 os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, f"web-{datetime.now().strftime('%Y-%m-%d')}.log")
-file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5, encoding='utf-8')
+file_handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding='utf-8')
 formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
 
 console_handler = logging.StreamHandler()
@@ -48,7 +51,6 @@ werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.setLevel(logging.INFO)
 werkzeug_logger.addHandler(file_handler)
 werkzeug_logger.addHandler(console_handler)
-
 
 app.secret_key = config['SECRET_KEY']
 app.config['UPLOAD_FOLDER'] = config['UPLOAD_FOLDER']
@@ -70,15 +72,18 @@ GITHUB_REPO = "SleepingCui/BCMOJ"
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
 
+
 def is_logged_in():
     return 'user_id' in session
+
 
 def admin_required(f):
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
         if "usergroup" not in session or session["usergroup"] != "admin":
-            return redirect(url_for("login")) 
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
+
     return decorated_function
 
 
@@ -87,8 +92,10 @@ def is_safe_url(target):
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
+
 def get_db_connection():
     return mysql.connector.connect(**DB_CONFIG)
+
 
 def login_required(f):
     @wraps(f)
@@ -105,7 +112,9 @@ def login_required(f):
                 return redirect(url_for('login', next=request.url))
 
         return f(*args, **kwargs)
+
     return decorated_function
+
 
 def send_verification_email(email, verification_code):
     try:
@@ -124,12 +133,11 @@ def send_verification_email(email, verification_code):
         return False
 
 
-
-
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -140,12 +148,12 @@ def login():
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
+
         cursor.execute('''
             SELECT * FROM users 
             WHERE (username = %s OR email = %s) AND passwd = %s
         ''', (username_or_email, username_or_email, hashed_password))
-        
+
         user = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -156,14 +164,13 @@ def login():
             session['username'] = user['username']
             session['usergroup'] = user['usergroup']
 
-           
             if user['usergroup'] == 'admin':
                 next_page = request.args.get('next')
                 if next_page and is_safe_url(next_page):
                     return redirect(next_page)
-                return redirect(url_for('problems')) 
+                return redirect(url_for('problems'))
             else:
-                
+
                 return redirect(url_for('problems'))
 
         else:
@@ -186,16 +193,16 @@ def register():
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
+
         cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', (username, email))
         existing_user = cursor.fetchone()
-        
+
         if existing_user:
             cursor.close()
             conn.close()
             flash('Username or email already exists', 'error')
             return redirect(url_for('register'))
-        
+
         hashed_password = hashlib.sha1(password.encode()).hexdigest()
 
         cursor.execute('''
@@ -215,79 +222,83 @@ def register():
 
     return render_template('register.html')
 
+
 @app.route('/forgotpasswd', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         if 'email' in request.form:
-    
+
             email = request.form.get('email')
-            
+
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
             cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
             user = cursor.fetchone()
             cursor.close()
             conn.close()
-            
+
             if not user:
                 flash('Email not found', 'error')
                 return redirect(url_for('forgot_password'))
-            
+
             verification_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
             session['verification_code'] = verification_code
             session['verification_email'] = email
-            
+
             if send_verification_email(email, verification_code):
                 flash('Verification code sent to your email', 'success')
                 return render_template('forgot_password.html', step=2)
             else:
                 flash('Failed to send verification code. Please try again.', 'error')
                 return redirect(url_for('forgot_password'))
-        
+
         elif 'verification_code' in request.form:
 
             user_code = request.form.get('verification_code')
             new_password = request.form.get('new_password')
             confirm_password = request.form.get('confirm_password')
-            
+
             if new_password != confirm_password:
                 flash('Passwords do not match', 'error')
                 return render_template('forgot_password.html', step=2)
-            
+
             if 'verification_code' not in session or 'verification_email' not in session:
                 flash('Session expired. Please start again.', 'error')
                 return redirect(url_for('forgot_password'))
-            
+
             if user_code != session['verification_code']:
                 flash('Invalid verification code', 'error')
                 return render_template('forgot_password.html', step=2)
-        
+
             hashed_password = hashlib.sha1(new_password.encode()).hexdigest()
             email = session['verification_email']
-            
+
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('UPDATE users SET passwd = %s WHERE email = %s', (hashed_password, email))
             conn.commit()
             cursor.close()
             conn.close()
-            
+
             session.pop('verification_code', None)
             session.pop('verification_email', None)
-            
+
             flash('Password updated successfully. Please login.', 'success')
             return redirect(url_for('login'))
 
     return render_template('forgot_password.html', step=1)
+
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('problems'))
 
+
 @app.route('/')
 def index():
     return redirect(url_for('problems'))
+
 
 @app.route('/problems')
 def problems():
@@ -357,11 +368,12 @@ def problem(problem_id):
 
     return render_template('problem.html', problem=problem, examples=examples)
 
+
 @app.route('/submit/<int:problem_id>', methods=['POST'])
 @login_required
 def submit(problem_id):
     app.logger.info(f"[LOGIN CHECK] User {'logged in' if is_logged_in() else 'not logged in'}")
-    
+
     cpp_file = request.files.get('code')
     if not cpp_file:
         return jsonify({'error': 'No file uploaded'}), 400
@@ -436,9 +448,8 @@ def submit(problem_id):
 
                     user_id = session.get('user_id')
                     app.logger.info(f'USERID {user_id}')
-                
-                    submit_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+                    submit_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
                     cursor.execute("""
                         INSERT INTO judge_results (userid, problemid, time, filepath) 
@@ -447,7 +458,7 @@ def submit(problem_id):
                     judge_result_id = cursor.lastrowid
                     app.logger.info(f"Inserted judge result with ID: {judge_result_id}")
                     target_dir = os.path.join(
-                        USERDATA_PATH, str(user_id), "upload_problem_answers", 
+                        USERDATA_PATH, str(user_id), "upload_problem_answers",
                         str(problem_id), str(judge_result_id)
                     )
                     os.makedirs(target_dir, exist_ok=True)
@@ -496,7 +507,7 @@ def submit(problem_id):
 @login_required
 def results(userid, resultid, page):
     current_user_id = session.get('user_id')
-    current_user_group = session.get('usergroup') 
+    current_user_group = session.get('usergroup')
     if userid != current_user_id and current_user_group not in ['admin', 'teacher']:
         return "Unauthorized access", 403
 
@@ -510,7 +521,8 @@ def results(userid, resultid, page):
         cursor.execute('SELECT COUNT(*) FROM judge_results WHERE userid = %s', (userid,))
         total_results = cursor.fetchone()['COUNT(*)']
         total_pages = (total_results + results_per_page - 1) // results_per_page
-        cursor.execute('SELECT * FROM judge_results WHERE userid = %s ORDER BY time DESC LIMIT %s OFFSET %s', (userid, results_per_page, offset))
+        cursor.execute('SELECT * FROM judge_results WHERE userid = %s ORDER BY time DESC LIMIT %s OFFSET %s',
+                       (userid, results_per_page, offset))
         results = cursor.fetchall()
 
         cursor.close()
@@ -546,13 +558,16 @@ def results(userid, resultid, page):
                                style_defs=style_defs,
                                userid=userid)
 
-#admin
+
+# admin
 @app.route('/admin')
 def admin_page():
     if 'usergroup' not in session or session['usergroup'] != 'admin':
-        abort(403) 
-    
+        abort(403)
+
     return send_file("templates/admin.html")
+
+
 @app.route("/admin/api")
 @admin_required
 def admin_api():
@@ -585,6 +600,7 @@ def admin_api():
         "problems": problems
     })
 
+
 @app.route("/admin/api/save_config_yml", methods=["POST"])
 @admin_required
 def save_config_yml():
@@ -595,6 +611,7 @@ def save_config_yml():
     subprocess.Popen(["pkill", "-f", "flask"])
     return "OK"
 
+
 @app.route("/admin/api/save_config_properties", methods=["POST"])
 @admin_required
 def save_config_properties():
@@ -602,6 +619,7 @@ def save_config_properties():
     with open("config.properties", "w", encoding="utf-8") as f:
         f.write(content)
     return "OK"
+
 
 @app.route("/admin/api/update_user", methods=["POST"])
 @admin_required
@@ -618,6 +636,7 @@ def update_user():
     app.logger.info("用户信息已更新！")
     return "OK"
 
+
 @app.route("/admin/api/delete_user", methods=["POST"])
 @admin_required
 def delete_user():
@@ -629,6 +648,7 @@ def delete_user():
     cursor.close()
     conn.close()
     return "OK"
+
 
 @app.route("/admin/api/create_problem", methods=["POST"])
 @admin_required
@@ -647,6 +667,7 @@ def create_problem():
     conn.close()
     return "OK"
 
+
 @app.route("/admin/api/update_problem", methods=["POST"])
 @admin_required
 def update_problem():
@@ -664,6 +685,7 @@ def update_problem():
     conn.close()
     return "OK"
 
+
 @app.route("/admin/api/delete_problem", methods=["POST"])
 @admin_required
 def delete_problem():
@@ -677,22 +699,21 @@ def delete_problem():
     return "OK"
 
 
-
-#teacher
+# teacher
 @app.route('/teacher/teacher_api', methods=['GET'])
 def get_teacher_data():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute('SELECT * FROM problems')
     problems = cursor.fetchall()
-    
+
     result = []
     for problem in problems:
         problem_id = problem['problem_id']
-        
+
         cursor.execute('SELECT * FROM examples WHERE problem_id = %s', (problem_id,))
         examples = cursor.fetchall()
-        
+
         result.append({
             'problem_id': problem_id,
             'title': problem['title'],
@@ -703,8 +724,9 @@ def get_teacher_data():
 
     cursor.close()
     conn.close()
-    
+
     return jsonify({'problems': result})
+
 
 @app.route('/teacher/api/teacher_create_problem', methods=['POST'])
 def teacher_create_problem():
@@ -720,13 +742,13 @@ def teacher_create_problem():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute('INSERT INTO problems (title, description, time_limit) VALUES (%s, %s, %s)', 
+    cursor.execute('INSERT INTO problems (title, description, time_limit) VALUES (%s, %s, %s)',
                    (title, description, time_limit))
     conn.commit()
 
     problem_id = cursor.lastrowid
     for ex in examples:
-        cursor.execute('INSERT INTO examples (input, output, problem_id) VALUES (%s, %s, %s)', 
+        cursor.execute('INSERT INTO examples (input, output, problem_id) VALUES (%s, %s, %s)',
                        (ex['input'], ex['output'], problem_id))
 
     conn.commit()
@@ -734,6 +756,7 @@ def teacher_create_problem():
     conn.close()
 
     return jsonify({'message': '问题创建成功'}), 201
+
 
 @app.route('/teacher/api/teacher_update_problem', methods=['POST'])
 def teacher_update_problem():
@@ -750,7 +773,6 @@ def teacher_update_problem():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-
     cursor.execute('UPDATE problems SET title = %s, description = %s, time_limit = %s WHERE problem_id = %s',
                    (title, description, time_limit, problem_id))
     conn.commit()
@@ -758,13 +780,14 @@ def teacher_update_problem():
     conn.commit()
 
     for ex in examples:
-        cursor.execute('INSERT INTO examples (input, output, problem_id) VALUES (%s, %s, %s)', 
+        cursor.execute('INSERT INTO examples (input, output, problem_id) VALUES (%s, %s, %s)',
                        (ex['input'], ex['output'], problem_id))
     conn.commit()
     cursor.close()
     conn.close()
 
     return jsonify({'message': '问题更新成功'}), 200
+
 
 @app.route('/teacher/api/teacher_delete_problem', methods=['POST'])
 def teacher_delete_problem():
@@ -784,6 +807,8 @@ def teacher_delete_problem():
     conn.close()
 
     return jsonify({'message': '问题已删除'}), 200
+
+
 @app.route('/teacher/problem_manage', methods=['GET', 'POST'])
 @login_required
 def teacher_problem_manage():
@@ -823,7 +848,7 @@ def teacher_problem_manage():
     return render_template('teacher_problem_manage.html', problems=problems)
 
 
-#admin results
+# admin results
 @app.route('/admin_results', defaults={'page': 1, 'search': ''}, methods=['GET'])
 @app.route('/admin_results/page/<int:page>', methods=['GET'])
 @app.route('/admin_results/search/<search>', defaults={'page': 1}, methods=['GET'])
@@ -865,12 +890,14 @@ def admin_results(page, search):
                            page=page,
                            total_pages=total_pages,
                            search=search)
-    
-#about
+
+
+# about
 
 @app.route("/about")
 def about():
     return render_template("about.html", repo=GITHUB_REPO)
+
 
 @app.route("/api/contributors")
 def get_contributors():
@@ -891,9 +918,11 @@ def get_contributors():
     else:
         app.logger.info(jsonify([]), response.status_code)
         return jsonify([]), response.status_code
-    
-#run
+
+
+# run
 if __name__ == '__main__':
     app.logger.info("Starting Flask app...")
     app.logger.info(f"App Config={config}")
-    app.run(port=app_port,host=app_host)
+    # app.run(port=app_port,host=app_host)
+    app.run()
