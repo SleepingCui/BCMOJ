@@ -11,3 +11,5 @@ config.yml
 /webapp/logs
 /webapp/__pycache__
 keywords.txt
+.idea/fastRequest/fastRequestCurrentProjectLocalConfig.xml
+webapp/config/__pycache__/*.pyc

@@ -23,7 +23,7 @@ import subprocess
 import requests
 import logging
 
-from webapp.config import config
+from config import config
 
 config = config.get_config()
 
