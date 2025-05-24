@@ -10,10 +10,8 @@ from pygments import highlight
 from pygments.lexers import CppLexer
 from pygments.formatters import HtmlFormatter
 
-import sys
 import mysql.connector
 import os
-import sys
 import socket
 import json
 import hashlib
