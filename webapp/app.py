@@ -363,7 +363,6 @@ def problem(problem_id):
 
     if not problem:
         return "题目不存在", 404
-
     return render_template('problem.html', problem=problem, examples=examples)
 
 
