@@ -1,6 +1,7 @@
 package org.bcmoj.judger;
 
 import java.io.*;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.*;
 
@@ -18,7 +19,6 @@ public class Judger {
     public static final int SYSTEM_ERROR = 5;
     public static final int ACCEPTED = 1;
 
-    // 封装状态码和运行时间的类
     public static class JudgeResult {
         public final int statusCode;
         public final double time;
@@ -28,7 +28,7 @@ public class Judger {
             this.time = time;
         }
     }
-    // 判题机
+
     public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int time) {
         Random random = new Random();
         String programName = "c_" + random.nextInt(1000000);
@@ -42,11 +42,12 @@ public class Judger {
             if (compileProgram(programPath, executableFile) != 0) {
                 return new JudgeResult(COMPILE_ERROR, 0.0);
             }
-            // 运行程序
+            String processedInput = unescapeString(inputContent);
+
             Process runProcess;
             double elapsedTime = 0.0;
             try {
-                RunResult runResult = runProgram(executableFile, inputContent, time);
+                RunResult runResult = runProgram(executableFile, processedInput, time);
                 runProcess = runResult.process;
                 elapsedTime = runResult.elapsedTime;
             } catch (TimeoutException e) {
@@ -57,7 +58,8 @@ public class Judger {
             if (runProcess.exitValue() != 0) {
                 return new JudgeResult(RUNTIME_ERROR, elapsedTime);
             }
-            if (!compareOutput(runProcess.getInputStream(), expectedOutputContent)) {
+            String processedExpected = unescapeString(expectedOutputContent);
+            if (!compareOutput(runProcess.getInputStream(), processedExpected)) {
                 return new JudgeResult(WRONG_ANSWER, elapsedTime);
             }
             return new JudgeResult(ACCEPTED, elapsedTime);
@@ -74,7 +76,7 @@ public class Judger {
             }
         }
     }
-    // 编译程序
+
     private static int compileProgram(File programPath, File executableFile) throws IOException, InterruptedException {
         ProcessBuilder compileBuilder = new ProcessBuilder("g++", "-o", executableFile.getName(), programPath.getAbsolutePath(), "-std=c++11");
         compileBuilder.redirectErrorStream(true);
@@ -87,6 +89,7 @@ public class Judger {
         }
         return compileProcess.waitFor();
     }
+
     private static class RunResult {
         public final Process process;
         public final double elapsedTime;
@@ -96,17 +99,22 @@ public class Judger {
             this.elapsedTime = elapsedTime;
         }
     }
-    // 运行程序
-    private static RunResult runProgram(File executableFile, String inputContent, int time) throws IOException, InterruptedException, TimeoutException {
-        String command = System.getProperty("os.name").toLowerCase().contains("win") ? executableFile.getName() : "./" + executableFile.getName();
+
+    private static RunResult runProgram(File executableFile, String inputContent, int time)
+            throws IOException, InterruptedException, TimeoutException {
+        String command = System.getProperty("os.name").toLowerCase().contains("win")
+                ? executableFile.getName()
+                : "./" + executableFile.getName();
         ProcessBuilder runBuilder = new ProcessBuilder(command);
         runBuilder.redirectErrorStream(true);
         Process runProcess = runBuilder.start();
+
         long startTime = System.nanoTime();
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(runProcess.getOutputStream()))) {
             writer.write(inputContent);
             writer.flush();
         }
+
         if (!runProcess.waitFor(time, TimeUnit.MILLISECONDS)) {
             long endTime = System.nanoTime();
             double elapsedTime = (endTime - startTime) / 1_000_000.0;
@@ -119,11 +127,12 @@ public class Judger {
             }
             throw new TimeoutException("Process timed out after " + elapsedTime + " ms");
         }
+
         long endTime = System.nanoTime();
         double elapsedTime = (endTime - startTime) / 1_000_000.0;
         return new RunResult(runProcess, elapsedTime);
     }
-    // 比较输出
+
     private static boolean compareOutput(InputStream actualOutput, String expectedOutputContent) throws IOException {
         try (BufferedReader actualReader = new BufferedReader(new InputStreamReader(actualOutput))) {
             StringBuilder actualOutputContent = new StringBuilder();
@@ -137,4 +146,35 @@ public class Judger {
             return expectedOutputContent.contentEquals(actualOutputContent);
         }
     }
+
+    private static final Map<Character, Character> ESCAPE_MAP = Map.of(
+            'n', '\n',
+            't', '\t',
+            'r', '\r',
+            '\\', '\\',
+            '\"', '\"',
+            '\'', '\''
+    );
+
+    private static String unescapeString(String str) {
+        if (str == null) return null;
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (c == '\\' && i + 1 < str.length()) {
+                char next = str.charAt(i + 1);
+                if (ESCAPE_MAP.containsKey(next)) {
+                    sb.append(ESCAPE_MAP.get(next));
+                    i++;
+                } else {
+                    sb.append(c);
+                }
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
 }

@@ -13,3 +13,4 @@ config.yml
 keywords.txt
 .idea/fastRequest/fastRequestCurrentProjectLocalConfig.xml
 webapp/config/__pycache__/*.pyc
+/Judger/logs/
