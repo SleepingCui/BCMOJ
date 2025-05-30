@@ -15,7 +15,7 @@ public class initConfig {
         try (OutputStream outputStream = new FileOutputStream("config.properties")) {
             properties.setProperty("ServerPort", "12402");
             properties.setProperty("KeywordsFilePath", "keywords.txt");
-            properties.store(outputStream, "Judger Configuration");
+            properties.store(outputStream, "JudgeServer Configuration");
 
         } catch (IOException e) {
             LOGGER.error("Error writing properties file", e);

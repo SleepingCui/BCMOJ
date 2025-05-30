@@ -5,7 +5,7 @@
     </properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%d] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%r}{magenta}] [%style{%c{1.}}{cyan}] %m%n" disableAnsi="false"/>
+            <PatternLayout pattern="[%d] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{1.}}{cyan}] %m%n" disableAnsi="false"/>
         </Console>
         <RollingFile name="rollingFile" fileName="${LOG_HOME}/log.log"
                      filePattern="${LOG_HOME}/$${date:yyyy-MM-dd}/log-%d{yyyy-MM-dd}-%i.log">
