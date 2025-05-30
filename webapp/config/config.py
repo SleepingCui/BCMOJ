@@ -12,13 +12,10 @@ class ConfigManager:
 
     def get_default_config(self):
         return {
-            'APP_CONFIG': {
-                'app_host': '0.0.0.0',
-                'app_port': 80
-            },
             'UPLOAD_FOLDER': 'tmp',
             'USERDATA_FOLDER': 'userdata',
             'SECRET_KEY': 'your_secret_key_here',
+            'UWSGI_STATS_URL': 'http://0.0.0.0:9191',
             'EMAIL_CONFIG': {
                 'sender': 'your_email@example.com',
                 'password': 'your_email_password',

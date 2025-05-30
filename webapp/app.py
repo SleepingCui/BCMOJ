@@ -15,6 +15,7 @@ import os
 import socket
 import json
 import hashlib
+import time
 import random
 import smtplib
 import shutil
@@ -59,6 +60,7 @@ app_host = config['APP_CONFIG']['app_host']
 
 EMAIL_CONFIG = config['EMAIL_CONFIG']
 DB_CONFIG = config['DB_CONFIG']
+UWSGI_STATS_URL = config['UWSGI_STATS_URL']
 SERVER_HOST = config['JUDGE_CONFIG']['host']
 SERVER_PORT = config['JUDGE_CONFIG']['port']
 ENABLE_SECURITY_CHECK = config['JUDGE_CONFIG']['enableCodeSecurityCheck']
@@ -925,6 +927,73 @@ def get_contributors():
     else:
         app.logger.info(jsonify([]), response.status_code)
         return jsonify([]), response.status_code
+
+
+#uwsgi STATUS
+UWSGI_STATS_URL = 'http://127.0.0.1:9191'
+
+# 缓存折线图数据（示例，只保留最近30个点）
+history = {
+    'requests': [],
+    'workers': [],
+    'timestamps': []
+}
+
+MAX_POINTS = 30
+
+def fetch_uwsgi_stats():
+    try:
+        resp = requests.get(UWSGI_STATS_URL, timeout=2)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        return None
+
+@app.route('/uwsgi_stats')
+def uwsgi_stats():
+    return render_template('uwsgi_stats.html')
+
+@app.route('/uwsgi_stats/data')
+def uwsgi_stats_data():
+    stats = fetch_uwsgi_stats()
+    if not stats:
+        return jsonify({'error': '无法获取uWSGI状态'}), 500
+
+    now = time.time()
+    requests_count = stats.get('requests', 0)
+    workers = len(stats.get('workers', []))
+
+    # 维护历史数据，用于折线图
+    history['timestamps'].append(now)
+    history['requests'].append(requests_count)
+    history['workers'].append(workers)
+
+    # 限制最大点数
+    if len(history['timestamps']) > MAX_POINTS:
+        history['timestamps'].pop(0)
+        history['requests'].pop(0)
+        history['workers'].pop(0)
+
+    # 返回数据
+    return jsonify({
+        'overview': {
+            'total_requests': requests_count,
+            'worker_count': workers,
+            'running': stats.get('running', 0),
+            'idle': stats.get('idle', 0),
+            'signals': stats.get('signals', 0),
+            'listen_queue': stats.get('listen_queue', 0),
+            'max_listen_queue': stats.get('max_listen_queue', 0),
+        },
+        'workers': stats.get('workers', []),
+        'history': {
+            'timestamps': history['timestamps'],
+            'requests': history['requests'],
+            'workers': history['workers'],
+        }
+    })
+
+
 
 
 # run
