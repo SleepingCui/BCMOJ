@@ -24,7 +24,7 @@ import subprocess
 import requests
 import logging
 
-from config import config
+from .config import config
 
 config = config.get_config()
 
@@ -992,13 +992,3 @@ def uwsgi_stats_data():
             'workers': history['workers'],
         }
     })
-
-
-
-
-# run
-if __name__ == '__main__':
-    app.logger.info("Starting Flask app...")
-    app.logger.info(f"App Config={config}")
-    # app.run(port=app_port,host=app_host)
-    app.run()
