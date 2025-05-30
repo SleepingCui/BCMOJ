@@ -72,7 +72,7 @@ public class JCFSocketServer {
                 String originalFileName = new String(fileNameBytes, StandardCharsets.UTF_8);
                 clientLogger.info("[{}] Received filename: {}", clientAddress, originalFileName);
                 long fileSize = dis.readLong();
-                String newFileName = generateRandomName(10) + getFileExtension(originalFileName);
+                String newFileName = generateRandomName() + getFileExtension(originalFileName);
                 outputFile = new File(newFileName);
                 clientLogger.info("[{}] Receiving file ({} bytes), saving as: {}", clientAddress, fileSize, newFileName);
                 try (FileOutputStream fos = new FileOutputStream(outputFile)) {
@@ -94,7 +94,7 @@ public class JCFSocketServer {
                 clientLogger.info("[{}] Received JSON config ({} bytes):\n{}",
                         clientAddress, jsonLength, jsonConfig);
                 clientLogger.info("[{}] Validating JSON config...", clientAddress);
-                if (!validator.validate(jsonConfig, dos)) {
+                if (!validator.validate(jsonConfig, dos,clientLogger)) {
                     clientLogger.warn("[{}] JSON validation failed", clientAddress);
                     return;
                 }
@@ -138,10 +138,10 @@ public class JCFSocketServer {
                 }
             }
         }
-        private String generateRandomName(int length) {
+        private String generateRandomName() {
             Random random = new Random();
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < length; i++) {
+            for (int i = 0; i < 10; i++) {
                 sb.append(random.nextInt(10));
             }
             return sb.toString();
