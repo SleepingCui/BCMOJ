@@ -137,46 +137,6 @@ def favicon():
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username_or_email = request.form.get('username_or_email')
-        password = request.form.get('password')
-        hashed_password = hashlib.sha1(password.encode()).hexdigest()
-
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        cursor.execute('''
-            SELECT * FROM users 
-            WHERE (username = %s OR email = %s) AND passwd = %s
-        ''', (username_or_email, username_or_email, hashed_password))
-
-        user = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
-        if user:
-            session.clear()
-            session['user_id'] = user['userid']
-            session['username'] = user['username']
-            session['usergroup'] = user['usergroup']
-
-            if user['usergroup'] == 'admin':
-                next_page = request.args.get('next')
-                if next_page and is_safe_url(next_page):
-                    return redirect(next_page)
-                return redirect(url_for('problems'))
-            else:
-
-                return redirect(url_for('problems'))
-
-        else:
-            flash('Invalid username/email or password', 'error')
-
-    return render_template('login.html')
-
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -201,7 +161,7 @@ def register():
             flash('Username or email already exists', 'error')
             return redirect(url_for('register'))
 
-        hashed_password = hashlib.sha1(password.encode()).hexdigest()
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
         cursor.execute('''
             INSERT INTO users (username, email, passwd, avatar, usergroup)
@@ -221,11 +181,62 @@ def register():
     return render_template('register.html')
 
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username_or_email = request.form.get('username_or_email')
+        password = request.form.get('password')
+        
+        hashed_password_sha256 = hashlib.sha256(password.encode()).hexdigest()
+        hashed_password_sha1 = hashlib.sha1(password.encode()).hexdigest()
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute('''
+            SELECT * FROM users 
+            WHERE (username = %s OR email = %s) AND passwd = %s
+        ''', (username_or_email, username_or_email, hashed_password_sha256))
+        user = cursor.fetchone()
+        if not user:
+            cursor.execute('''
+                SELECT * FROM users 
+                WHERE (username = %s OR email = %s) AND passwd = %s
+            ''', (username_or_email, username_or_email, hashed_password_sha1))
+            user = cursor.fetchone()
+            if user:
+                cursor.execute('''
+                    UPDATE users SET passwd = %s 
+                    WHERE userid = %s
+                ''', (hashed_password_sha256, user['userid']))
+                conn.commit()
+                app.logger.info(f"Upgraded password hash to SHA256 for user: {user['username']}")
+
+        cursor.close()
+        conn.close()
+
+        if user:
+            session.clear()
+            session['user_id'] = user['userid']
+            session['username'] = user['username']
+            session['usergroup'] = user['usergroup']
+
+            if user['usergroup'] == 'admin':
+                next_page = request.args.get('next')
+                if next_page and is_safe_url(next_page):
+                    return redirect(next_page)
+                return redirect(url_for('problems'))
+            else:
+                return redirect(url_for('problems'))
+        else:
+            flash('Invalid username/email or password', 'error')
+
+    return render_template('login.html')
+
 @app.route('/forgotpasswd', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         if 'email' in request.form:
-
             email = request.form.get('email')
 
             conn = get_db_connection()
@@ -251,7 +262,6 @@ def forgot_password():
                 return redirect(url_for('forgot_password'))
 
         elif 'verification_code' in request.form:
-
             user_code = request.form.get('verification_code')
             new_password = request.form.get('new_password')
             confirm_password = request.form.get('confirm_password')
@@ -268,7 +278,7 @@ def forgot_password():
                 flash('Invalid verification code', 'error')
                 return render_template('forgot_password.html', step=2)
 
-            hashed_password = hashlib.sha1(new_password.encode()).hexdigest()
+            hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
             email = session['verification_email']
 
             conn = get_db_connection()

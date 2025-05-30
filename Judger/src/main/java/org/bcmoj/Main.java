@@ -22,7 +22,7 @@ public class Main {
             System.exit(1);
         }
     }
-    public static void main(String[] args) {
+    public static void logo(){
         String logo = """
                   ____   ____ __  __  ___      _       _ ____                          \s
                  | __ ) / ___|  \\/  |/ _ \\    | |     | / ___|  ___ _ ____   _____ _ __\s
@@ -33,6 +33,9 @@ public class Main {
                     BCMOJ Judge Server v1.0-SNAPSHOT  Developed by SleepingCui
                 """;
         System.out.println(logo);
+    }
+    public static void main(String[] args) {
+        logo();
         on_start();
     }
 }
