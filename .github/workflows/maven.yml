@@ -43,7 +43,7 @@ jobs:
         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
         echo "Searching for jar-with-dependencies.jar..."
-        JAR_PATH=$(find target -maxdepth 1 -name "*-jar-with-dependencies.jar" | head -n 1)
+        JAR_PATH=$(find target -maxdepth 1 -name "*.jar" | head -n 1)
 
         if [ -z "$JAR_PATH" ]; then
           echo "::error::No JAR file found in target/. Build may have failed."
