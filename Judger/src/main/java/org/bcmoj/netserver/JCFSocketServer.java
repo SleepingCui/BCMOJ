@@ -25,7 +25,6 @@ public class JCFSocketServer {
         try {
             serverSocket = new ServerSocket(port);
             logger.info("File server started on port {}", port);
-            logger.info("Waiting for client connections...");
             while (!serverSocket.isClosed()) {
                 try {
                     Socket clientSocket = serverSocket.accept();

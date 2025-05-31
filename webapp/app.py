@@ -9,6 +9,7 @@ from functools import wraps
 from pygments import highlight
 from pygments.lexers import CppLexer
 from pygments.formatters import HtmlFormatter
+from colorlog import ColoredFormatter
 
 import mysql.connector
 import os
@@ -26,48 +27,78 @@ import logging
 
 from .config import config
 
-config = config.get_config()
-
 app = Flask(__name__)
+
+#config
+config = config.get_config()
+DISABLE_COLOR_LOG = config['app_settings']['disable_color_log']
+EMAIL_CONFIG = config['email_config']
+UWSGI_STATS_URL = config['app_settings']['uwsgi_stats_url']
+SERVER_HOST = config['judge_config']['judge_host']
+SERVER_PORT = config['judge_config']['judge_port']
+ENABLE_SECURITY_CHECK = config['judge_config']['enable_code_security_check']
+USERDATA_PATH = config['app_settings']['userdata_folder']
+SECRET_KEY = config['app_settings']['secret_key']
+CONFIG_YML_PATH = './config.yml'
+CONFIG_PROPERTIES_PATH = './config.properties'
+GITHUB_REPO = "SleepingCui/BCMOJ"
+
+raw_db_config = config['db_config']
+DB_CONFIG = {
+    'database': raw_db_config['db_name'],
+    'host': raw_db_config['db_host'],
+    'user': raw_db_config['db_user'],
+    'password': raw_db_config['db_password'],
+    'port': raw_db_config['db_port'],
+}
+#app config
+app.secret_key = SECRET_KEY
+app.config['UPLOAD_FOLDER'] = config['app_settings']['upload_folder']
+app.config['USERDATA_FOLDER'] = config['app_settings']['userdata_folder']
+app.secret_key = config['app_settings']['secret_key']
+
+#logger
+for handler in list(app.logger.handlers):
+    app.logger.removeHandler(handler)
 
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
 os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, f"web-{datetime.now().strftime('%Y-%m-%d')}.log")
+
+file_formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
 file_handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding='utf-8')
-formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
-
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
-console_handler.setLevel(logging.INFO)
-
-file_handler.setFormatter(formatter)
+file_handler.setFormatter(file_formatter)
 file_handler.setLevel(logging.INFO)
 
+console_handler = logging.StreamHandler()
+
+if not DISABLE_COLOR_LOG:
+    color_formatter = ColoredFormatter(
+        '%(log_color)s[%(asctime)s] [%(levelname)s]%(reset)s %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG': 'cyan',
+            'INFO': 'green',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+    console_handler.setFormatter(color_formatter)
+else:
+    console_handler.setFormatter(file_formatter)
+console_handler.setLevel(logging.INFO)
 app.logger.addHandler(file_handler)
 app.logger.addHandler(console_handler)
 app.logger.setLevel(logging.INFO)
+
 werkzeug_logger = logging.getLogger('werkzeug')
-werkzeug_logger.setLevel(logging.INFO)
 werkzeug_logger.addHandler(file_handler)
 werkzeug_logger.addHandler(console_handler)
-
-app.secret_key = config['SECRET_KEY']
-app.config['UPLOAD_FOLDER'] = config['UPLOAD_FOLDER']
-app.config['USERDATA_FOLDER'] = config['USERDATA_FOLDER']
-app.secret_key = 'secret'
-app_port = config['APP_CONFIG']['app_port']
-app_host = config['APP_CONFIG']['app_host']
-
-EMAIL_CONFIG = config['EMAIL_CONFIG']
-DB_CONFIG = config['DB_CONFIG']
-UWSGI_STATS_URL = config['UWSGI_STATS_URL']
-SERVER_HOST = config['JUDGE_CONFIG']['host']
-SERVER_PORT = config['JUDGE_CONFIG']['port']
-ENABLE_SECURITY_CHECK = config['JUDGE_CONFIG']['enableCodeSecurityCheck']
-USERDATA_PATH = config['USERDATA_FOLDER']
-CONFIG_YML_PATH = './config.yml'
-CONFIG_PROPERTIES_PATH = './config.properties'
-GITHUB_REPO = "SleepingCui/BCMOJ"
+werkzeug_logger.setLevel(logging.INFO)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
@@ -129,7 +160,7 @@ def send_verification_email(email, verification_code):
             server.send_message(msg)
         return True
     except Exception as e:
-        app.logger.info(f"Error sending email: {e}")
+        app.logger.error(f"Error sending email: {e}")
         return False
 
 
@@ -487,7 +518,7 @@ def submit(problem_id):
                     app.logger.info("Transaction committed successfully.")
 
                 except json.JSONDecodeError as e:
-                    app.logger.info(f"Error decoding JSON: {e}")
+                    app.logger.error(f"Error decoding JSON: {e}")
                     conn.rollback()
                     return jsonify({'error': 'Invalid JSON response'}), 500
                 except Exception as e:
@@ -501,7 +532,7 @@ def submit(problem_id):
         })
 
     except Exception as e:
-        app.logger.info(f"Error in submit function: {e}")
+        app.logger.error(f"Error in submit function: {e}")
         return jsonify({'error': str(e)}), 500
     finally:
         if os.path.exists(temp_path):
@@ -642,7 +673,7 @@ def update_user():
     conn.commit()
     cursor.close()
     conn.close()
-    app.logger.info("用户信息已更新！")
+    app.logger.info("User information has been updated!")
     return "OK"
 
 
@@ -930,15 +961,12 @@ def get_contributors():
 
 
 #uwsgi STATUS
-UWSGI_STATS_URL = 'http://127.0.0.1:9191'
 
-# 缓存折线图数据（示例，只保留最近30个点）
 history = {
     'requests': [],
     'workers': [],
     'timestamps': []
 }
-
 MAX_POINTS = 30
 
 def fetch_uwsgi_stats():
@@ -963,18 +991,14 @@ def uwsgi_stats_data():
     requests_count = stats.get('requests', 0)
     workers = len(stats.get('workers', []))
 
-    # 维护历史数据，用于折线图
     history['timestamps'].append(now)
     history['requests'].append(requests_count)
     history['workers'].append(workers)
-
-    # 限制最大点数
     if len(history['timestamps']) > MAX_POINTS:
         history['timestamps'].pop(0)
         history['requests'].pop(0)
         history['workers'].pop(0)
 
-    # 返回数据
     return jsonify({
         'overview': {
             'total_requests': requests_count,
