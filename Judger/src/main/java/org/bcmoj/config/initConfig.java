@@ -14,6 +14,7 @@ public class initConfig {
 
         try (OutputStream outputStream = new FileOutputStream("config.properties")) {
             properties.setProperty("ServerPort", "12345");
+            properties.setProperty("ServerIP", "0.0.0.0");
             properties.setProperty("KeywordsFilePath", "keywords.txt");
             properties.store(outputStream, "JudgeServer Configuration");
 

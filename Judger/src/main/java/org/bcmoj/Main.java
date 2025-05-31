@@ -7,18 +7,44 @@ import org.slf4j.LoggerFactory;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
-    public static void on_start(){
-        String port = ConfigProcess.GetConfig("ServerPort");
+    public static void main(String[] args) {
+        logo();
+        on_start(args);
+    }
+
+    private static void on_start(String[] args) {
+        String portStr = (args.length > 0 && !args[0].isBlank()) ? args[0] : ConfigProcess.GetConfig("ServerPort");
+        String ip = (args.length > 1 && !args[1].isBlank()) ? args[1] : ConfigProcess.GetConfig("ServerIP");
+
+        if (portStr == null || portStr.isBlank()) {
+            logger.error("Port not specified: {}",portStr);
+            System.exit(1);
+        }
+
+        if (ip == null || ip.isBlank()) {
+            logger.error("IP address not specified: {}",ip);
+            System.exit(1);
+        }
+        int port;
         try {
-            logger.info("Starting server on port {}...", port);
+            port = Integer.parseInt(portStr);
+        } catch (NumberFormatException e) {
+            logger.error("Invalid port: {}", portStr);
+            System.exit(1);
+            return;
+        }
+
+        try {
+            logger.info("Starting server at {}:{}", ip, port);
             JCFSocketServer server = new JCFSocketServer();
-            server.start(Integer.parseInt(port));
+            server.start(port, ip);
+
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                logger.info("Shutting down server...");
+                logger.info("Server shutting down.");
                 server.stop();
             }));
         } catch (Exception e) {
-            logger.error("Server fatal error: ", e);
+            logger.error("Startup failed: {}", e.toString());
             System.exit(1);
         }
     }
@@ -34,8 +60,5 @@ public class Main {
                 """;
         System.out.println(logo);
     }
-    public static void main(String[] args) {
-        logo();
-        on_start();
-    }
+
 }

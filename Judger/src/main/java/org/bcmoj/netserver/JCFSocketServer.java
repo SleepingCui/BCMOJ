@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -21,10 +22,12 @@ public class JCFSocketServer {
     private ServerSocket serverSocket;
     private final JsonValidator validator = new JsonValidator();
 
-    public void start(int port) {
+    public void start(int port,String host) {
         try {
-            serverSocket = new ServerSocket(port);
-            logger.info("File server started on port {}", port);
+            serverSocket = new ServerSocket();
+            serverSocket.bind(new InetSocketAddress(host, port));
+            logger.info("File server started on {}:{}", host, port);
+
             while (!serverSocket.isClosed()) {
                 try {
                     Socket clientSocket = serverSocket.accept();
@@ -42,6 +45,7 @@ public class JCFSocketServer {
             stop();
         }
     }
+
 
     public void stop() {
         try {
