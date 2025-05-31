@@ -33,7 +33,7 @@ jobs:
       run: |
         mvn clean package
 
-    - name: Rename and Prepare Artifact
+    - name: Rename and Prepare Artifacts
       working-directory: ./Judger
       run: |
         echo "Contents of target/:"
@@ -43,21 +43,35 @@ jobs:
         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
         echo "Searching for jar-with-dependencies.jar..."
-        JAR_PATH=$(find target -maxdepth 1 -name "*.jar" | head -n 1)
+        JAR_DEP_PATH=$(find target -maxdepth 1 -name "*-jar-with-dependencies.jar" | head -n 1)
+        echo "Searching for normal jar..."
+        JAR_PATH=$(find target -maxdepth 1 -name "*.jar" ! -name "*-jar-with-dependencies.jar" | head -n 1)
 
-        if [ -z "$JAR_PATH" ]; then
-          echo "::error::No JAR file found in target/. Build may have failed."
+        if [ -z "$JAR_DEP_PATH" ]; then
+          echo "::error::No jar-with-dependencies.jar found in target/. Build may have failed."
           exit 1
         fi
+
+        if [ -z "$JAR_PATH" ]; then
+          echo "::error::No normal jar found in target/. Build may have failed."
+          exit 1
+        fi
+
+        NEW_NAME_DEP="Judger-${COMMIT_ID}-${VERSION}-with-dependencies.jar"
+        echo "Renaming $JAR_DEP_PATH to $NEW_NAME_DEP"
+        mv "$JAR_DEP_PATH" "target/$NEW_NAME_DEP"
 
         NEW_NAME="Judger-${COMMIT_ID}-${VERSION}.jar"
         echo "Renaming $JAR_PATH to $NEW_NAME"
         mv "$JAR_PATH" "target/$NEW_NAME"
 
         echo "judger_jar_path=Judger/target/$NEW_NAME" >> $GITHUB_ENV
+        echo "judger_jar_dep_path=Judger/target/$NEW_NAME_DEP" >> $GITHUB_ENV
 
-    - name: Upload Artifact
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: judger-jar
-        path: ${{ env.judger_jar_path }}
+        name: judger-jars
+        path: |
+          ${{ env.judger_jar_path }}
+          ${{ env.judger_jar_dep_path }}
