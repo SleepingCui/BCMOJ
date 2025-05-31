@@ -20,7 +20,6 @@ public class Main {
             logger.error("Port not specified: {}",portStr);
             System.exit(1);
         }
-
         if (ip == null || ip.isBlank()) {
             logger.error("IP address not specified: {}",ip);
             System.exit(1);
@@ -33,7 +32,6 @@ public class Main {
             System.exit(1);
             return;
         }
-
         try {
             logger.info("Starting server at {}:{}", ip, port);
             JCFSocketServer server = new JCFSocketServer();
