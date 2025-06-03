@@ -10,8 +10,10 @@ from pygments import highlight
 from pygments.lexers import CppLexer
 from pygments.formatters import HtmlFormatter
 from colorlog import ColoredFormatter
+from logging.handlers import RotatingFileHandler
 
 import mysql.connector
+import contextvars
 import os
 import socket
 import json
@@ -58,23 +60,33 @@ app.config['USERDATA_FOLDER'] = config['app_settings']['userdata_folder']
 app.secret_key = config['app_settings']['secret_key']
 
 #logger
-for handler in list(app.logger.handlers):
-    app.logger.removeHandler(handler)
+log_route_context = contextvars.ContextVar('log_route', default='main')
+class RouteNameFilter(logging.Filter):
+    def filter(self, record):
+        record.route_name = log_route_context.get()
+        return True
 
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
 os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, f"web-{datetime.now().strftime('%Y-%m-%d')}.log")
 
-file_formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
-file_handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding='utf-8')
+log_format = '[%(asctime)s] [%(levelname)s] [%(route_name)s] %(message)s'
+
+file_formatter = logging.Formatter(log_format)
+file_handler = RotatingFileHandler(
+    log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding='utf-8'
+)
+
 file_handler.setFormatter(file_formatter)
 file_handler.setLevel(logging.INFO)
-
+file_handler.addFilter(RouteNameFilter())
 console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.addFilter(RouteNameFilter())
 
-if not DISABLE_COLOR_LOG:
+if 'DISABLE_COLOR_LOG' not in globals() or not DISABLE_COLOR_LOG:
     color_formatter = ColoredFormatter(
-        '%(log_color)s[%(asctime)s] [%(levelname)s]%(reset)s %(message)s',
+        '%(log_color)s' + log_format + '%(reset)s',
         datefmt='%Y-%m-%d %H:%M:%S',
         reset=True,
         log_colors={
@@ -84,21 +96,31 @@ if not DISABLE_COLOR_LOG:
             'ERROR': 'red',
             'CRITICAL': 'red,bg_white',
         },
-        secondary_log_colors={},
         style='%'
     )
     console_handler.setFormatter(color_formatter)
 else:
     console_handler.setFormatter(file_formatter)
-console_handler.setLevel(logging.INFO)
+
+for handler in list(app.logger.handlers):
+    app.logger.removeHandler(handler)
+
 app.logger.addHandler(file_handler)
 app.logger.addHandler(console_handler)
 app.logger.setLevel(logging.INFO)
-
 werkzeug_logger = logging.getLogger('werkzeug')
+werkzeug_logger.handlers.clear()
 werkzeug_logger.addHandler(file_handler)
 werkzeug_logger.addHandler(console_handler)
 werkzeug_logger.setLevel(logging.INFO)
+werkzeug_logger.addFilter(RouteNameFilter())
+
+@app.before_request
+def set_log_route_name():
+    try:
+        log_route_context.set(request.path)
+    except RuntimeError:
+        log_route_context.set('unknown')
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
