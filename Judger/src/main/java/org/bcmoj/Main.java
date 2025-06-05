@@ -5,6 +5,17 @@ import org.bcmoj.netserver.JCFSocketServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * BCMOJ Judge Server
+ * <p>
+ *     Judge Server Main Program
+ * </p>
+ * @author SleepingCui
+ * @since 2025
+ * @version 1.0-SNAPSHOT
+ * @see <a href="https://github.com/SleepingCui/BCMOJ">Github Repository</a>
+ */
+
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static void main(String[] args) {
@@ -12,40 +23,39 @@ public class Main {
         on_start(args);
     }
 
-    private static void on_start(String[] args) {
-        String portStr = (args.length > 0 && !args[0].isBlank()) ? args[0] : ConfigProcess.GetConfig("ServerPort");
-        String ip = (args.length > 1 && !args[1].isBlank()) ? args[1] : ConfigProcess.GetConfig("ServerIP");
 
-        if (portStr == null || portStr.isBlank()) {
-            logger.error("Port not specified: {}",portStr);
+    private static String getConfigValue(String[] args, int index, String configKey) {
+        return (args.length > index && !args[index].isBlank()) ? args[index] : ConfigProcess.GetConfig(configKey);
+    }
+    private static boolean isBlank(String str) {
+        return str == null || str.isBlank();
+    }
+    private static void on_start(String[] args) {
+        String portStr = getConfigValue(args, 0, "ServerPort");
+        String ip = getConfigValue(args, 1, "ServerIP");
+
+        if (isBlank(portStr) || isBlank(ip)) {
+            logger.error("Configuration missing: Port={}, IP={}", portStr, ip);
             System.exit(1);
-        }
-        if (ip == null || ip.isBlank()) {
-            logger.error("IP address not specified: {}",ip);
-            System.exit(1);
-        }
-        int port;
-        try {
-            port = Integer.parseInt(portStr);
-        } catch (NumberFormatException e) {
-            logger.error("Invalid port: {}", portStr);
-            System.exit(1);
-            return;
         }
         try {
-            logger.info("Starting server at {}:{}", ip, port);
             JCFSocketServer server = new JCFSocketServer();
-            server.start(port, ip);
+            server.start(Integer.parseInt(portStr), ip);
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 logger.info("Server shutting down.");
                 server.stop();
             }));
+            logger.info("Starting server at {}:{}", ip, portStr);
+        } catch (NumberFormatException e) {
+            logger.error("Invalid port: {}", portStr);
+            System.exit(1);
         } catch (Exception e) {
             logger.error("Startup failed: {}", e.toString());
             System.exit(1);
         }
     }
+
     public static void logo(){
         String logo = """
                   ____   ____ __  __  ___      _       _ ____                          \s

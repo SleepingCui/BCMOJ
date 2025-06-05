@@ -9,7 +9,34 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
-
+/**
+ * JSON Configuration Validator
+ * <p>
+ * Validates the structure and content of judge configuration JSON payloads.
+ * Ensures required fields are present and properly formatted before processing.
+ * </p>
+ *
+ * <p><b>Validation Rules:</b></p>
+ * <ul>
+ *   <li>Requires <code>timeLimit</code> (positive integer)</li>
+ *   <li>Requires <code>securityCheck</code> boolean field</li>
+ *   <li>Requires <code>checkpoints</code> object with matching input/output pairs</li>
+ *   <li>Ensures all test inputs (<code>*_in</code>) have corresponding outputs (<code>*_out</code>)</li>
+ * </ul>
+ *
+ * <p><b>Error Response Format:</b></p>
+ * <pre>{
+ *   "1_res": 5,
+ *   "1_time": 0.0,
+ *   ...
+ * }</pre>
+ * <p>Where status code 5 indicates a SYSTEM_ERROR.</p>
+ *
+ * @author SleepingCui
+ * @version 1.0-SNAPSHOT
+ * @since 2025
+ * @see <a href="https://github.com/SleepingCui/bcmoj-judge-server">GitHub Repository</a>
+ */
 public class JsonValidator {
     private static final ObjectMapper mapper = new ObjectMapper();
     public boolean validate(String jsonConfig, DataOutputStream dos, Logger logger) throws IOException {
