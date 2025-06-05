@@ -12,7 +12,7 @@ from pygments.formatters import HtmlFormatter
 from colorlog import ColoredFormatter
 from logging.handlers import RotatingFileHandler
 
-import mysql.connector
+
 import contextvars
 import os
 import socket
@@ -28,6 +28,8 @@ import requests
 import logging
 
 from .config import config
+from .db import db, DB_URI
+from .db import User, Problem, JudgeResult, CheckpointResult, Example
 
 app = Flask(__name__)
 
@@ -45,19 +47,35 @@ CONFIG_YML_PATH = './config.yml'
 CONFIG_PROPERTIES_PATH = './config.properties'
 GITHUB_REPO = "SleepingCui/BCMOJ"
 
-raw_db_config = config['db_config']
-DB_CONFIG = {
-    'database': raw_db_config['db_name'],
-    'host': raw_db_config['db_host'],
-    'user': raw_db_config['db_user'],
-    'password': raw_db_config['db_password'],
-    'port': raw_db_config['db_port'],
-}
 #app config
 app.secret_key = SECRET_KEY
 app.config['UPLOAD_FOLDER'] = config['app_settings']['upload_folder']
 app.config['USERDATA_FOLDER'] = config['app_settings']['userdata_folder']
 app.secret_key = config['app_settings']['secret_key']
+app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+#db init
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+    from werkzeug.security import generate_password_hash
+
+    admin_user = User.query.filter_by(username='admin').first()
+    if not admin_user:
+        hashed_passwd = generate_password_hash('123456')
+        admin_user = User(
+            username='admin',
+            email='admin@example.com',
+            passwd=hashed_passwd,
+            avatar=None,
+            usergroup='admin'
+        )
+        db.session.add(admin_user)
+        db.session.commit()
+        app.logger.info(f"Default admin user has been created. username={admin_user.username} password=123456 email={admin_user.email}")
+
 
 #logger
 log_route_context = contextvars.ContextVar('log_route', default='main')
@@ -70,7 +88,7 @@ log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
 os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, f"web-{datetime.now().strftime('%Y-%m-%d')}.log")
 
-log_format = '[%(asctime)s] [%(levelname)s] [%(route_name)s] %(message)s'
+log_format = '[%(asctime)s] [%(levelname)s] %(message)s'
 
 file_formatter = logging.Formatter(log_format)
 file_handler = RotatingFileHandler(
@@ -125,7 +143,6 @@ def set_log_route_name():
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
 
-
 def is_logged_in():
     return 'user_id' in session
 
@@ -144,10 +161,6 @@ def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
-
-
-def get_db_connection():
-    return mysql.connector.connect(**DB_CONFIG)
 
 
 def login_required(f):
@@ -204,31 +217,16 @@ def register():
             flash('Passwords do not match', 'error')
             return redirect(url_for('register'))
 
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', (username, email))
-        existing_user = cursor.fetchone()
+        existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
 
         if existing_user:
-            cursor.close()
-            conn.close()
             flash('Username or email already exists', 'error')
             return redirect(url_for('register'))
 
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
-
-        cursor.execute('''
-            INSERT INTO users (username, email, passwd, avatar, usergroup)
-            VALUES (%s, %s, %s, %s, %s)
-        ''', (username, email, hashed_password, '', 'user'))
-        user_id = cursor.lastrowid
-
-        cursor.execute('UPDATE users SET avatar = %s WHERE userid = %s', (0, user_id))
-
-        conn.commit()
-        cursor.close()
-        conn.close()
+        new_user = User(username=username, email=email, passwd=hashed_password, avatar='0', usergroup='user')
+        db.session.add(new_user)
+        db.session.commit()
 
         flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
@@ -241,42 +239,32 @@ def login():
     if request.method == 'POST':
         username_or_email = request.form.get('username_or_email')
         password = request.form.get('password')
-        
+
         hashed_password_sha256 = hashlib.sha256(password.encode()).hexdigest()
         hashed_password_sha1 = hashlib.sha1(password.encode()).hexdigest()
 
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        user = User.query.filter(
+            (User.username == username_or_email) | (User.email == username_or_email),
+            User.passwd == hashed_password_sha256
+        ).first()
 
-        cursor.execute('''
-            SELECT * FROM users 
-            WHERE (username = %s OR email = %s) AND passwd = %s
-        ''', (username_or_email, username_or_email, hashed_password_sha256))
-        user = cursor.fetchone()
         if not user:
-            cursor.execute('''
-                SELECT * FROM users 
-                WHERE (username = %s OR email = %s) AND passwd = %s
-            ''', (username_or_email, username_or_email, hashed_password_sha1))
-            user = cursor.fetchone()
+            user = User.query.filter(
+                (User.username == username_or_email) | (User.email == username_or_email),
+                User.passwd == hashed_password_sha1
+            ).first()
             if user:
-                cursor.execute('''
-                    UPDATE users SET passwd = %s 
-                    WHERE userid = %s
-                ''', (hashed_password_sha256, user['userid']))
-                conn.commit()
-                app.logger.info(f"Upgraded password hash to SHA256 for user: {user['username']}")
-
-        cursor.close()
-        conn.close()
+                user.passwd = hashed_password_sha256
+                db.session.commit()
+                app.logger.info(f"Upgraded password hash to SHA256 for user: {user.username}")
 
         if user:
             session.clear()
-            session['user_id'] = user['userid']
-            session['username'] = user['username']
-            session['usergroup'] = user['usergroup']
+            session['user_id'] = user.userid
+            session['username'] = user.username
+            session['usergroup'] = user.usergroup
 
-            if user['usergroup'] == 'admin':
+            if user.usergroup == 'admin':
                 next_page = request.args.get('next')
                 if next_page and is_safe_url(next_page):
                     return redirect(next_page)
@@ -288,18 +276,13 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route('/forgotpasswd', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         if 'email' in request.form:
             email = request.form.get('email')
-
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
-            user = cursor.fetchone()
-            cursor.close()
-            conn.close()
+            user = User.query.filter_by(email=email).first()
 
             if not user:
                 flash('Email not found', 'error')
@@ -336,12 +319,10 @@ def forgot_password():
             hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
             email = session['verification_email']
 
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute('UPDATE users SET passwd = %s WHERE email = %s', (hashed_password, email))
-            conn.commit()
-            cursor.close()
-            conn.close()
+            user = User.query.filter_by(email=email).first()
+            if user:
+                user.passwd = hashed_password
+                db.session.commit()
 
             session.pop('verification_code', None)
             session.pop('verification_email', None)
@@ -350,6 +331,7 @@ def forgot_password():
             return redirect(url_for('login'))
 
     return render_template('forgot_password.html', step=1)
+
 
 
 @app.route('/logout')
@@ -368,44 +350,28 @@ def problems():
     query = request.args.get('q', '').strip()
     page = request.args.get('page', 1, type=int)
     per_page = 20
-    offset = (page - 1) * per_page
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    count_sql = 'SELECT COUNT(*) as total FROM problems'
-    select_sql = 'SELECT * FROM problems'
-    where_clause = ''
-    params = []
-
+    q = Problem.query
     if query:
-        where_clause = ' WHERE title LIKE %s OR problem_id LIKE %s'
-        params = [f'%{query}%', f'%{query}%']
+        like_pattern = f"%{query}%"
+        q = q.filter((Problem.title.like(like_pattern)) | (Problem.problem_id.cast(db.String).like(like_pattern)))
 
-    cursor.execute(count_sql + where_clause, params)
-    total = cursor.fetchone()['total']
-    total_pages = (total + per_page - 1) // per_page
-
-    cursor.execute(select_sql + where_clause + ' LIMIT %s OFFSET %s', params + [per_page, offset])
-    problems = cursor.fetchall()
+    pagination = q.paginate(page=page, per_page=per_page, error_out=False)
+    problems = pagination.items
+    total_pages = pagination.pages
 
     user_id = session.get('user_id')
     usergroup = None
     if user_id:
-        cursor.execute('SELECT usergroup FROM users WHERE userid = %s', (user_id,))
-        user_data = cursor.fetchone()
-        if user_data:
-            usergroup = user_data['usergroup']
-
-    cursor.close()
-    conn.close()
+        user = User.query.filter_by(userid=user_id).first()
+        if user:
+            usergroup = user.usergroup
 
     username = session.get('username') or "None"
     user_id = user_id or "None"
 
     return render_template('problems.html', problems=problems, username=username, user_id=user_id,
                            query=query, page=page, total_pages=total_pages, usergroup=usergroup)
-
 
 @app.route('/problem/<int:problem_id>')
 def problem(problem_id):
@@ -414,21 +380,15 @@ def problem(problem_id):
             return jsonify({'error': 'unauthorized'}), 401
         else:
             return redirect(url_for('login', next=request.url))
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
 
-    cursor.execute('SELECT * FROM problems WHERE problem_id = %s', (problem_id,))
-    problem = cursor.fetchone()
-
-    cursor.execute('SELECT * FROM examples WHERE problem_id = %s ORDER BY example_id LIMIT 2', (problem_id,))
-    examples = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
+    problem = Problem.query.filter_by(problem_id=problem_id).first()
     if not problem:
         return "题目不存在", 404
+
+    examples = Example.query.filter_by(problem_id=problem_id).order_by(Example.example_id).limit(2).all()
+
     return render_template('problem.html', problem=problem, examples=examples)
+
 
 
 @app.route('/submit/<int:problem_id>', methods=['POST'])
@@ -444,21 +404,18 @@ def submit(problem_id):
     temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     cpp_file.save(temp_path)
 
-    conn = None
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute('SELECT * FROM problems WHERE problem_id = %s', (problem_id,))
-        problem = cursor.fetchone()
-        cursor.execute('SELECT * FROM examples WHERE problem_id = %s ORDER BY example_id', (problem_id,))
-        examples = cursor.fetchall()
+        problem = Problem.query.filter_by(problem_id=problem_id).first()
+        if not problem:
+            return jsonify({'error': 'Problem not found'}), 404
+        examples = Example.query.filter_by(problem_id=problem_id).order_by(Example.example_id).all()
 
         checkpoints = {}
         for idx, example in enumerate(examples, 1):
-            checkpoints[f"{idx}_in"] = example['input']
-            checkpoints[f"{idx}_out"] = example['output']
+            checkpoints[f"{idx}_in"] = example.input
+            checkpoints[f"{idx}_out"] = example.output
         config = {
-            "timeLimit": problem['time_limit'],
+            "timeLimit": problem.time_limit,
             "checkpoints": checkpoints,
             "securityCheck": ENABLE_SECURITY_CHECK
         }
@@ -510,42 +467,41 @@ def submit(problem_id):
 
                     user_id = session.get('user_id')
                     app.logger.info(f'USERID {user_id}')
+                    submit_time = datetime.now()
 
-                    submit_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    judge_result = JudgeResult(userid=user_id, problemid=problem_id, time=submit_time, filepath='')
+                    db.session.add(judge_result)
+                    db.session.flush()
 
-                    cursor.execute("""
-                        INSERT INTO judge_results (userid, problemid, time, filepath) 
-                        VALUES (%s, %s, %s, %s)
-                    """, (user_id, problem_id, submit_time, ''))
-                    judge_result_id = cursor.lastrowid
-                    app.logger.info(f"Inserted judge result with ID: {judge_result_id}")
                     target_dir = os.path.join(
                         USERDATA_PATH, str(user_id), "upload_problem_answers",
-                        str(problem_id), str(judge_result_id)
+                        str(problem_id), str(judge_result.result_id)
                     )
                     os.makedirs(target_dir, exist_ok=True)
                     cpp_target_path = os.path.join(target_dir, "answer.cpp")
                     shutil.copy(temp_path, cpp_target_path)
 
-                    cursor.execute("""
-                        UPDATE judge_results SET filepath = %s WHERE result_id = %s
-                    """, (cpp_target_path, judge_result_id))
+                    judge_result.filepath = cpp_target_path
+
                     for result in results:
-                        cursor.execute("""
-                            INSERT INTO checkpoint_results (result_id, checkpoint_id, result, time) 
-                            VALUES (%s, %s, %s, %s)
-                        """, (judge_result_id, result['checkpoint'], result['result'], result['time']))
-                    app.logger.info("Inserted checkpoint results.")
-                    conn.commit()
+                        checkpoint_result = CheckpointResult(
+                            result_id=judge_result.result_id,
+                            checkpoint_id=int(result['checkpoint']),
+                            result=result['result'],
+                            time=result['time']
+                        )
+                        db.session.add(checkpoint_result)
+
+                    db.session.commit()
                     app.logger.info("Transaction committed successfully.")
 
                 except json.JSONDecodeError as e:
                     app.logger.error(f"Error decoding JSON: {e}")
-                    conn.rollback()
+                    db.session.rollback()
                     return jsonify({'error': 'Invalid JSON response'}), 500
                 except Exception as e:
-                    app.logger.info(f"Error during database insertion: {e}")
-                    conn.rollback()
+                    app.logger.error(f"Error during database insertion: {e}")
+                    db.session.rollback()
                     return jsonify({'error': str(e)}), 500
 
         return jsonify({
@@ -559,9 +515,6 @@ def submit(problem_id):
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
-        if conn:
-            conn.close()
-
 
 @app.route('/results/<int:userid>/', defaults={'resultid': None, 'page': 1})
 @app.route('/results/<int:userid>/<int:resultid>', defaults={'page': 1})
@@ -573,45 +526,31 @@ def results(userid, resultid, page):
     if userid != current_user_id and current_user_group not in ['admin', 'teacher']:
         return "Unauthorized access", 403
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
     results_per_page = 20
     offset = (page - 1) * results_per_page
 
     if resultid is None:
-        cursor.execute('SELECT COUNT(*) FROM judge_results WHERE userid = %s', (userid,))
-        total_results = cursor.fetchone()['COUNT(*)']
+        total_results = JudgeResult.query.filter_by(userid=userid).count()
         total_pages = (total_results + results_per_page - 1) // results_per_page
-        cursor.execute('SELECT * FROM judge_results WHERE userid = %s ORDER BY time DESC LIMIT %s OFFSET %s',
-                       (userid, results_per_page, offset))
-        results = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
+        results = JudgeResult.query.filter_by(userid=userid).order_by(JudgeResult.time.desc()).limit(results_per_page).offset(offset).all()
 
         return render_template('result_list.html', results=results, userid=userid, page=page, total_pages=total_pages)
     else:
-        cursor.execute('SELECT * FROM judge_results WHERE result_id = %s AND userid = %s', (resultid, userid))
-        judge_result = cursor.fetchone()
+        judge_result = JudgeResult.query.filter_by(result_id=resultid, userid=userid).first()
 
         if not judge_result:
             return "评测结果不存在", 404
 
-        cursor.execute('SELECT * FROM checkpoint_results WHERE result_id = %s ORDER BY checkpoint_id', (resultid,))
-        checkpoint_results = cursor.fetchall()
+        checkpoint_results = CheckpointResult.query.filter_by(result_id=resultid).order_by(CheckpointResult.checkpoint_id).all()
 
         cpp_code = ""
-        if judge_result['filepath'] and os.path.exists(judge_result['filepath']):
-            with open(judge_result['filepath'], 'r', encoding='utf-8', errors='ignore') as f:
+        if judge_result.filepath and os.path.exists(judge_result.filepath):
+            with open(judge_result.filepath, 'r', encoding='utf-8', errors='ignore') as f:
                 cpp_code = f.read()
 
         formatter = HtmlFormatter(style="friendly", linenos=True, full=False, cssclass="codehilite")
         highlighted_code = highlight(cpp_code, CppLexer(), formatter)
         style_defs = formatter.get_style_defs('.codehilite')
-
-        cursor.close()
-        conn.close()
 
         return render_template('result_detail.html',
                                judge_result=judge_result,
@@ -619,7 +558,6 @@ def results(userid, resultid, page):
                                highlighted_code=highlighted_code,
                                style_defs=style_defs,
                                userid=userid)
-
 
 # admin
 @app.route('/admin')
@@ -633,27 +571,31 @@ def admin_page():
 @app.route("/admin/api")
 @admin_required
 def admin_api():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
     with open("config.yml", encoding='utf-8') as f:
         config_yml = f.read()
     with open("config.properties", encoding='utf-8') as f:
         config_properties = f.read()
+    users = User.query.with_entities(
+        User.userid,
+        User.username,
+        User.email,
+        User.passwd,
+        db.literal('user').label('usergroup')
+    ).all()
+    users = [dict(zip(['userid', 'username', 'email', 'passwd', 'usergroup'], user)) for user in users]
 
-    cursor.execute("SELECT userid, username, email, passwd, 'user' AS usergroup FROM users")
-    users = cursor.fetchall()
-    cursor.execute("SELECT * FROM problems")
-    problems_raw = cursor.fetchall()
     problems = []
-    for p in problems_raw:
-        cursor.execute("SELECT input, output FROM examples WHERE problem_id = %s", (p["problem_id"],))
-        examples = cursor.fetchall()
-        p["examples"] = examples
-        problems.append(p)
-
-    cursor.close()
-    conn.close()
+    for p in Problem.query.all():
+        examples = Example.query.filter_by(problem_id=p.problem_id).with_entities(Example.input, Example.output).all()
+        examples = [{'input': ex.input, 'output': ex.output} for ex in examples]
+        problem_data = {
+            "problem_id": p.problem_id,
+            "title": p.title,
+            "description": p.description,
+            "time_limit": p.time_limit,
+            "examples": examples
+        }
+        problems.append(problem_data)
 
     return jsonify({
         "config_yml": config_yml,
@@ -662,14 +604,12 @@ def admin_api():
         "problems": problems
     })
 
-
 @app.route("/admin/api/save_config_yml", methods=["POST"])
 @admin_required
 def save_config_yml():
     content = request.json.get("content", "")
     with open("config.yml", "w", encoding="utf-8") as f:
         f.write(content)
-
     subprocess.Popen(["pkill", "-f", "flask"])
     return "OK"
 
@@ -687,15 +627,14 @@ def save_config_properties():
 @admin_required
 def update_user():
     data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE users SET username=%s, passwd=%s, email=%s, usergroup=%s WHERE userid=%s
-    """, (data["username"], data["passwd"], data["email"], data["usergroup"], data["userid"]))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    app.logger.info("User information has been updated!")
+    user = User.query.get(data["userid"])
+    if user:
+        user.username = data["username"]
+        user.passwd = data["passwd"]
+        user.email = data["email"]
+        user.usergroup = data["usergroup"]
+        db.session.commit()
+        app.logger.info("User information has been updated!")
     return "OK"
 
 
@@ -703,12 +642,10 @@ def update_user():
 @admin_required
 def delete_user():
     userid = request.json.get("userid")
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE userid=%s", (userid,))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    user = User.query.get(userid)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
     return "OK"
 
 
@@ -716,17 +653,23 @@ def delete_user():
 @admin_required
 def create_problem():
     data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO problems (title, description, time_limit) VALUES (%s, %s, %s)",
-                   (data["title"], data["description"], data["time_limit"]))
-    problem_id = cursor.lastrowid
+    problem = Problem(
+        title=data["title"],
+        description=data["description"],
+        time_limit=data["time_limit"]
+    )
+    db.session.add(problem)
+    db.session.flush()
+    
     for ex in data["examples"]:
-        cursor.execute("INSERT INTO examples (problem_id, input, output) VALUES (%s, %s, %s)",
-                       (problem_id, ex["input"], ex["output"]))
-    conn.commit()
-    cursor.close()
-    conn.close()
+        example = Example(
+            problem_id=problem.problem_id,
+            input=ex["input"],
+            output=ex["output"]
+        )
+        db.session.add(example)
+    
+    db.session.commit()
     return "OK"
 
 
@@ -734,17 +677,23 @@ def create_problem():
 @admin_required
 def update_problem():
     data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("UPDATE problems SET title=%s, description=%s, time_limit=%s WHERE problem_id=%s",
-                   (data["title"], data["description"], data["time_limit"], data["problem_id"]))
-    cursor.execute("DELETE FROM examples WHERE problem_id=%s", (data["problem_id"],))
-    for ex in data["examples"]:
-        cursor.execute("INSERT INTO examples (problem_id, input, output) VALUES (%s, %s, %s)",
-                       (data["problem_id"], ex["input"], ex["output"]))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    problem = Problem.query.get(data["problem_id"])
+    if problem:
+        problem.title = data["title"]
+        problem.description = data["description"]
+        problem.time_limit = data["time_limit"]
+        
+        Example.query.filter_by(problem_id=problem.problem_id).delete()
+        
+        for ex in data["examples"]:
+            example = Example(
+                problem_id=problem.problem_id,
+                input=ex["input"],
+                output=ex["output"]
+            )
+            db.session.add(example)
+        
+        db.session.commit()
     return "OK"
 
 
@@ -752,40 +701,26 @@ def update_problem():
 @admin_required
 def delete_problem():
     problem_id = request.json.get("problem_id")
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM problems WHERE problem_id=%s", (problem_id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    problem = Problem.query.get(problem_id)
+    if problem:
+        db.session.delete(problem)
+        db.session.commit()
     return "OK"
-
 
 # teacher
 @app.route('/teacher/teacher_api', methods=['GET'])
 def get_teacher_data():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT * FROM problems')
-    problems = cursor.fetchall()
-
+    problems = Problem.query.all()
     result = []
     for problem in problems:
-        problem_id = problem['problem_id']
-
-        cursor.execute('SELECT * FROM examples WHERE problem_id = %s', (problem_id,))
-        examples = cursor.fetchall()
-
+        examples = Example.query.filter_by(problem_id=problem.problem_id).all()
         result.append({
-            'problem_id': problem_id,
-            'title': problem['title'],
-            'description': problem['description'],
-            'time_limit': problem['time_limit'],
-            'examples': [{'input': ex['input'], 'output': ex['output']} for ex in examples]
+            'problem_id': problem.problem_id,
+            'title': problem.title,
+            'description': problem.description,
+            'time_limit': problem.time_limit,
+            'examples': [{'input': ex.input, 'output': ex.output} for ex in examples]
         })
-
-    cursor.close()
-    conn.close()
 
     return jsonify({'problems': result})
 
@@ -801,21 +736,19 @@ def teacher_create_problem():
     if not title or not description or not time_limit:
         return jsonify({'error': 'Missing required fields'}), 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    problem = Problem(title=title, description=description, time_limit=time_limit)
+    db.session.add(problem)
+    db.session.flush()
 
-    cursor.execute('INSERT INTO problems (title, description, time_limit) VALUES (%s, %s, %s)',
-                   (title, description, time_limit))
-    conn.commit()
-
-    problem_id = cursor.lastrowid
     for ex in examples:
-        cursor.execute('INSERT INTO examples (input, output, problem_id) VALUES (%s, %s, %s)',
-                       (ex['input'], ex['output'], problem_id))
+        example = Example(
+            problem_id=problem.problem_id,
+            input=ex['input'],
+            output=ex['output']
+        )
+        db.session.add(example)
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+    db.session.commit()
 
     return jsonify({'message': '问题创建成功'}), 201
 
@@ -832,21 +765,25 @@ def teacher_update_problem():
     if not problem_id or not title or not description or not time_limit:
         return jsonify({'error': 'Missing required fields'}), 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    problem = Problem.query.get(problem_id)
+    if not problem:
+        return jsonify({'error': 'Problem not found'}), 404
 
-    cursor.execute('UPDATE problems SET title = %s, description = %s, time_limit = %s WHERE problem_id = %s',
-                   (title, description, time_limit, problem_id))
-    conn.commit()
-    cursor.execute('DELETE FROM examples WHERE problem_id = %s', (problem_id,))
-    conn.commit()
+    problem.title = title
+    problem.description = description
+    problem.time_limit = time_limit
+
+    Example.query.filter_by(problem_id=problem_id).delete()
 
     for ex in examples:
-        cursor.execute('INSERT INTO examples (input, output, problem_id) VALUES (%s, %s, %s)',
-                       (ex['input'], ex['output'], problem_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
+        example = Example(
+            problem_id=problem_id,
+            input=ex['input'],
+            output=ex['output']
+        )
+        db.session.add(example)
+
+    db.session.commit()
 
     return jsonify({'message': '问题更新成功'}), 200
 
@@ -859,14 +796,10 @@ def teacher_delete_problem():
     if not problem_id:
         return jsonify({'error': 'Missing problem_id'}), 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM examples WHERE problem_id = %s', (problem_id,))
-    cursor.execute('DELETE FROM problems WHERE problem_id = %s', (problem_id,))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    problem = Problem.query.get(problem_id)
+    if problem:
+        db.session.delete(problem)
+        db.session.commit()
 
     return jsonify({'message': '问题已删除'}), 200
 
@@ -878,37 +811,33 @@ def teacher_problem_manage():
     if usergroup not in ['admin', 'teacher']:
         return "Unauthorized access", 403
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM problems")
-    problems = cursor.fetchall()
-    if request.method == 'POST':
-        if 'create_problem' in request.form:
-            title = request.form['title']
-            description = request.form['description']
-            time_limit = request.form['time_limit']
+    problems = Problem.query.all()
+    
+    if request.method == 'POST' and 'create_problem' in request.form:
+        title = request.form['title']
+        description = request.form['description']
+        time_limit = request.form['time_limit']
 
-            cursor.execute("INSERT INTO problems (title, description, time_limit) VALUES (%s, %s, %s)",
-                           (title, description, time_limit))
-            app.logger.info(f"Insert[title={title} description={description} tlimit={time_limit}]")
-            problem_id = cursor.lastrowid
+        problem = Problem(title=title, description=description, time_limit=time_limit)
+        db.session.add(problem)
+        db.session.flush()
 
-            examples = request.form.getlist('examples')
-            for example in examples:
-                input_data, output_data = example.split('|')
-                cursor.execute("INSERT INTO examples (problem_id, input, output) VALUES (%s, %s, %s)",
-                               (problem_id, input_data, output_data))
-                app.logger.info(f"Insert[problemid={problem_id} input_data={input_data} output_data={output_data}]")
+        examples = request.form.getlist('examples')
+        for example in examples:
+            input_data, output_data = example.split('|')
+            example = Example(
+                problem_id=problem.problem_id,
+                input=input_data,
+                output=output_data
+            )
+            db.session.add(example)
+            app.logger.info(f"Insert[problemid={problem.problem_id} input_data={input_data} output_data={output_data}]")
 
-            conn.commit()
-            app.logger.info("Success")
-            flash("题目创建成功", "success")
-
-    cursor.close()
-    conn.close()
+        db.session.commit()
+        app.logger.info("Success")
+        flash("题目创建成功", "success")
 
     return render_template('teacher_problem_manage.html', problems=problems)
-
 
 # admin results
 @app.route('/admin_results', defaults={'page': 1, 'search': ''}, methods=['GET'])
@@ -920,40 +849,35 @@ def admin_results(page, search):
     if current_user_group not in ['admin', 'teacher']:
         return "Unauthorized access", 403
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
     results_per_page = 20
     offset = (page - 1) * results_per_page
 
-    query = 'SELECT * FROM judge_results WHERE 1=1'
-    params = []
+    query = JudgeResult.query.join(Problem, JudgeResult.problemid == Problem.problem_id)
+    
     if search:
-        query += ' AND (result_id LIKE %s OR problemid LIKE %s OR title LIKE %s)'
         search_pattern = f'%{search}%'
-        params = [search_pattern, search_pattern, search_pattern]
+        query = query.filter(
+            db.or_(
+                JudgeResult.result_id.like(search_pattern),
+                JudgeResult.problemid.like(search_pattern),
+                Problem.title.like(search_pattern)
+            )
+        )
 
-    cursor.execute(query, params)
-    cursor.fetchall()
-    total_results = cursor.rowcount
+    total_results = query.count()
     total_pages = (total_results + results_per_page - 1) // results_per_page
 
-    query += f' ORDER BY time DESC LIMIT %s OFFSET %s'
-    params.extend([results_per_page, offset])
-    cursor.execute(query, params)
-    results = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
+    results = query.order_by(JudgeResult.time.desc())\
+                  .limit(results_per_page)\
+                  .offset(offset)\
+                  .all()
 
     app.logger.info(f"Results={results} Page={page}/{total_pages}")
     return render_template('admin_result_list.html',
-                           results=results,
-                           page=page,
-                           total_pages=total_pages,
-                           search=search)
-
-
+                         results=results,
+                         page=page,
+                         total_pages=total_pages,
+                         search=search)
 # about
 
 @app.route("/about")

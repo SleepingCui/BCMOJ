@@ -16,8 +16,6 @@ class CustomRequestHandler(WSGIRequestHandler):
         route_name = log_route_context.get('werkzeug') if log_route_context.get() == 'main' else log_route_context.get()
         logger.log(level, '[%s] %s - %s', route_name, client_ip, message)
 
-
-
 logo = r"""
   ____   ____ __  __  ___      _   ____            _           _   
  | __ ) / ___|  \/  |/ _ \    | | |  _ \ _ __ ___ (_) ___  ___| |_ 
@@ -27,8 +25,8 @@ logo = r"""
                                                 |__/               
  Developed by SleepingCui    https://github.com/SleepingCui/BCMOJ/
 
- 
 """
+
 if __name__ == '__main__':
     print(logo)
     app.run(request_handler=CustomRequestHandler)
