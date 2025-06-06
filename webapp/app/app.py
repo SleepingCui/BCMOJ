@@ -1,5 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, \
-    send_from_directory, current_app
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, send_from_directory, current_app
 from urllib.parse import urlparse, urljoin
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
@@ -10,8 +9,6 @@ from pygments import highlight
 from pygments.lexers import CppLexer
 from pygments.formatters import HtmlFormatter
 from colorlog import ColoredFormatter
-from logging.handlers import RotatingFileHandler
-
 
 import contextvars
 import os
@@ -46,6 +43,7 @@ SECRET_KEY = config['app_settings']['secret_key']
 CONFIG_YML_PATH = './config.yml'
 CONFIG_PROPERTIES_PATH = './config.properties'
 GITHUB_REPO = "SleepingCui/BCMOJ"
+MAX_POINTS = 30
 
 #app config
 app.secret_key = SECRET_KEY
@@ -81,8 +79,12 @@ with app.app_context():
 log_route_context = contextvars.ContextVar('log_route', default='main')
 class RouteNameFilter(logging.Filter):
     def filter(self, record):
-        record.route_name = log_route_context.get()
+        route_name = log_route_context.get()
+        if route_name == 'nolog':
+            return False
+        record.route_name = route_name
         return True
+
 
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
 os.makedirs(log_dir, exist_ok=True)
@@ -136,9 +138,13 @@ werkzeug_logger.addFilter(RouteNameFilter())
 @app.before_request
 def set_log_route_name():
     try:
-        log_route_context.set(request.path)
+        if request.path == '/uwsgi_stats/data':
+            log_route_context.set('nolog')
+        else:
+            log_route_context.set(request.path)
     except RuntimeError:
         log_route_context.set('unknown')
+
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
@@ -913,8 +919,6 @@ history = {
     'workers': [],
     'timestamps': []
 }
-MAX_POINTS = 30
-
 def fetch_uwsgi_stats():
     try:
         resp = requests.get(UWSGI_STATS_URL, timeout=2)
@@ -931,7 +935,8 @@ def uwsgi_stats():
 def uwsgi_stats_data():
     stats = fetch_uwsgi_stats()
     if not stats:
-        return jsonify({'error': '无法获取uWSGI状态'}), 500
+        app.logger.error(f'Unable to get uWSGI Status : {stats}')
+        return jsonify({'error': 'Unable to get uWSGI Status'}), 500
 
     now = time.time()
     requests_count = stats.get('requests', 0)

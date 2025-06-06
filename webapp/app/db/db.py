@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from webapp.config import config
+from app.config import config
 
 config = config.get_config()
 raw_db_config = config['db_config']
