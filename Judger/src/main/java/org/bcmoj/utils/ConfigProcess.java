@@ -1,4 +1,4 @@
-package org.bcmoj.config;
+package org.bcmoj.utils;
 
 import java.io.*;
 import java.util.Properties;
@@ -29,24 +29,20 @@ import java.util.Properties;
  */
 public class ConfigProcess {
     private static final String CONFIG_FILE = "config.properties";
-    private static final Properties props = new Properties();
-
-    static {
-        loadConfig();
-    }
+    private static Properties props = null;
 
     /**
-     * Loads configuration from the properties file.
-     * <p>
-     * If the configuration file doesn't exist or cannot be read,
-     * default values will be loaded instead.
-     * </p>
+     * Ensures configuration is loaded from disk if not already loaded.
+     * Loads default values if the config file is missing or invalid.
      */
-    private static void loadConfig() {
+    private static void ensureLoaded() {
+        if (props != null) return;
+
+        props = new Properties();
         try (InputStream input = new FileInputStream(CONFIG_FILE)) {
             props.load(input);
         } catch (IOException e) {
-            System.err.println("Error loading config file: " + e.getMessage());
+            System.err.println("[ensureLoad]Error loading config file: " + e.getMessage());
             setDefaultConfig();
         }
     }
@@ -70,6 +66,7 @@ public class ConfigProcess {
      * @return The configuration value, or null if the key doesn't exist
      */
     public static String GetConfig(String key) {
+        ensureLoaded();
         return props.getProperty(key);
     }
 
@@ -84,6 +81,7 @@ public class ConfigProcess {
      * @param value The new value for the configuration key
      */
     public static void UpdateConfig(String key, String value) {
+        ensureLoaded();
         props.setProperty(key, value);
     }
 
@@ -105,6 +103,7 @@ public class ConfigProcess {
      * @throws IOException If the configuration file cannot be written
      */
     public static void saveConfig() throws IOException {
+        ensureLoaded();
         try (OutputStream output = new FileOutputStream(CONFIG_FILE)) {
             props.store(output, "Updated configuration");
         }
@@ -117,7 +116,7 @@ public class ConfigProcess {
      * </p>
      */
     public static void reloadConfig() {
-        props.clear();
-        loadConfig();
+        props = null;
+        ensureLoaded();
     }
 }
