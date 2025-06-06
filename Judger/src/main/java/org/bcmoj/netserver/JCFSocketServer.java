@@ -1,6 +1,5 @@
 package org.bcmoj.netserver;
 
-import org.bcmoj.config.ConfigProcess;
 import org.bcmoj.judgeserver.JudgeServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,70 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
- /**
- * JCF (Judge Communication Framework) Socket Server
- * <p>
- * A high-performance network server that handles client connections for code submission and judging.
- * Manages file transfers, JSON configuration validation, and communication with the JudgeServer.
- * </p>
- *
- * <p><b>Communication Protocol:</b></p>
- * <ol>
- *   <li><b>Client Request Format:</b>
- *     <pre>[4-byte filename length][filename][8-byte file size][file content][4-byte JSON length][JSON]</pre>
- *     <p><b>Example JSON Request:</b></p>
- *     <pre>{
- *   "timeLimit": 1000,
- *   "checkpoints": {
- *     "1_in": "1 1",
- *     "1_out": "2",
- *     "2_in": "1 2",
- *     "2_out": "3",
- *     "3_in": "2 2",
- *     "3_out": "4",
- *     "4_in": "35 3",
- *     "4_out": "38",
- *     "5_in": "482 3",
- *     "5_out": "485"
- *   },
- *   "securityCheck": true
- * }</pre>
- *   </li>
- *
- *   <li><b>Server Response Format:</b>
- *     <pre>[4-byte response length][response content]</pre>
- *     <p><b>Example JSON Response:</b></p>
- *     <pre>{
- *   "1_res": 1,
- *   "1_time": 149.4676,
- *   "2_res": 1,
- *   "2_time": 165.1431,
- *   "3_res": 1,
- *   "3_time": 144.3808,
- *   "4_res": 1,
- *   "4_time": 155.1627,
- *   "5_res": 1,
- *   "5_time": 159.8404
- * }</pre>
- *     <p>Where result codes are:
- *     <ul>
- *       <li>1 = Accepted</li>
- *       <li>-3 = Wrong Answer</li>
- *       <li>2 = Time Limit Exceeded</li>
- *       <li>4 = Runtime Error</li>
- *       <li>-4 = Compile Error</li>
- *     </ul>
- *     </p>
- *   </li>
- * </ol>
- *
- * @author SleepingCui
- * @version 1.0-SNAPSHOT
- * @since 2025
- * @see <a href="https://github.com/SleepingCui/bcmoj-judge-server">GitHub Repository</a>
- * @see JudgeServer
- * @see JsonValidator
- */
 
 public class JCFSocketServer {
     private static final Logger logger = LoggerFactory.getLogger(JCFSocketServer.class);
@@ -86,17 +21,17 @@ public class JCFSocketServer {
     private ServerSocket serverSocket;
     private final JsonValidator validator = new JsonValidator();
 
-    public void start(int port,String host) {
+    public void start(int port, String host, String kwFilePath) {
         try {
             serverSocket = new ServerSocket();
             serverSocket.bind(new InetSocketAddress(host, port));
-            logger.info("File server started on {}:{}", host, port);
+            logger.info("File server started on {}:{} with keywords file: {}", host, port, kwFilePath);
 
             while (!serverSocket.isClosed()) {
                 try {
                     Socket clientSocket = serverSocket.accept();
                     logger.info("New client connected: {}", clientSocket.getRemoteSocketAddress());
-                    executor.submit(new ClientHandler(clientSocket, validator));
+                    executor.submit(new ClientHandler(clientSocket, validator, kwFilePath));
                 } catch (SocketException e) {
                     if (!serverSocket.isClosed()) {
                         logger.error("Error accepting client connection", e);
@@ -109,7 +44,6 @@ public class JCFSocketServer {
             stop();
         }
     }
-
 
     public void stop() {
         try {
@@ -126,11 +60,13 @@ public class JCFSocketServer {
     private static class ClientHandler implements Runnable {
         private final Socket clientSocket;
         private final JsonValidator validator;
+        private final String kwFilePath;
         private final Logger clientLogger = LoggerFactory.getLogger(ClientHandler.class);
 
-        public ClientHandler(Socket socket, JsonValidator validator) {
+        public ClientHandler(Socket socket, JsonValidator validator, String kwFilePath) {
             this.clientSocket = socket;
             this.validator = validator;
+            this.kwFilePath = kwFilePath;
         }
 
         @Override
@@ -178,7 +114,7 @@ public class JCFSocketServer {
                 clientLogger.info("[{}] JSON validation passed", clientAddress);
                 clientLogger.info("[{}] Processing with JudgeServer...", clientAddress);
 
-                File KWFilePath = new File(ConfigProcess.GetConfig("KeywordsFilePath"));
+                File KWFilePath = new File(kwFilePath);
                 String jserverResponse = JudgeServer.JServer(jsonConfig, outputFile, KWFilePath);
                 clientLogger.info("[{}] JudgeServer response: {}", clientAddress, jserverResponse);
 
