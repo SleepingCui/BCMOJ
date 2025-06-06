@@ -4,6 +4,9 @@ import org.bcmoj.config.ConfigProcess;
 import org.bcmoj.netserver.JCFSocketServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * BCMOJ Judge Server
@@ -18,35 +21,58 @@ import org.slf4j.LoggerFactory;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
     public static void main(String[] args) {
         logo();
-        on_start(args);
+        parseArguments(args);
     }
 
+    private static void parseArguments(String[] args) {
+        Properties cmdProps = new Properties();
 
-    private static String getConfigValue(String[] args, int index, String configKey) {
-        return (args.length > index && !args[index].isBlank()) ? args[index] : ConfigProcess.GetConfig(configKey);
+        for (String arg : args) {
+            if (arg.startsWith("--")) {
+                String[] parts = arg.substring(2).split("=", 2);
+                if (parts.length == 2) {
+                    cmdProps.setProperty(parts[0], parts[1]);
+                }
+            }
+        }
+        if (cmdProps.containsKey("config")) {
+            try (FileInputStream fis = new FileInputStream(cmdProps.getProperty("config"))) {
+                Properties fileProps = new Properties();
+                fileProps.load(fis);
+                fileProps.forEach((k, v) -> cmdProps.putIfAbsent(k.toString(), v.toString()));
+            } catch (IOException e) {
+                logger.error("Failed to load config file: {}", e.getMessage());
+                System.exit(1);
+            }
+        }
+
+        startServer(cmdProps);
     }
-    private static boolean isBlank(String str) {
-        return str == null || str.isBlank();
-    }
-    private static void on_start(String[] args) {
-        String portStr = getConfigValue(args, 0, "ServerPort");
-        String ip = getConfigValue(args, 1, "ServerIP");
+    private static void startServer(Properties props) {
+        String portStr = props.getProperty("port", ConfigProcess.GetConfig("ServerPort"));
+        String ip = props.getProperty("host", ConfigProcess.GetConfig("ServerIP"));
+        String kwFile = props.getProperty("kwfile", ConfigProcess.GetConfig("KeywordsFile"));
 
         if (isBlank(portStr) || isBlank(ip)) {
             logger.error("Configuration missing: Port={}, IP={}", portStr, ip);
             System.exit(1);
         }
+        if (!isBlank(kwFile)) {
+            ConfigProcess.UpdateConfig("KeywordsFile", kwFile);
+        }
+
         try {
             JCFSocketServer server = new JCFSocketServer();
-            server.start(Integer.parseInt(portStr), ip);
+            server.start(Integer.parseInt(portStr), ip, kwFile);
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 logger.info("Server shutting down.");
                 server.stop();
             }));
-            logger.info("Starting server at {}:{}", ip, portStr);
+            logger.info("Starting server at {}:{} with keywords file: {}", ip, portStr, kwFile);
         } catch (NumberFormatException e) {
             logger.error("Invalid port: {}", portStr);
             System.exit(1);
@@ -56,7 +82,11 @@ public class Main {
         }
     }
 
-    public static void logo(){
+    private static boolean isBlank(String str) {
+        return str == null || str.isBlank();
+    }
+
+    public static void logo() {
         String logo = """
                   ____   ____ __  __  ___      _       _ ____                          \s
                  | __ ) / ___|  \\/  |/ _ \\    | |     | / ___|  ___ _ ____   _____ _ __\s
@@ -68,5 +98,4 @@ public class Main {
                 """;
         System.out.println(logo);
     }
-
 }

@@ -11,52 +11,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
-/**
- * Judge Server Implementation
- * <p>
- * Core component that coordinates the execution of code submissions against multiple test cases.
- * Manages parallel test case evaluation and compiles final results.
- * </p>
- *
- * <p><b>Key Features:</b></p>
- * <ul>
- *   <li>Parallel test case execution using thread pool</li>
- *   <li>Optional code security validation</li>
- *   <li>Timeout handling for each test case</li>
- *   <li>Comprehensive result aggregation</li>
- * </ul>
- *
- * <p><b>Execution Flow:</b></p>
- * <ol>
- *   <li>Parse JSON configuration (timeLimit, securityCheck, checkpoints)</li>
- *   <li>Perform security check if enabled</li>
- *   <li>Execute all test cases in parallel</li>
- *   <li>Aggregate results into JSON response</li>
- * </ol>
- *
- * <p><b>Result Codes:</b></p>
- * <ul>
- *   <li>-5: Security Check Failed</li>
- *   <li>-4: Compile Error</li>
- *   <li>-3: Wrong Answer</li>
- *   <li>2: Real Time Limit Exceeded</li>
- *   <li>4: Runtime Error</li>
- *   <li>5: System Error</li>
- *   <li>1: Accepted</li>
- * </ul>
- *
- * <p><b>Response Format:</b></p>
- * <pre>{
- *   "1_res": [status_code],
- *   "1_time": [execution_time],
- *   ...
- * }</pre>
- *
- * @author SleepingCui
- * @version 1.0-SNAPSHOT
- * @since 2025
- * @see <a href="https://github.com/SleepingCui/bcmoj-judge-server">GitHub Repository</a>
- */
+
 public class JudgeServer {
     public static Logger LOGGER = LoggerFactory.getLogger(JudgeServer.class);
     public static class Config {
