@@ -8,28 +8,6 @@ import java.util.concurrent.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * BCMOJ Judger Component
- * <p>
- * Core judging component responsible for compiling, executing, and evaluating submitted programs.
- * Handles the complete judging workflow including compilation, runtime execution, output comparison,
- * and resource management.
- * </p>
- *
- * <p>Key features:</p>
- * <ul>
- *   <li>Supports multiple verdict states (AC, WA, TLE, RTE, etc.)</li>
- *   <li>Precise time measurement for program execution</li>
- *   <li>Cross-platform support (Windows/Linux)</li>
- *   <li>Secure execution with proper resource cleanup</li>
- *   <li>Escape sequence handling for test cases</li>
- * </ul>
- *
- * @author SleepingCui
- * @version 1.0-SNAPSHOT
- * @since 2025
- * @see <a href="https://github.com/SleepingCui/bcmoj-judge-server">Github Repository</a>
- */
 public class Judger {
 
     public static Logger LOGGER = LoggerFactory.getLogger(Judger.class);
