@@ -616,7 +616,6 @@ def save_config_yml():
     content = request.json.get("content", "")
     with open("config.yml", "w", encoding="utf-8") as f:
         f.write(content)
-    subprocess.Popen(["pkill", "-f", "flask"])
     return "OK"
 
 

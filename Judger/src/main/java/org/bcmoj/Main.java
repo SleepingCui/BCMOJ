@@ -17,6 +17,7 @@ import java.util.Properties;
  * @since 2025
  * @version 1.0-SNAPSHOT
  */
+
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
