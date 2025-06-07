@@ -24,7 +24,16 @@ Flask Web Server ─────▶ MySQL 数据库
   判题服务器 (Java)
 ```
 
+---
+
+## 如何使用
+
+### 详见[Wiki](https://github.com/SleepingCui/BCMOJ/wiki)
+
+---
+
 ## ScreenShots
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/SleepingCui/BCMOJ/master/imgs/ss1.png" alt="ss1"/>
   <img src="https://raw.githubusercontent.com/SleepingCui/BCMOJ/master/imgs/ss2.png" alt="ss2"/>
