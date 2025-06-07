@@ -7,9 +7,9 @@
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/SleepingCui/BCMOJ/master)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/SleepingCui/BCMOJ/maven.yml)
 
-### **BCMOJ** 是一个轻量化的在线代码评测系统。  
+### **BCMOJ** ———一个轻量化的在线代码评测系统 ~~(两位初中生花100+h堆石山代码堆出来的玩意)~~
 #### 前端基于 **HTML + JavaScript**，后端使用 **Flask** 提供接口服务，评测核心由 **Java** 实现，使用 **MySQL** 存储数据。
-～～两位初中生花100+h堆石山代码堆出来的玩意～～
+
 ---
 
 ## 架构
