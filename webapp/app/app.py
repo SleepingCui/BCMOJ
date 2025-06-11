@@ -20,7 +20,6 @@ import random
 import smtplib
 import shutil
 import functools
-import subprocess
 import requests
 import logging
 
@@ -57,16 +56,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 with app.app_context():
-    db.create_all()
-    from werkzeug.security import generate_password_hash
+    db.create_all()  #create db if not exist
 
     admin_user = User.query.filter_by(username='admin').first()
     if not admin_user:
-        hashed_passwd = generate_password_hash('123456')
+        hashed_password = hashlib.sha256("123456".encode()).hexdigest()
         admin_user = User(
             username='admin',
             email='admin@example.com',
-            passwd=hashed_passwd,
+            passwd=hashed_password,
             avatar=None,
             usergroup='admin'
         )
@@ -149,9 +147,9 @@ def set_log_route_name():
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
 
+
 def is_logged_in():
     return 'user_id' in session
-
 
 def admin_required(f):
     @functools.wraps(f)
@@ -162,12 +160,10 @@ def admin_required(f):
 
     return decorated_function
 
-
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
-
 
 def login_required(f):
     @wraps(f)
@@ -187,7 +183,6 @@ def login_required(f):
 
     return decorated_function
 
-
 def send_verification_email(email, verification_code):
     try:
         msg = MIMEText(f'Your verification code is: {verification_code}')
@@ -203,7 +198,6 @@ def send_verification_email(email, verification_code):
     except Exception as e:
         app.logger.error(f"Error sending email: {e}")
         return False
-
 
 @app.route('/favicon.ico')
 def favicon():
