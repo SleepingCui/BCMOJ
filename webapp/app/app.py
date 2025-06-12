@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, send_from_directory, current_app
 from urllib.parse import urlparse, urljoin
-from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from email.mime.text import MIMEText
 from werkzeug.utils import secure_filename
@@ -8,30 +7,28 @@ from functools import wraps
 from pygments import highlight
 from pygments.lexers import CppLexer
 from pygments.formatters import HtmlFormatter
-from colorlog import ColoredFormatter
 
-import contextvars
 import os
 import socket
 import json
 import hashlib
 import time
 import random
+import string
 import smtplib
 import shutil
 import functools
 import requests
-import logging
 
 from .config import config
+from .logger import setup_logging, log_route_context
 from .db import db, DB_URI
 from .db import User, Problem, JudgeResult, CheckpointResult, Example
 
 app = Flask(__name__)
-
+setup_logging(app)
 #config
 config = config.get_config()
-DISABLE_COLOR_LOG = config['app_settings']['disable_color_log']
 EMAIL_CONFIG = config['email_config']
 UWSGI_STATS_URL = config['app_settings']['uwsgi_stats_url']
 SERVER_HOST = config['judge_config']['judge_host']
@@ -57,10 +54,10 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()  #create db if not exist
-
     admin_user = User.query.filter_by(username='admin').first()
     if not admin_user:
-        hashed_password = hashlib.sha256("123456".encode()).hexdigest()
+        generated_password = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+        hashed_password = hashlib.sha256(generated_password.encode()).hexdigest()
         admin_user = User(
             username='admin',
             email='admin@example.com',
@@ -70,68 +67,8 @@ with app.app_context():
         )
         db.session.add(admin_user)
         db.session.commit()
-        app.logger.info(f"Default admin user has been created. username={admin_user.username} password=123456 email={admin_user.email}")
+        app.logger.info(f"Default admin user has been created. username={admin_user.username} password={generated_password} email={admin_user.email}")
 
-
-#logger
-log_route_context = contextvars.ContextVar('log_route', default='main')
-class RouteNameFilter(logging.Filter):
-    def filter(self, record):
-        route_name = log_route_context.get()
-        if route_name == 'nolog':
-            return False
-        record.route_name = route_name
-        return True
-
-
-log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
-os.makedirs(log_dir, exist_ok=True)
-log_file = os.path.join(log_dir, f"web-{datetime.now().strftime('%Y-%m-%d')}.log")
-
-log_format = '[%(asctime)s] [%(levelname)s] %(message)s'
-
-file_formatter = logging.Formatter(log_format)
-file_handler = RotatingFileHandler(
-    log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding='utf-8'
-)
-
-file_handler.setFormatter(file_formatter)
-file_handler.setLevel(logging.INFO)
-file_handler.addFilter(RouteNameFilter())
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_handler.addFilter(RouteNameFilter())
-
-if 'DISABLE_COLOR_LOG' not in globals() or not DISABLE_COLOR_LOG:
-    color_formatter = ColoredFormatter(
-        '%(log_color)s' + log_format + '%(reset)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        reset=True,
-        log_colors={
-            'DEBUG': 'cyan',
-            'INFO': 'green',
-            'WARNING': 'yellow',
-            'ERROR': 'red',
-            'CRITICAL': 'red,bg_white',
-        },
-        style='%'
-    )
-    console_handler.setFormatter(color_formatter)
-else:
-    console_handler.setFormatter(file_formatter)
-
-for handler in list(app.logger.handlers):
-    app.logger.removeHandler(handler)
-
-app.logger.addHandler(file_handler)
-app.logger.addHandler(console_handler)
-app.logger.setLevel(logging.INFO)
-werkzeug_logger = logging.getLogger('werkzeug')
-werkzeug_logger.handlers.clear()
-werkzeug_logger.addHandler(file_handler)
-werkzeug_logger.addHandler(console_handler)
-werkzeug_logger.setLevel(logging.INFO)
-werkzeug_logger.addFilter(RouteNameFilter())
 
 @app.before_request
 def set_log_route_name():
