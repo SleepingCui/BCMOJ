@@ -83,7 +83,7 @@ def runserver(host, port, debug, wsgi):
                 from waitress import serve
                 click.echo(f"gunicorn not found, using waitress at http://{host}:{port}")
                 
-                app.logger.warning("Waitress does not support werkzeug-style request logging. "
+                app.logger.warning("Waitress does not support request logging. "
                                    "Access logs will NOT be recorded unless handled manually.")
                 
                 serve(app, host=host, port=port)

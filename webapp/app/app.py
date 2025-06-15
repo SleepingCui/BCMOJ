@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, send_from_directory, current_app
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, send_from_directory
 from urllib.parse import urlparse, urljoin
 from datetime import datetime
 from email.mime.text import MIMEText
@@ -27,6 +27,7 @@ from .db import User, Problem, JudgeResult, CheckpointResult, Example
 
 app = Flask(__name__)
 setup_logging(app)
+
 #config
 config = config.get_config()
 EMAIL_CONFIG = config['email_config']
