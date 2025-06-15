@@ -1,4 +1,4 @@
-from .db import db, DB_URI
+from .db import db, DB_URI, init_db
 from .db import User, Problem, JudgeResult, CheckpointResult, Example
 
 __all__ = [

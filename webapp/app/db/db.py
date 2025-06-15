@@ -1,9 +1,15 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from app.config import config
+from sqlalchemy import create_engine, text
+import random
+import string
+import hashlib
+import logging
+from app.config import config as app_config
 
-config = config.get_config()
+config = app_config.get_config()
 raw_db_config = config['db_config']
+
 DB_URI = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@" \
          f"{raw_db_config['db_host']}:{raw_db_config['db_port']}/{raw_db_config['db_name']}"
 
@@ -54,3 +60,34 @@ class Example(db.Model):
     input = db.Column(db.Text, nullable=False)
     output = db.Column(db.Text, nullable=False)
     problem = db.relationship('Problem', backref=db.backref('examples', lazy=True, cascade="all, delete"))
+
+def init_db(app): #create db if not exist
+    db_name = raw_db_config['db_name']
+    base_uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@" \
+               f"{raw_db_config['db_host']}:{raw_db_config['db_port']}"
+
+    engine = create_engine(base_uri, echo=False)
+    with engine.connect() as conn:
+        conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{db_name}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"))
+        conn.commit()
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+    db.init_app(app)
+
+    with app.app_context():
+        db.create_all()
+        admin_user = User.query.filter_by(username='admin').first()
+        if not admin_user:
+            generated_password = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+            hashed_password = hashlib.sha256(generated_password.encode()).hexdigest()
+            admin_user = User(
+                username='admin',
+                email='admin@example.com',
+                passwd=hashed_password,
+                avatar=None,
+                usergroup='admin'
+            )
+            db.session.add(admin_user)
+            db.session.commit()
+
+            app.logger.info(f"[DB] Default admin user created: username=admin password={generated_password} email=admin@example.com")

@@ -14,7 +14,6 @@ import json
 import hashlib
 import time
 import random
-import string
 import smtplib
 import shutil
 import functools
@@ -22,7 +21,7 @@ import requests
 
 from .config import config
 from .logger import setup_logging, log_route_context
-from .db import db, DB_URI
+from .db import db, DB_URI, init_db
 from .db import User, Problem, JudgeResult, CheckpointResult, Example
 
 app = Flask(__name__)
@@ -51,25 +50,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #db init
-db.init_app(app)
-
-with app.app_context():
-    db.create_all()  #create db if not exist
-    admin_user = User.query.filter_by(username='admin').first()
-    if not admin_user:
-        generated_password = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
-        hashed_password = hashlib.sha256(generated_password.encode()).hexdigest()
-        admin_user = User(
-            username='admin',
-            email='admin@example.com',
-            passwd=hashed_password,
-            avatar=None,
-            usergroup='admin'
-        )
-        db.session.add(admin_user)
-        db.session.commit()
-        app.logger.info(f"Default admin user has been created. username={admin_user.username} password={generated_password} email={admin_user.email}")
-
+init_db(app)
 
 @app.before_request
 def set_log_route_name():
