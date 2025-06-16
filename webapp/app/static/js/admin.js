@@ -2,7 +2,6 @@ async function fetchAdminData() {
     const res = await axios.get('/admin/api')
     const data = res.data
     document.getElementById('configYmlContent').value = data.config_yml
-    document.getElementById('configPropertiesContent').value = data.config_properties
     renderUsers(data.users)
     renderProblems(data.problems)
 }
@@ -13,11 +12,6 @@ function saveYml() {
     }).then(response => alert(response.data === 'OK' ? "操作成功!" : "操作失败: " + response.data.reason))
 }
 
-function saveProperties() {
-    axios.post('/admin/api/save_config_properties', {
-        content: document.getElementById('configPropertiesContent').value
-    }).then(response => alert(response.data === 'OK' ? "操作成功!" : "操作失败: " + response.data.reason))
-}
 
 function renderUsers(users) {
     const tbody = document.querySelector('#userTable tbody')

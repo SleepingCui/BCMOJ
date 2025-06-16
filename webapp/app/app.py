@@ -36,8 +36,6 @@ SERVER_PORT = config['judge_config']['judge_port']
 ENABLE_SECURITY_CHECK = config['judge_config']['enable_code_security_check']
 USERDATA_PATH = config['app_settings']['userdata_folder']
 SECRET_KEY = config['app_settings']['secret_key']
-CONFIG_YML_PATH = './config.yml'
-CONFIG_PROPERTIES_PATH = './config.properties'
 GITHUB_REPO = "SleepingCui/BCMOJ"
 MAX_POINTS = 30
 
@@ -492,8 +490,7 @@ def admin_page():
 def admin_api():
     with open("config.yml", encoding='utf-8') as f:
         config_yml = f.read()
-    with open("config.properties", encoding='utf-8') as f:
-        config_properties = f.read()
+    
     users = User.query.with_entities(
         User.userid,
         User.username,
@@ -518,25 +515,16 @@ def admin_api():
 
     return jsonify({
         "config_yml": config_yml,
-        "config_properties": config_properties,
         "users": users,
         "problems": problems
     })
+
 
 @app.route("/admin/api/save_config_yml", methods=["POST"])
 @admin_required
 def save_config_yml():
     content = request.json.get("content", "")
     with open("config.yml", "w", encoding="utf-8") as f:
-        f.write(content)
-    return "OK"
-
-
-@app.route("/admin/api/save_config_properties", methods=["POST"])
-@admin_required
-def save_config_properties():
-    content = request.json.get("content", "")
-    with open("config.properties", "w", encoding="utf-8") as f:
         f.write(content)
     return "OK"
 
@@ -825,7 +813,6 @@ def get_contributors():
 
 
 #uwsgi STATUS
-
 history = {
     'requests': [],
     'workers': [],

@@ -102,9 +102,9 @@ def run(host, port, wsgi, debug):
                 serve(app, host=host, port=port)
             except ImportError:
                 click.echo("[initialize] Neither gunicorn nor waitress is installed.")
-                click.echo("              Please install one of them:")
-                click.echo("                 pip install gunicorn")
-                click.echo("                 pip install waitress")
+                click.echo("Please install one of them:")
+                click.echo("    pip install gunicorn")
+                click.echo("    pip install waitress")
                 sys.exit(1)
     else:
         if debug:

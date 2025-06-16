@@ -25,7 +25,7 @@ def setup_logging(app=None):
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, f"web-{datetime.now().strftime('%Y-%m-%d')}.log")
 
-    log_format = '[%(asctime)s] [%(levelname)s] [%(route_name)s] %(message)s'
+    log_format = '[%(asctime)s] [%(levelname)s] %(message)s'
     file_formatter = logging.Formatter(log_format)
 
     file_handler = RotatingFileHandler(
