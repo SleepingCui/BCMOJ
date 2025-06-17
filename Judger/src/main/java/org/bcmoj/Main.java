@@ -151,7 +151,7 @@ public class Main {
                  | |_) | |___| |  | | |_| | |_| | | |_| |___) |  __/ |   \\ V /  __/ |  \s
                  |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_|  \s
 
-                    BCMOJ Judge Server v1.0-SNAPSHOT  Developed by SleepingCui
+                BCMOJ Judge Server v1.0-SNAPSHOT  Developed by SleepingCui & MxingFoew1034
                \s""";
         System.out.println(logo);
     }

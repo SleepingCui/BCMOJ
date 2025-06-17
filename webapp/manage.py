@@ -10,7 +10,7 @@ logo = r"""
  | |_) | |___| |  | | |_| | |_| | |  __/| | | (_) | |  __| (__| |_ 
  |____/ \____|_|  |_|\___/ \___/  |_|   |_|  \____/ |\___|\___|\__|
                                                  |__/              
-                Developed by SleepingCui    https://github.com/SleepingCui/BCMOJ/
+  Developed by SleepingCui    https://github.com/SleepingCui/BCMOJ/
 """
 
 
