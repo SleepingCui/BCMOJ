@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <title>{{ problem.title }} - 提交代码</title>
   <link rel="stylesheet" href="/static/css/problem.css">
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        packages: {'[+]': ['amsmath', 'amssymb', 'bm']}
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="/static/css/github.min.css">
 </head>
 <body>
 
@@ -16,11 +30,10 @@
   </div>
 </header>
 
-
 <div class="container">
   <div class="description">
     <h2>题目描述</h2>
-    <div style="white-space: pre-wrap;">{{ problem.description }}</div>
+    <div class="markdown-content" style="white-space: pre-wrap;">{{ problem.description }}</div>
     <p><strong>时间限制:</strong> {{ problem.time_limit }} ms</p>
   </div>
 
@@ -30,11 +43,11 @@
       <div class="example-pair">
         <div class="example-half">
           <h4>输入 {{ loop.index }}:</h4>
-          <pre>{{ example.input }}</pre>
+          <pre><code class="language-plaintext">{{ example.input }}</code></pre>
         </div>
         <div class="example-half">
           <h4>输出 {{ loop.index }}:</h4>
-          <pre>{{ example.output }}</pre>
+          <pre><code class="language-plaintext">{{ example.output }}</code></pre>
         </div>
       </div>
     {% endfor %}
@@ -43,8 +56,8 @@
   <div class="upload-area">
     <h2>提交你的代码</h2>
     <form id="submitForm" method="post" enctype="multipart/form-data">
-      <input type="file" name="code" id="fileInput">
-      <textarea id="codePasteArea" placeholder="你也可以在这里粘贴代码..." rows="10"></textarea>
+      <input type="file" name="code" id="fileInput" accept=".cpp,.c,.java,.py,.js,.go,.rs">
+      <textarea id="codePasteArea" placeholder="你也可以在这里粘贴代码..." rows="10" spellcheck="false"></textarea>
       <p style="color: #888;">你可以拖动文件到页面任意位置，或将代码粘贴到上方文本框</p>
       <button type="submit">提交</button>
     </form>
@@ -60,11 +73,11 @@
   <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
 </div>
 
+<!-- 添加必要的JS库 -->
+<script src="/static/js/marked.min.js"></script>
+<script src="/static/js/tex-mml-chtml.js"></script>
+<script src="/static/js/highlight.min.js"></script>
 <script src="/static/js/problem.js"></script>
-
-
-
-
 
 </body>
 </html>
