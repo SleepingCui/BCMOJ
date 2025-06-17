@@ -1,52 +1,131 @@
 body {
-            font-family: "Segoe UI", sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            padding: 20px;
-        }
-        h2, h3 {
-            color: #007bff;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-            background-color: white;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            border: 1px solid #dee2e6;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
+    font-family: "Segoe UI", sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 20px;
+}
 
-        .status-Accepted { color: green; font-weight: bold; }
-        .status-Wrong { color: #dc3545; font-weight: bold; }
-        .status-Time { color: #ffc107; font-weight: bold; }
-        .status-Runtime { color: #fd7e14; font-weight: bold; }
-        .status-Compile { color: #6f42c1; font-weight: bold; }
-        .status-Security { color: #17a2b8; font-weight: bold; }
-        .status-System { color: gray; font-weight: bold; }
+h2, h3 {
+    color: #007bff;
+}
 
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
 
-        {{ style_defs|safe }}
+th, td {
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    text-align: center;
+}
 
-        .codehilite {
-            background-color: #f0f0f0;
-            border-left: 5px solid #007bff;
-            padding: 16px;
-            overflow-x: auto;
-            margin-top: 20px;
-            text-align: left;
+th {
+    background-color: #007bff;
+    color: white;
+}
 
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #888;
-            font-size: 14px;
-        }
+.status-Accepted { color: green; font-weight: bold; }
+.status-Wrong { color: #dc3545; font-weight: bold; }
+.status-Time { color: #ffc107; font-weight: bold; }
+.status-Runtime { color: #fd7e14; font-weight: bold; }
+.status-Compile { color: #6f42c1; font-weight: bold; }
+.status-Security { color: #17a2b8; font-weight: bold; }
+.status-System { color: gray; font-weight: bold; }
+
+/* 代码容器样式 - 保持你的设计风格但优化代码显示 */
+.codehilite {
+    background-color: #f0f0f0;
+    border-left: 5px solid #007bff;
+    padding: 0; /* 重置padding，让pre元素控制内边距 */
+    overflow-x: auto;
+    margin-top: 20px;
+    text-align: left;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 重置并优化代码字体和布局 */
+.codehilite pre {
+    margin: 0;
+    padding: 16px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    background-color: transparent;
+    overflow-x: auto;
+    text-align: left;
+    white-space: pre;
+    word-wrap: normal;
+}
+
+/* 行号样式优化 */
+.codehilite .linenos {
+    background-color: #e9ecef;
+    color: #6c757d;
+    padding: 16px 8px 16px 12px;
+    text-align: right;
+    user-select: none;
+    border-right: 1px solid #dee2e6;
+    min-width: 40px;
+}
+
+/* 确保代码行的正确对齐 */
+.codehilite table {
+    width: 100%;
+    border: none;
+    margin: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.codehilite table td {
+    border: none;
+    padding: 0;
+    vertical-align: top;
+}
+
+/* 语法高亮颜色 - 与你的主题色调协调 */
+.codehilite .k { color: #007bff; font-weight: bold; } /* 关键字 - 使用主题蓝色 */
+.codehilite .kt { color: #007bff; font-weight: bold; } /* 类型 */
+.codehilite .s { color: #28a745; } /* 字符串 - 绿色 */
+.codehilite .s2 { color: #28a745; } /* 双引号字符串 */
+.codehilite .c1 { color: #6c757d; font-style: italic; } /* 单行注释 */
+.codehilite .cm { color: #6c757d; font-style: italic; } /* 多行注释 */
+.codehilite .cp { color: #e83e8c; } /* 预处理指令 */
+.codehilite .cpf { color: #28a745; } /* 预处理文件名 */
+.codehilite .n { color: #333; } /* 普通标识符 */
+.codehilite .nf { color: #6f42c1; } /* 函数名 */
+.codehilite .nb { color: #007bff; } /* 内置函数 */
+.codehilite .mi { color: #fd7e14; } /* 整数 */
+.codehilite .mf { color: #fd7e14; } /* 浮点数 */
+.codehilite .o { color: #dc3545; } /* 操作符 */
+.codehilite .p { color: #333; } /* 标点符号 */
+
+/* 移除可能干扰的默认样式 */
+.codehilite code {
+    font-family: inherit !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #888;
+    font-size: 14px;
+}
+
+.footer a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}

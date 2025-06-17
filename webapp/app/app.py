@@ -320,8 +320,6 @@ def problem(problem_id):
 @app.route('/submit/<int:problem_id>', methods=['POST'])
 @login_required
 def submit(problem_id):
-    app.logger.info(f"[LOGIN CHECK] User {'logged in' if is_logged_in() else 'not logged in'}")
-
     cpp_file = request.files.get('code')
     if not cpp_file:
         return jsonify({'error': 'No file uploaded'}), 400
@@ -346,6 +344,7 @@ def submit(problem_id):
             "securityCheck": ENABLE_SECURITY_CHECK
         }
         json_data = json.dumps(config, indent=2)
+        app.logger.info(f"Problem Data : {json_data}")
 
         results = []
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -380,6 +379,7 @@ def submit(problem_id):
 
                 try:
                     data = json.loads(received.decode('utf-8'))
+                    app.logger.info(f"Received data : {data}")
                     for key in data:
                         if key.endswith('_res'):
                             idx = key.split('_')[0]
