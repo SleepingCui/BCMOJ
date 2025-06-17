@@ -36,7 +36,7 @@ public class JudgeServer {
                 securityCheckFailed = false;
                 LOGGER.info("Code Security Check is not enabled");
             }
-            // 生成检查点
+
             for (int i = 1; i <= checkpointsCount; i++) {
                 final int checkpointIndex = i;
                 Callable<Judger.JudgeResult> task = () -> {

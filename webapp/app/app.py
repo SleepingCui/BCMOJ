@@ -77,6 +77,15 @@ def admin_required(f):
 
     return decorated_function
 
+def teacher_required(f):
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "usergroup" not in session or session["usergroup"] != "teacher":
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
@@ -614,136 +623,93 @@ def delete_problem():
     return "OK"
 
 # teacher
-@app.route('/teacher/teacher_api', methods=['GET'])
-def get_teacher_data():
-    problems = Problem.query.all()
-    result = []
-    for problem in problems:
-        examples = Example.query.filter_by(problem_id=problem.problem_id).all()
-        result.append({
-            'problem_id': problem.problem_id,
-            'title': problem.title,
-            'description': problem.description,
-            'time_limit': problem.time_limit,
-            'examples': [{'input': ex.input, 'output': ex.output} for ex in examples]
-        })
+# teacher
+@app.route('/teacher')
+def teacher_page():
+    if 'usergroup' not in session or session['usergroup'] not in ['admin', 'teacher']:
+        abort(403)
 
-    return jsonify({'problems': result})
+    return send_file("templates/teacher.html")
 
 
-@app.route('/teacher/api/teacher_create_problem', methods=['POST'])
+@app.route("/teacher/api")
+@teacher_required
+def teacher_api():
+    problems = []
+    for p in Problem.query.all():
+        examples = Example.query.filter_by(problem_id=p.problem_id).with_entities(Example.input, Example.output).all()
+        examples = [{'input': ex.input, 'output': ex.output} for ex in examples]
+        problem_data = {
+            "problem_id": p.problem_id,
+            "title": p.title,
+            "description": p.description,
+            "time_limit": p.time_limit,
+            "examples": examples
+        }
+        problems.append(problem_data)
+
+    return jsonify({
+        "problems": problems
+    })
+
+
+@app.route("/teacher/api/create_problem", methods=["POST"])
+@teacher_required
 def teacher_create_problem():
-    data = request.get_json()
-    title = data.get('title')
-    description = data.get('description')
-    time_limit = data.get('time_limit')
-    examples = data.get('examples')
-
-    if not title or not description or not time_limit:
-        return jsonify({'error': 'Missing required fields'}), 400
-
-    problem = Problem(title=title, description=description, time_limit=time_limit)
+    data = request.json
+    problem = Problem(
+        title=data["title"],
+        description=data["description"],
+        time_limit=data["time_limit"]
+    )
     db.session.add(problem)
     db.session.flush()
-
-    for ex in examples:
+    
+    for ex in data["examples"]:
         example = Example(
             problem_id=problem.problem_id,
-            input=ex['input'],
-            output=ex['output']
+            input=ex["input"],
+            output=ex["output"]
         )
         db.session.add(example)
-
+    
     db.session.commit()
+    return "OK"
 
-    return jsonify({'message': '问题创建成功'}), 201
 
-
-@app.route('/teacher/api/teacher_update_problem', methods=['POST'])
+@app.route("/teacher/api/update_problem", methods=["POST"])
+@teacher_required
 def teacher_update_problem():
-    data = request.get_json()
-    problem_id = data.get('problem_id')
-    title = data.get('title')
-    description = data.get('description')
-    time_limit = data.get('time_limit')
-    examples = data.get('examples')
-
-    if not problem_id or not title or not description or not time_limit:
-        return jsonify({'error': 'Missing required fields'}), 400
-
-    problem = Problem.query.get(problem_id)
-    if not problem:
-        return jsonify({'error': 'Problem not found'}), 404
-
-    problem.title = title
-    problem.description = description
-    problem.time_limit = time_limit
-
-    Example.query.filter_by(problem_id=problem_id).delete()
-
-    for ex in examples:
-        example = Example(
-            problem_id=problem_id,
-            input=ex['input'],
-            output=ex['output']
-        )
-        db.session.add(example)
-
-    db.session.commit()
-
-    return jsonify({'message': '问题更新成功'}), 200
+    data = request.json
+    problem = Problem.query.get(data["problem_id"])
+    if problem:
+        problem.title = data["title"]
+        problem.description = data["description"]
+        problem.time_limit = data["time_limit"]
+        
+        Example.query.filter_by(problem_id=problem.problem_id).delete()
+        
+        for ex in data["examples"]:
+            example = Example(
+                problem_id=problem.problem_id,
+                input=ex["input"],
+                output=ex["output"]
+            )
+            db.session.add(example)
+        
+        db.session.commit()
+    return "OK"
 
 
-@app.route('/teacher/api/teacher_delete_problem', methods=['POST'])
+@app.route("/teacher/api/delete_problem", methods=["POST"])
+@teacher_required
 def teacher_delete_problem():
-    data = request.get_json()
-    problem_id = data.get('problem_id')
-
-    if not problem_id:
-        return jsonify({'error': 'Missing problem_id'}), 400
-
+    problem_id = request.json.get("problem_id")
     problem = Problem.query.get(problem_id)
     if problem:
         db.session.delete(problem)
         db.session.commit()
-
-    return jsonify({'message': '问题已删除'}), 200
-
-
-@app.route('/teacher/problem_manage', methods=['GET', 'POST'])
-@login_required
-def teacher_problem_manage():
-    usergroup = session.get('usergroup')
-    if usergroup not in ['admin', 'teacher']:
-        return "Unauthorized access", 403
-
-    problems = Problem.query.all()
-    
-    if request.method == 'POST' and 'create_problem' in request.form:
-        title = request.form['title']
-        description = request.form['description']
-        time_limit = request.form['time_limit']
-
-        problem = Problem(title=title, description=description, time_limit=time_limit)
-        db.session.add(problem)
-        db.session.flush()
-
-        examples = request.form.getlist('examples')
-        for example in examples:
-            input_data, output_data = example.split('|')
-            example = Example(
-                problem_id=problem.problem_id,
-                input=input_data,
-                output=output_data
-            )
-            db.session.add(example)
-            app.logger.info(f"Insert[problemid={problem.problem_id} input_data={input_data} output_data={output_data}]")
-
-        db.session.commit()
-        app.logger.info("Success")
-        flash("题目创建成功", "success")
-
-    return render_template('teacher_problem_manage.html', problems=problems)
+    return "OK"
 
 # admin results
 @app.route('/admin_results', defaults={'page': 1, 'search': ''}, methods=['GET'])

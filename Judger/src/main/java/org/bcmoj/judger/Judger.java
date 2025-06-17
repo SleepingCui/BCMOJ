@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 public class Judger {
 
     public static Logger LOGGER = LoggerFactory.getLogger(Judger.class);
-    // 状态码
+
     public static final int COMPILE_ERROR = -4;
     public static final int WRONG_ANSWER = -3;
     public static final int REAL_TIME_LIMIT_EXCEEDED = 2;
