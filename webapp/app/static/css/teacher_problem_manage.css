@@ -1,6 +1,6 @@
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7fa;
+            background-color: #f4f6f9;
             color: #333;
             margin: 0;
             padding: 0;
@@ -9,8 +9,31 @@
         h1 {
             text-align: center;
             color: #007bff;
-            margin: 20px 0;
+            margin: 0;
         }
+    header {
+        background-color: #007bff;
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    header h1 {
+        margin: 0;
+        font-size: 36px;
+        color: white;
+    }
+
+    /* header a {
+        color: white;
+        text-decoration: none;
+    }
+
+    header a:hover {
+        text-decoration: underline;
+    } */
 
         .section {
             background-color: #ffffff;

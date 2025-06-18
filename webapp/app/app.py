@@ -150,7 +150,7 @@ def register():
             return redirect(url_for('register'))
 
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
-        new_user = User(username=username, email=email, passwd=hashed_password, avatar=None, usergroup='user')
+        new_user = User(username=username, email=email, passwd=hashed_password, avatar='0', usergroup='user')
         db.session.add(new_user)
         db.session.commit()
 
