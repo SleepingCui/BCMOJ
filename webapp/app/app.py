@@ -623,7 +623,6 @@ def delete_problem():
     return "OK"
 
 # teacher
-# teacher
 @app.route('/teacher')
 def teacher_page():
     if 'usergroup' not in session or session['usergroup'] not in ['admin', 'teacher']:
@@ -724,8 +723,19 @@ def admin_results(page, search):
     results_per_page = 20
     offset = (page - 1) * results_per_page
 
-    query = JudgeResult.query.join(Problem, JudgeResult.problemid == Problem.problem_id)
-    
+    query = (
+        db.session.query(
+            JudgeResult.result_id,
+            JudgeResult.userid,
+            User.username,
+            JudgeResult.problemid,
+            Problem.title,
+            JudgeResult.time
+        )
+        .join(Problem, JudgeResult.problemid == Problem.problem_id)
+        .join(User, JudgeResult.userid == User.userid)
+    )
+
     if search:
         search_pattern = f'%{search}%'
         query = query.filter(
@@ -738,20 +748,22 @@ def admin_results(page, search):
 
     total_results = query.count()
     total_pages = (total_results + results_per_page - 1) // results_per_page
+    results = (
+        query.order_by(JudgeResult.time.desc())
+             .limit(results_per_page)
+             .offset(offset)
+             .all()
+    )
+    app.logger.info(f"Total Results : {total_results}")
+    return render_template(
+        'admin_result_list.html',
+        results=results,
+        page=page,
+        total_pages=total_pages,
+        search=search
+    )
 
-    results = query.order_by(JudgeResult.time.desc())\
-                  .limit(results_per_page)\
-                  .offset(offset)\
-                  .all()
-
-    app.logger.info(f"Results={results} Page={page}/{total_pages}")
-    return render_template('admin_result_list.html',
-                         results=results,
-                         page=page,
-                         total_pages=total_pages,
-                         search=search)
 # about
-
 @app.route("/about")
 def about():
     return render_template("about.html", repo=GITHUB_REPO)

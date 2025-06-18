@@ -17,7 +17,7 @@
             <tr>
                 <th>评测 ID</th>
                 <th>题目 ID</th>
-                <th>题目标题</th>
+                <th>题目</th>
                 <th>时间</th>
                 <th>操作</th>
             </tr>
@@ -27,7 +27,7 @@
             <tr>
                 <td>{{ r.result_id }}</td>
                 <td>{{ r.problemid }}</td>
-                <td>{{ r.title }}</td>
+                <td>{{ r.problem.title }}</td>
                 <td>{{ r.time }}</td>
                 <td><a class="button" href="{{ url_for('results', userid=r.userid, resultid=r.result_id) }}">查看详情</a></td>
             </tr>
