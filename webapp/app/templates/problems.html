@@ -63,8 +63,8 @@
 
     {% if usergroup == 'admin' %}
         <a href="{{ url_for('admin_page') }}" class="admin-console-btn">管理员控制台</a>
+        <a href="{{ url_for('teacher_page') }}" class="problem-manage-btn">题目管理</a>
     {% elif usergroup == 'teacher' %}
->
         <a href="{{ url_for('teacher_page') }}" class="problem-manage-btn">题目管理</a>
     {% endif %}
 {% endif %}

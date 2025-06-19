@@ -80,10 +80,9 @@ def admin_required(f):
 def teacher_required(f):
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
-        if "usergroup" not in session or session["usergroup"] != "teacher":
+        if "usergroup" not in session or session["usergroup"] not in ["teacher", "admin"]:
             return redirect(url_for("login"))
         return f(*args, **kwargs)
-
     return decorated_function
 
 def is_safe_url(target):

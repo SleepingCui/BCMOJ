@@ -1,163 +1,155 @@
 body {
-            font-family: "Microsoft YaHei", sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            position: relative; 
-        }
+    font-family: "Microsoft YaHei", sans-serif;
+    background-color: #f4f6f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    position: relative; 
+}
 
-        header {
-            background-color: #007bff;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-        h1 {
-            margin: 0;
-            font-size: 36px;
-        }
+h1 {
+    margin: 0;
+    font-size: 36px;
+}
 
-        .user-info {
-            font-size: 16px;
-            cursor: pointer;
-        }
+.user-info {
+    font-size: 16px;
+    cursor: pointer;
+}
 
-        .container {
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
+.container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
-        .problem-list {
-            list-style-type: none;
-            padding: 0;
-        }
+.problem-list {
+    list-style-type: none;
+    padding: 0;
+}
 
-        .problem-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #e9ecef;
-            margin: 10px 0;
-            padding: 10px 20px;
-            border-radius: 5px;
-        }
+.problem-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e9ecef;
+    margin: 10px 0;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
 
-        .problem-title {
-            font-size: 18px;
-            color: #007bff;
-            text-decoration: none;
-            flex: 1;
-        }
+.problem-title {
+    font-size: 18px;
+    color: #007bff;
+    text-decoration: none;
+    flex: 1;
+}
 
-        .problem-id {
-            font-weight: bold;
-            color: #555;
-            margin-left: 20px;
-        }
+.problem-id {
+    font-weight: bold;
+    color: #555;
+    margin-left: 20px;
+}
 
-        .search-box {
-            margin-bottom: 20px;
-        }
+.search-box {
+    margin-bottom: 20px;
+}
 
-        .search-box input {
-            padding: 10px;
-            width: 97%;
-            font-size: 16px;
-        }
+.search-box input {
+    padding: 10px;
+    width: 97%;
+    font-size: 16px;
+}
 
-        .pagination {
-            text-align: center;
-            margin-top: 20px;
-        }
+.pagination {
+    text-align: center;
+    margin-top: 20px;
+}
 
-        .pagination button, .pagination a {
-            padding: 6px 12px;
-            margin: 0 5px;
-            font-size: 14px;
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-            text-decoration: none;
-        }
+.pagination button, .pagination a {
+    padding: 6px 12px;
+    margin: 0 5px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    text-decoration: none;
+}
 
-        .pagination input {
-            width: 60px;
-            padding: 10px;
-            text-align: center;
-        }
+.pagination input {
+    width: 60px;
+    padding: 10px;
+    text-align: center;
+}
 
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #888;
-            font-size: 14px;
-        }
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #888;
+    font-size: 14px;
+}
 
-        .go-to-records-btn {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 14px;
-            text-decoration: none;
-            z-index: 1000; 
-        }
+.go-to-records-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    text-decoration: none;
+    z-index: 1000; 
+}
 
-        .go-to-records-btn:hover {
-            background-color: #0056b3;
-        }
+.go-to-records-btn:hover {
+    background-color: #0056b3;
+}
 
-        
-        .admin-console-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #28a745;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 14px;
-            text-decoration: none;
-            z-index: 1000;
-        }
+.admin-console-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 120px;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    text-decoration: none;
+    z-index: 1000;
+}
 
-        .admin-console-btn:hover {
-            background-color: #218838;
-        }
+.admin-console-btn:hover {
+    background-color: #0056b3;
+}
 
-      
-        .problem-manage-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #ffc107;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 14px;
-            text-decoration: none;
-            z-index: 1000;
-        }
+.problem-manage-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    text-decoration: none;
+    z-index: 1000;
+}
 
-        .problem-manage-btn:hover {
-            background-color: #e0a800;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #888;
-            font-size: 14px;
-        }
+.problem-manage-btn:hover {
+    background-color: #0056b3;
+}
