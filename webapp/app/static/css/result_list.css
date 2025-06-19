@@ -1,79 +1,123 @@
-        body {
-            font-family: "Segoe UI", sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            padding: 20px;
-        }
-        h2 {
-            color: #007bff;
-        }
-        .search-container {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .search-container input {
-            padding: 8px;
-        font-size: 16px;
-        border-radius: 4px;
-        border: 1px solid #ced4da;
-        width: 100%;
-        max-width: 600px;
+html, body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            padding: 12px;
-            text-align: center;
-            border-bottom: 1px solid #dee2e6;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        a.button {
-            background-color: #007bff;
-            color: white;
-            padding: 6px 12px;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        a.button:hover {
-            background-color: #0056b3;
-        }
-        .pagination {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            list-style-type: none;
-            padding: 0;
-        }
-        .pagination li {
-            margin: 0 5px;
-        }
-        .pagination a {
-            padding: 8px 12px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        .pagination a:hover {
-            background-color: #0056b3;
-        }
-        .pagination .disabled {
-            background-color: #e0e0e0;
-            cursor: not-allowed;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #888;
-            font-size: 14px;
-        }
+body {
+    font-family: "Segoe UI", sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 20px;
+    padding-top: 90px;
+    margin: 0;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    background-color: #007bff;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    z-index: 9999;
+    margin: 0;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 36px;
+}
+
+.user-info a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    position: relative;
+    left: -20px;
+}
+
+.search-container {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-container input {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    width: 100%;
+    max-width: 600px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+a.button {
+    background-color: #007bff;
+    color: white;
+    padding: 6px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+a.button:hover {
+    background-color: #0056b3;
+}
+
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    list-style-type: none;
+    padding: 0;
+}
+
+.pagination li {
+    margin: 0 5px;
+}
+
+.pagination a {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.pagination a:hover {
+    background-color: #0056b3;
+}
+
+.pagination .disabled {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #888;
+    font-size: 14px;
+}

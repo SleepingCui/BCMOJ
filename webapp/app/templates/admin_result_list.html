@@ -5,9 +5,14 @@
     <title>所有用户评测结果</title>
     <link rel="stylesheet" href="/static/css/admin_result_list.css">
 </head>
-<body>
-    <h2>所有用户的评测结果</h2>
 
+<body>
+    <header>
+        <h1>所有用户评测结果</h1>
+        <div class="user-info">
+            <a href="/problems">题目列表</a>
+        </div>
+    </header>
     <div class="search-container">
         <form action="{{ url_for('admin_results') }}" method="get">
             <input type="text" name="search" placeholder="按评测ID、题目ID、题目标题搜索" value="{{ search }}"/>

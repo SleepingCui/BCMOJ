@@ -6,7 +6,12 @@
     <link rel="stylesheet" href="/static/css/result_list.css">
 </head>
 <body>
-    <h2>用户 {{ session.username }} 的评测记录</h2>
+    <header>
+        <h1>用户 {{ session.username }} 的评测记录</h1>
+        <div class="user-info">
+            <a href="/problems">题目列表</a>
+        </div>
+    </header>
 
     <div class="search-container">
         <input type="text" id="searchInput" onkeyup="searchResults()" placeholder="按题目ID、标题、时间或评测ID搜索..." />
