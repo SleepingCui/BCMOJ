@@ -4,7 +4,6 @@ from sqlalchemy import create_engine, text
 import random
 import string
 import hashlib
-import logging
 from app.config import config as app_config
 
 config = app_config.get_config()
