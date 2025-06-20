@@ -716,15 +716,14 @@ def teacher_delete_problem():
     return "OK"
 
 # admin results
-@app.route('/admin_results', defaults={'page': 1, 'search': ''}, methods=['GET'])
+@app.route('/admin_results', methods=['GET'])
 @app.route('/admin_results/page/<int:page>', methods=['GET'])
-@app.route('/admin_results/search/<search>', defaults={'page': 1}, methods=['GET'])
 @login_required
-def admin_results(page, search):
+def admin_results(page=1):
     current_user_group = session.get('usergroup')
     if current_user_group not in ['admin', 'teacher']:
         return "Unauthorized access", 403
-
+    search = request.args.get('search', '', type=str)
     results_per_page = 20
     offset = (page - 1) * results_per_page
 
