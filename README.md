@@ -6,6 +6,8 @@
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr/SleepingCui/BCMOJ)
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/SleepingCui/BCMOJ/master)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/SleepingCui/BCMOJ/maven.yml)
+![GitHub Release](https://img.shields.io/github/v/release/SleepingCui/BCMOJ)
+
 <br></br>
 
 > [!WARNING]
