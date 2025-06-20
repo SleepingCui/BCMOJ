@@ -19,7 +19,7 @@ import shutil
 import functools
 import requests
 
-from .config import config
+from .config import config, version
 from .logger import setup_logging, log_route_context
 from .db import db, DB_URI, init_db
 from .db import User, Problem, JudgeResult, CheckpointResult, Example
@@ -64,6 +64,12 @@ def set_log_route_name():
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
 
+def get_latest_release():
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+    response = requests.get(url, timeout=5)
+    if response.status_code == 200:
+        return response.json().get("tag_name")
+    return None
 
 def is_logged_in():
     return 'user_id' in session
@@ -296,7 +302,7 @@ def problems():
     user_id = user_id or "None"
 
     return render_template('problems.html', problems=problems, username=username, user_id=user_id,
-                           query=query, page=page, total_pages=total_pages, usergroup=usergroup)
+                           query=query, page=page, total_pages=total_pages, usergroup=usergroup, version=version)
 
 @app.route('/problem/<int:problem_id>')
 def problem(problem_id):
@@ -843,3 +849,21 @@ def uwsgi_stats_data():
             'workers': history['workers'],
         }
     })
+
+@app.route('/check_update')
+@login_required
+def check_update():
+    if session.get('usergroup') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    latest = get_latest_release()
+    if not latest:
+        return jsonify({"error": "无法获取最新版本"}), 500
+
+    if latest == version:
+        return jsonify({"message": f"已是最新版本：{version}"}), 200
+    else:
+        return jsonify({
+            "message": f"发现新版本：{latest}（当前为 {version}）",
+            "latest": latest
+        }), 200

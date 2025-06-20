@@ -50,7 +50,9 @@ def cli(ctx):
       python manage.py run --host=0.0.0.0 --port=8080 --wsgi
     """
     if ctx.invoked_subcommand is None:
+        from app.config import version
         click.echo(logo)
+        click.echo(f"Version : {version}")
         click.echo(ctx.get_help())
 
 
@@ -74,10 +76,12 @@ def run(host, port, wsgi, debug):
         sys.exit(1)
     
     from app.app import app  
+    from app.config import version
     from app.logger import setup_logging
     
     setup_logging(app)
-    
+    click.echo(f"[initialize] App Version : {version}")
+
     if wsgi:
         try:
             import gunicorn.app.wsgiapp as gunicorn_app

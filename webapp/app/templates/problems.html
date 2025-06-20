@@ -28,8 +28,7 @@
     {% else %}
         <li style="text-align: center; padding: 20px; font-size: 18px; color: #888;">没有题目!</li>
     {% endif %}
-</ul>
-
+    </ul>
 
     <div class="pagination">
         {% if page > 1 %}
@@ -50,9 +49,17 @@
 </div>
 
 <div class="footer">
-    <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
-</div>
+    <p>
+        &copy; 2025 BCMOJ. Released under the
+        <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.
+        | <a href="/about">关于我们</a>
+        | 当前版本：{{ version }}
+        {% if usergroup == 'admin' %}
+        | <a href="javascript:void(0);" id="checkUpdateBtn">检查更新</a>
+        {% endif %}
 
+    </p>
+</div>
 
 {% if user_id not in ['None', ''] %}
     {% if usergroup in ['admin', 'teacher'] %}
@@ -68,28 +75,29 @@
         <a href="{{ url_for('teacher_page') }}" class="problem-manage-btn">题目管理</a>
     {% endif %}
 {% endif %}
-<script type="text/javascript">
-    const username = "{{ username|default('') }}";
-    const userId = "{{ user_id|default('') }}";
-    const usergroup = "{{ usergroup|default('') }}";
-    console.log(usergroup);
-    const userInfoDiv = document.getElementById('userInfo');
 
-    if (username === "" || userId === "" || username === "None" || userId === "None") {
-        userInfoDiv.textContent = '未登录';
-        userInfoDiv.onclick = function() {
-            window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
-        };
-    } else {
-        userInfoDiv.textContent = `${username} [${userId}]`;
-        userInfoDiv.onclick = function() {
-            const confirmLogout = confirm('确定要登出吗？');
-            if (confirmLogout) {
-                window.location.href = '/logout';
-            }
-        };
-    }
-    
+<script type="text/javascript">
+const username = "{{ username|default('') }}";
+const userId = "{{ user_id|default('') }}";
+const usergroup = "{{ usergroup|default('') }}";
+console.log(usergroup);
+const userInfoDiv = document.getElementById('userInfo');
+
+if (username === "" || userId === "" || username === "None" || userId === "None") {
+    userInfoDiv.textContent = '未登录';
+    userInfoDiv.onclick = function() {
+        window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
+    };
+} else {
+    userInfoDiv.textContent = `${username} [${userId}]`;
+    userInfoDiv.onclick = function() {
+        const confirmLogout = confirm('确定要登出吗？');
+        if (confirmLogout) {
+            window.location.href = '/logout';
+        }
+    };
+}
+
 document.getElementById('searchInput').addEventListener('input', function() {
     const query = this.value;
     const url = new URL(window.location.href);
@@ -108,12 +116,36 @@ function jumpToPage() {
         return;
     }
 
-        const url = new URL(window.location.href);
-        url.searchParams.set('page', page);
-        if (query) url.searchParams.set('q', query);
-        window.location.href = url.toString();
-    }
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    if (query) url.searchParams.set('q', query);
+    window.location.href = url.toString();
+}
+
 </script>
+{% if usergroup == 'admin' %}
+<script>
+document.getElementById("checkUpdateBtn").onclick = function () {
+    fetch("/check_update")
+        .then(response => response.json())
+        .then(data => {
+            console.info(data)
+            if (data.error) {
+                alert("错误：" + data.error);
+            } else if (data.latest) {
+                alert("发现新版本：" + data.latest);
+                window.location.href = "https://github.com/your_username/your_repo_name/releases/latest";
+            } else {
+                alert("当前是最新版！");
+            }
+        })
+        .catch(err => {
+            alert("请求失败：" + err);
+        });
+};
+</script>
+{% endif %}
+
 
 </body>
 </html>
