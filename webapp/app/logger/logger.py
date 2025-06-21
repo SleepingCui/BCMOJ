@@ -2,7 +2,6 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from colorlog import ColoredFormatter
 from app.config import config
-
 import os
 import logging
 import contextvars
@@ -18,10 +17,15 @@ class RouteNameFilter(logging.Filter):
         record.route_name = route_name
         return True
 
-def setup_logging(app=None):
-    disable_color=config['app_settings']['disable_color_log']
+def get_project_root():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.abspath(os.path.join(current_dir, '../../../'))
 
-    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+def setup_logging(app=None):
+    disable_color = config['app_settings']['disable_color_log']
+    
+    project_root = get_project_root()
+    log_dir = os.path.join(project_root, 'logs')
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, f"web-{datetime.now().strftime('%Y-%m-%d')}.log")
 
