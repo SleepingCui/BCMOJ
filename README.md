@@ -15,25 +15,9 @@
 ---
 
 ## 项目架构
-
-```mermaid
-flowchart TD
-    A[用户浏览器] -->|提交代码| B[Flask Web服务器]
-    B -->|保存记录| C[(MySQL数据库)]
-    B -->|转发请求| D[Java判题服务器]
-    D -->|获取测试用例| C
-    D --> E{安全检查}
-    E -->|安全| F[编译代码]
-    E -->|危险| G[返回错误]
-    F --> H[执行测试用例]
-    H --> I[结果比对]
-    I --> J[生成报告]
-    J -->|存储结果| C
-    J -->|返回结果| B
-    B -->|显示结果| A
-```
-
----
+<p align="center">
+  <img src="https://raw.githubusercontent.com/SleepingCui/BCMOJ/master/imgs/md1.svg" alt="System Architecture" width="50%"/>
+</p>
 
 ## 如何使用
 
