@@ -8,8 +8,6 @@
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/SleepingCui/BCMOJ/maven.yml)
 ![GitHub Release](https://img.shields.io/github/v/release/SleepingCui/BCMOJ)
 
-<br></br>
-
 > [!WARNING]
 > **这个项目目前处于开发阶段,可能存在未经查明的bug
 > 如果发现bug,请提出[issue](https://github.com/SleepingCui/BCMOJ/issues)**
