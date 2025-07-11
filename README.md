@@ -19,7 +19,7 @@
   <img src="https://raw.githubusercontent.com/SleepingCui/BCMOJ/master/imgs/md1.svg" alt="System Architecture" width="50%"/>
 </p>
 
-## 如何使用
+## 安装&使用
 
 ### 详见[Wiki](https://github.com/SleepingCui/BCMOJ/wiki)
 
