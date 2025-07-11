@@ -28,8 +28,7 @@ def send_verification_email(email, verification_code):
         return False
 
 def generate_verification_code(length=6):
-    # 生成长度为 length 的数字验证码（字符串）
-    return ''.join(str(random.randint(0, 9)) for _ in range(length))
+    return ''.join(str(random.randint(0, 99999)) for _ in range(length))
 
 def start_password_reset(email):
     user = User.query.filter_by(email=email).first()
