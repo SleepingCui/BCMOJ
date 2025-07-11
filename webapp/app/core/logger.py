@@ -1,12 +1,13 @@
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from colorlog import ColoredFormatter
-from app.config import config
 import os
 import logging
 import contextvars
 
-config = config.get_config()
+from .config import get_config
+
+config = get_config()
 log_route_context = contextvars.ContextVar("log_route_context", default="main")
 
 class RouteNameFilter(logging.Filter):

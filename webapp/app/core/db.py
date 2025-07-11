@@ -4,9 +4,9 @@ from sqlalchemy import create_engine, text
 import random
 import string
 import hashlib
-from app.config import config as app_config
+from .config import get_config
 
-config = app_config.get_config()
+config = get_config()
 raw_db_config = config['db_config']
 
 DB_URI = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@" \

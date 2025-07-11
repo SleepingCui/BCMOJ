@@ -26,7 +26,7 @@ class CustomRequestHandler(WSGIRequestHandler):
         }.get(type, logging.INFO)
         client_ip = self.client_address[0]
         try:
-            from app.logger import log_route_context
+            from app.core.logger import log_route_context
             route_name = log_route_context.get('werkzeug') if log_route_context.get() == 'main' else log_route_context.get()
         except ImportError:
             route_name = 'app'
@@ -50,7 +50,7 @@ def cli(ctx):
       python manage.py run --host=0.0.0.0 --port=8080 --wsgi
     """
     if ctx.invoked_subcommand is None:
-        from app.config import version
+        from app.core import version
         click.echo(logo)
         click.echo(f"Version : {version}")
         click.echo(ctx.get_help())
@@ -76,8 +76,8 @@ def run(host, port, wsgi, debug):
         sys.exit(1)
     
     from app.app import app  
-    from app.config import version
-    from app.logger import setup_logging
+    from app.core import version
+    from app.core.logger import setup_logging
     
     setup_logging(app)
     click.echo(f"[initialize] App Version : {version}")
