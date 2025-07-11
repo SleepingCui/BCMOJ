@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_file, abort, send_from_directory
+from flask import Flask, request, session, render_template, redirect, url_for, send_from_directory, send_file, flash, abort, jsonify
 
 import os
-import requests
 
 from .core.config import get_config
 from .core.logger import setup_logging, log_route_context
