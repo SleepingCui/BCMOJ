@@ -1,4 +1,4 @@
-from flask import Flask, request, session, render_template, redirect, url_for, send_from_directory, send_file, flash, abort, jsonify
+from flask import Flask, request, session, render_template, redirect, url_for, send_from_directory, flash, abort, jsonify
 
 import os
 
@@ -12,12 +12,9 @@ setup_logging(app)
 
 #config
 config = get_config()
-SECRET_KEY = config['app_settings']['secret_key']
-GITHUB_REPO = "SleepingCui/BCMOJ"
-app.secret_key = SECRET_KEY
+app.secret_key = config['app_settings']['secret_key']
 app.config['UPLOAD_FOLDER'] = config['app_settings']['upload_folder']
 app.config['USERDATA_FOLDER'] = config['app_settings']['userdata_folder']
-app.secret_key = config['app_settings']['secret_key']
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -157,7 +154,7 @@ def results(userid, resultid, page):
 def admin_page():
     if 'usergroup' not in session or session['usergroup'] != 'admin':
         abort(403)
-    return send_file("templates/admin.html")
+    return render_template("admin.html")
 
 @app.route("/admin/api")
 @admin_required
@@ -206,7 +203,7 @@ def admin_delete_problem():
 def teacher_page():
     if 'usergroup' not in session or session['usergroup'] not in ['admin', 'teacher']:
         abort(403)
-    return send_file("templates/teacher.html")
+    return render_template("teacher.html")
 
 @app.route("/teacher/api")
 @teacher_required
@@ -240,7 +237,7 @@ def admin_results(page=1):
 # about
 @app.route("/about")
 def about():
-    return render_template("about.html", repo=GITHUB_REPO)
+    return render_template("about.html", repo="SleepingCui/BCMOJ")
 
 @app.route("/api/contributors")
 def get_contributors():

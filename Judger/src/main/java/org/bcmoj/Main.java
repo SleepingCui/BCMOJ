@@ -91,9 +91,14 @@ public class Main {
         String kwFile = props.getProperty("kwfile");
         boolean needDefaultConfig = isBlank(ip) || isBlank(portStr) || isBlank(kwFile);
 
-
         if (needDefaultConfig && !hasConfigFile) {
-            logger.info("Loading default configuration for missing parameters...");
+            logger.error("Missing required parameters (host, port, or kwfile) and no --config file provided.");
+            showHelp();
+            System.exit(1);
+        }
+
+        if (needDefaultConfig) {
+            logger.info("Loading missing parameters from config file...");
 
             if (isBlank(ip)) {
                 ip = ConfigProcess.GetConfig("ServerIP");
@@ -105,11 +110,13 @@ public class Main {
                 kwFile = ConfigProcess.GetConfig("KeywordsFile");
             }
         }
+
         if (isBlank(ip) || isBlank(portStr)) {
             logger.error("Missing required parameters: host={}, port={}", ip, portStr);
             showHelp();
             System.exit(1);
         }
+
         if (isBlank(kwFile)) {
             kwFile = "keywords.txt";
             logger.info("Using default keyword file: {}", kwFile);
@@ -119,6 +126,7 @@ public class Main {
                 logger.warn("Could not create keyword file: {}", e.getMessage());
             }
         }
+
         try {
             int port = Integer.parseInt(portStr);
             JCFSocketServer server = new JCFSocketServer();
@@ -138,6 +146,7 @@ public class Main {
             System.exit(1);
         }
     }
+
 
     private static boolean isBlank(String str) {
         return str == null || str.trim().isEmpty();
