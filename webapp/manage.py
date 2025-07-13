@@ -88,7 +88,7 @@ def run(host, port, wsgi, debug):
             click.echo(f"[initialize] Starting WSGI server: gunicorn on http://{host}:{port}")
             sys.argv = [
                 "gunicorn",
-                f"{app.__module__}:app",
+                "app.app:app",
                 "-b", f"{host}:{port}",
                 "--access-logfile", "-",
                 "--log-level", "info",
