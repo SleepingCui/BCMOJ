@@ -12,6 +12,12 @@ from .admin_results import get_admin_results
 from .about import fetch_contributors
 from .uwsgi_status import get_uwsgi_stats_data
 from .check_update import check_update_service
+from .exams import get_exam_list
+from .exam import get_exam_context
+from .exam_submit import handle_exam_submission
+from .teacher_exam_api import get_teacher_exam_data, create_exam, update_exam, delete_exam
+from .exam_result import get_exam_result_data
+from .exam_results import get_exam_admin_results, get_exam_results_list
 
 __all__ = [
     'submit_solution',
@@ -43,5 +49,16 @@ __all__ = [
     'get_admin_results',
     'fetch_contributors',
     'get_uwsgi_stats_data',
-    'check_update_service'
+    'check_update_service',
+    'get_exam_list',
+    'get_exam_context',
+    'handle_exam_submission',
+    'get_teacher_exam_data',
+    'create_exam',
+    'update_exam',
+    'delete_exam',
+    'get_exam_result_data',
+    'get_exam_admin_results',
+    'get_exam_results_list'
+
 ]

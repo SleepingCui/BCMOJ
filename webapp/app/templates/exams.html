@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>试卷列表</title>
+    <link rel="stylesheet" href="/static/css/problems.css">
+</head>
+<body>
+
+<header>
+    <h1>试卷列表</h1>
+    <div class="user-info" id="userInfo"></div>
+</header>
+
+<div class="container">
+    <form class="search-box" method="get">
+        <input type="text" name="q" placeholder="按标题或试卷ID搜索..." value="{{ query|default('') }}" id="searchInput">
+    </form>
+
+    <ul class="problem-list">
+    {% if exams %}
+        {% for exam in exams %}
+            <li class="problem-item">
+                <a class="problem-title" href="{{ url_for('exam_detail', exam_id=exam.exam_id) }}">{{ exam.title }}</a>
+                <span class="problem-id">{{ exam.exam_id }}</span>
+            </li>
+        {% endfor %}
+    {% else %}
+        <li style="text-align: center; padding: 20px; font-size: 18px; color: #888;">没有试卷!</li>
+    {% endif %}
+    </ul>
+
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="{{ url_for('exams', q=query, page=page-1) }}">&laquo; 上一页</a>
+        {% endif %}
+
+        <span>第 {{ page }} 页 / 共 {{ total_pages }} 页</span>
+
+        {% if page < total_pages %}
+            <a href="{{ url_for('exams', q=query, page=page+1) }}">下一页 &raquo;</a>
+        {% endif %}
+
+        <div style="margin-top: 10px;">
+            <input type="number" id="jumpPage" min="1" max="{{ total_pages }}" placeholder="页码">
+            <button onclick="jumpToPage()">跳转</button>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>
+        &copy; 2025 BCMOJ. Released under the
+        <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.
+        | <a href="/about">关于我们</a>
+        | v{{ version }}
+        {% if usergroup == 'admin' %}
+        | <a href="javascript:void(0);" id="checkUpdateBtn">检查更新</a>
+        {% endif %}
+    </p>
+</div>
+
+{% if user_id not in ['None', ''] %}
+    {% if usergroup in ['admin', 'teacher'] %}
+        <a href="/admin_results" class="go-to-records-btn">所有评测记录</a>
+    {% else %}
+        <a href="{{ url_for('results', userid=user_id) }}" class="go-to-records-btn">评测记录</a>
+    {% endif %}
+
+    {% if usergroup == 'admin' %}
+        <a href="{{ url_for('admin_page') }}" class="admin-console-btn">管理员控制台</a>
+        <a href="{{ url_for('teacher_page') }}" class="problem-manage-btn">题目管理</a>
+    {% elif usergroup == 'teacher' %}
+        <a href="{{ url_for('teacher_page') }}" class="problem-manage-btn">题目管理</a>
+    {% endif %}
+{% endif %}
+
+<script src="/static/js/problems.js"></script>
+<script type="text/javascript">
+    const username = "{{ username|default('') }}";
+    const userId = "{{ user_id|default('') }}";
+    const usergroup = "{{ usergroup|default('') }}";
+    const totalPages = "{{ total_pages }}";
+    const query = "{{ query|default('') }}";
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initUserInfo(username, userId, usergroup);
+        initSearchInput();
+
+        {% if usergroup == 'admin' %}
+        initCheckUpdate();
+        {% endif %}
+    });
+
+    function jumpToPage() {
+        const pageInput = document.getElementById('jumpPage');
+        let page = parseInt(pageInput.value);
+        if (page >= 1 && page <= {{ total_pages }}) {
+            window.location.href = "{{ url_for('exams') }}" + "?q=" + encodeURIComponent(query) + "&page=" + page;
+        }
+    }
+</script>
+
+</body>
+</html>
