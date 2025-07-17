@@ -1,4 +1,6 @@
 from werkzeug.serving import run_simple, WSGIRequestHandler
+from app.core.config import write_default_config
+from pathlib import Path
 import logging
 import click
 import sys
@@ -85,6 +87,7 @@ def run(host, port, wsgi, debug):
     if wsgi:
         try:
             import gunicorn.app.wsgiapp as gunicorn_app
+            from app.core.config import get_config
             click.echo(f"[initialize] Starting WSGI server: gunicorn on http://{host}:{port}")
             sys.argv = [
                 "gunicorn",
@@ -92,7 +95,7 @@ def run(host, port, wsgi, debug):
                 "-b", f"{host}:{port}",
                 "--access-logfile", "-",
                 "--log-level", "info",
-                "--workers", "4"
+                "--workers", str(get_config()['app_settings']['gunicorn_workers'])
             ]
             gunicorn_app.run()
         except ImportError:
@@ -105,11 +108,12 @@ def run(host, port, wsgi, debug):
                                  
                 serve(app, host=host, port=port)
             except ImportError:
-                click.echo("[initialize] Neither gunicorn nor waitress is installed.")
-                click.echo("Please install one of them:")
-                click.echo("    pip install gunicorn")
-                click.echo("    pip install waitress")
-                sys.exit(1)
+                    click.echo("[initialize] Neither gunicorn nor waitress is installed.")
+                    click.echo("Please install one of them:")
+                    click.echo("    pip install gunicorn  (for Linux/Unix)")
+                    click.echo("    pip install waitress  (for Windows)")
+                    sys.exit(1)
+
     else:
         if debug:
             click.echo(f"[initialize] Starting development server on http://{host}:{port}")
@@ -128,4 +132,10 @@ def run(host, port, wsgi, debug):
         )
 
 if __name__ == "__main__":
+    if not Path("config.yml").exists():
+        write_default_config()
+        click.echo("[initialize] config.yml not found. Default configuration file has been generated.")
+        click.echo("[initialize] Please edit config.yml before running BCMOJ again.")
+        sys.exit(0)
+    
     cli()

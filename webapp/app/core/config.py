@@ -1,5 +1,5 @@
 from pathlib import Path
-from threading import Lock
+from threading import RLock
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedBase
 
@@ -7,7 +7,7 @@ class ConfigManager:
     def __init__(self):
         self.config_path = Path('config.yml')
         self.config = None
-        self.lock = Lock()
+        self.lock = RLock()
         self.yaml = YAML()
         self.yaml.indent(mapping=2, sequence=4, offset=2)
         self.yaml.preserve_quotes = True
@@ -30,7 +30,9 @@ class ConfigManager:
                 for k, c in comments.items():
                     cm.yaml_add_eol_comment(c, key=k)
             return cm
+
         config = CommentedMap()
+
         db_config = add_comments({
             'db_name': 'bcmoj',
             'db_host': 'localhost',
@@ -66,6 +68,7 @@ class ConfigManager:
             'upload_folder': 'tmp',
             'userdata_folder': 'userdata',
             'uwsgi_stats_url': 'http://0.0.0.0:9191',
+            'gunicorn_workers': 4,
             'disable_color_log': False
         }, {
             'secret_key': 'Used for session encryption, set to a strong random string',
@@ -73,23 +76,29 @@ class ConfigManager:
         })
         add_section_header(app_settings, section_comment("Application Settings"))
         config['app_settings'] = app_settings
-
         return config
+
+    def write_default_config(self, force: bool = False):
+        with self.lock:
+            if force or not self.config_path.exists():
+                with open(self.config_path, 'w', encoding='utf-8') as f:
+                    self.yaml.dump(self.get_default_config(), f)
 
     def load_config(self):
         with self.lock:
             if not self.config_path.exists():
-                with open(self.config_path, 'w', encoding='utf-8') as f:
-                    self.yaml.dump(self.get_default_config(), f)
-                self.config = self.get_default_config()
-            else:
-                with open(self.config_path, encoding='utf-8') as f:
-                    self.config = self.yaml.load(f)
+                self.write_default_config()
+            with open(self.config_path, encoding='utf-8') as f:
+                self.config = self.yaml.load(f)
 
     def get_config(self):
         with self.lock:
             return self.config
 
 config_manager = ConfigManager()
-def get_config():    #入口
+
+def get_config():
     return config_manager.get_config()
+
+def write_default_config(force: bool = False):
+    config_manager.write_default_config(force)

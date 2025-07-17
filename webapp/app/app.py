@@ -15,8 +15,6 @@ config = get_config()
 app.secret_key = config['app_settings']['secret_key']
 app.config['UPLOAD_FOLDER'] = config['app_settings']['upload_folder']
 app.config['USERDATA_FOLDER'] = config['app_settings']['userdata_folder']
-app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #db
 init_db(app)
@@ -104,6 +102,7 @@ def forgot_password():
 
     return render_template('forgot_password.html', step=1)
 
+#problem
 @app.route('/problems')
 def problems():
     query = request.args.get('q', '').strip()
@@ -148,7 +147,7 @@ def results(userid, resultid, page):
         if not judge_result:
             return "评测结果不存在", 404
         return render_template('result_detail.html', judge_result=judge_result, checkpoint_results=checkpoint_results, highlighted_code=highlighted_code, style_defs=style_defs, userid=userid)
-    
+
 # admin
 @app.route('/admin')
 def admin_page():

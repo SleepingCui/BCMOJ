@@ -59,7 +59,7 @@ class Example(db.Model):
     input = db.Column(db.Text, nullable=False)
     output = db.Column(db.Text, nullable=False)
     problem = db.relationship('Problem', backref=db.backref('examples', lazy=True, cascade="all, delete"))
-
+    
 def init_db(app): #create db if not exist
     db_name = raw_db_config['db_name']
     base_uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@" \
@@ -71,6 +71,7 @@ def init_db(app): #create db if not exist
         conn.commit()
 
     app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
 
     with app.app_context():
