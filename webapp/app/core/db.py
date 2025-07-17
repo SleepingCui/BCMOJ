@@ -65,16 +65,16 @@ class ExamPaper(db.Model):
     __tablename__ = 'exam_papers'
     exam_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(255), nullable=False)
-    time_limit = db.Column(db.Integer, nullable=False, default=0)  # 单位：分钟，0 表示不限时
+    time_limit = db.Column(db.Integer, nullable=False, default=0)
 
 class ExamQuestion(db.Model):
     __tablename__ = 'exam_questions'
     question_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     exam_id = db.Column(db.Integer, db.ForeignKey('exam_papers.exam_id', ondelete='CASCADE'), nullable=False)
     question_text = db.Column(db.Text, nullable=False)
-    options = db.Column(db.JSON, nullable=False)  # 格式：{"A": "选项内容", "B": "选项内容", ...}
-    correct_answer = db.Column(db.JSON, nullable=False)  # 单选：["A"], 多选：["A", "C"]
-    is_multiple = db.Column(db.Boolean, default=False)  # True 表示多选题
+    options = db.Column(db.JSON, nullable=False)  #{"A": "text", "B": "text", ...}
+    correct_answer = db.Column(db.JSON, nullable=False)  #["A"] or ["A", "C"]
+    is_multiple = db.Column(db.Boolean, default=False) 
 
     exam = db.relationship('ExamPaper', backref=db.backref('questions', lazy=True, cascade="all, delete"))
 
@@ -93,7 +93,7 @@ class UserAnswer(db.Model):
     __tablename__ = 'user_answers'
     result_id = db.Column(db.Integer, db.ForeignKey('user_exam_results.result_id', ondelete='CASCADE'), primary_key=True)
     question_id = db.Column(db.Integer, db.ForeignKey('exam_questions.question_id', ondelete='CASCADE'), primary_key=True)
-    selected = db.Column(db.JSON, nullable=False)  # 用户选择的答案，格式如 ["A"] 或 ["A", "C"]
+    selected = db.Column(db.JSON, nullable=False)  #["A"] or ["A", "C"]
     is_correct = db.Column(db.Boolean, nullable=False)
 
     result = db.relationship('UserExamResult', backref=db.backref('answers', lazy=True, cascade="all, delete"))
