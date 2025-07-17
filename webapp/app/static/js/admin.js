@@ -12,6 +12,7 @@ function saveYml() {
 }
 
 function renderUsers(users) {
+    console.log(users.map(u => u.usergroup))
     const tbody = document.querySelector('#userTable tbody')
     tbody.innerHTML = ''
     users.forEach(user => {
@@ -29,10 +30,16 @@ function renderUsers(users) {
             </td>
             <td><button onclick="deleteUser(${user.userid})">删除</button></td>
         `
-        row.querySelector('select').value = user.usergroup || 'user'
+        const select = row.querySelector('select')
+        if ([...select.options].some(opt => opt.value === user.usergroup)) {
+            select.value = user.usergroup
+        } else {
+            select.value = 'user'
+        }
         tbody.appendChild(row)
     })
 }
+
 
 function userChanged(input, id) {
     const row = input.parentElement.parentElement

@@ -11,7 +11,7 @@ def get_admin_data():
         User.username,
         User.email,
         User.passwd,
-        db.literal('user').label('usergroup')
+        User.usergroup
     ).all()
     users = [dict(zip(['userid', 'username', 'email', 'passwd', 'usergroup'], user)) for user in users]
 
