@@ -4,7 +4,7 @@ import os
 
 from .core.config import get_config
 from .core.logger import setup_logging, log_route_context
-from .core.db import DB_URI, init_db
+from .core.db import init_db
 from .services import *
 
 app = Flask(__name__)
@@ -33,7 +33,7 @@ def set_log_route_name():
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['USERDATA_FOLDER'], exist_ok=True)
 
-def is_logged_in():
+def logged_in():
     return 'user_id' in session
 
 @app.route('/logout')
@@ -112,7 +112,7 @@ def problems():
 
 @app.route('/problem/<int:problem_id>')
 def problem(problem_id):
-    if not is_logged_in():
+    if not logged_in():
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({'error': 'unauthorized'}), 401
         else:

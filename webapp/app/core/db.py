@@ -9,8 +9,7 @@ from .config import get_config
 config = get_config()
 raw_db_config = config['db_config']
 
-DB_URI = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@" \
-         f"{raw_db_config['db_host']}:{raw_db_config['db_port']}/{raw_db_config['db_name']}"
+DB_URI = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@{raw_db_config['db_host']}:{raw_db_config['db_port']}/{raw_db_config['db_name']}"
 
 db = SQLAlchemy()
 

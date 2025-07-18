@@ -59,8 +59,7 @@ class ConfigManager:
             'judge_host': 'localhost',
             'judge_port': 12345
         })
-        add_section_header(judge_config, section_comment("Judge Configuration") +
-                           "# Refer to: https://github.com/SleepingCui/BCMOJ/wiki/%E9%85%8D%E7%BD%AE")
+        add_section_header(judge_config, section_comment("Judge Configuration") + "# Refer to: https://github.com/SleepingCui/BCMOJ/wiki/%E9%85%8D%E7%BD%AE")
         config['judge_config'] = judge_config
 
         app_settings = add_comments({
@@ -91,8 +90,23 @@ class ConfigManager:
             with open(self.config_path, encoding='utf-8') as f:
                 self.config = self.yaml.load(f)
 
+    def merge_config(self, default: CommentedMap, actual: CommentedMap) -> bool:
+        updated = False
+        for key, value in default.items():
+            if key not in actual:
+                actual[key] = value
+                updated = True
+            elif isinstance(value, dict) and isinstance(actual[key], dict):
+                if self.merge_config(value, actual[key]):
+                    updated = True
+        return updated
+
     def get_config(self):
         with self.lock:
+            default_config = self.get_default_config()
+            if self.merge_config(default_config, self.config):
+                with open(self.config_path, 'w', encoding='utf-8') as f:
+                    self.yaml.dump(self.config, f)
             return self.config
 
 config_manager = ConfigManager()
