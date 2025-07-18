@@ -2,7 +2,7 @@
   <artifact type="jar" name="Judger:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/Judger_jar</output-path>
     <root id="archive" name="Judger.jar">
-      <element id="module-output" name="Judger" />
+      <element id="module-output" name="judger" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/junit/junit/4.13.1/junit-4.13.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/logging/log4j/log4j-api/2.17.1/log4j-api-2.17.1.jar" path-in-jar="/" />
