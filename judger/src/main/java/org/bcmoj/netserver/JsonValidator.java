@@ -4,83 +4,92 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
+import org.everit.json.schema.Schema;
+import org.everit.json.schema.loader.SchemaLoader;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 @Slf4j
 public class JsonValidator {
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static Schema schema;
 
-    public boolean validate(String jsonConfig, DataOutputStream dos, Logger log) throws IOException {
-        try {
-            JsonNode root = mapper.readTree(jsonConfig);
-            if (!root.has("timeLimit") || !root.has("securityCheck")) {
-                JsonValidator.log.warn("[JsonValidator] Validation Failed - Missing required fields");
-                sendErrorResponse(dos, root.path("checkpoints"));
-                return false;
+    static {
+        try (InputStream in = JsonValidator.class.getResourceAsStream("/problem.schema.json")) {
+            if (in == null) {
+                throw new IllegalStateException("Schema file not found");
             }
-            if (!root.get("timeLimit").isInt() || root.get("timeLimit").asInt() <= 0) {
-                JsonValidator.log.warn("[JsonValidator] Validation Failed - Invalid timeLimit");
-                sendErrorResponse(dos, root.path("checkpoints"));
-                return false;
-            }
-            if (!root.has("checkpoints")) {
-                JsonValidator.log.warn("[JsonValidator] Validation Failed - Missing checkpoints");
-                sendErrorResponse(dos, null);
-                return false;
-            }
-            JsonNode checkpoints = root.get("checkpoints");
-            if (!checkpoints.isObject()) {
-                JsonValidator.log.warn("[JsonValidator] Validation Failed - Invalid checkpoints format");
-                sendErrorResponse(dos, checkpoints);
-                return false;
-            }
-            Iterator<String> fieldNames = checkpoints.fieldNames();
-            while (fieldNames.hasNext()) {
-                String name = fieldNames.next();
-                if (name.endsWith("_in")) {
-                    String outName = name.replace("_in", "_out");
-                    if (!checkpoints.has(outName)) {
-                        JsonValidator.log.warn("[JsonValidator] Validation Failed - Missing output for input: {}", name);
-                        sendErrorResponse(dos, checkpoints);
-                        return false;
-                    }
-                }
-            }
-            return true;
+            JSONObject rawSchema = new JSONObject(new JSONTokener(in));
+            schema = SchemaLoader.load(rawSchema);
         } catch (Exception e) {
-            JsonValidator.log.warn("[JsonValidator] Validation Failed - Invalid JSON format: {}", e.getMessage());
-            sendErrorResponse(dos, null);
-            return false;
+            log.error("Failed to load schema: {}", e.getMessage());
         }
     }
 
-    private void sendErrorResponse(DataOutputStream dos, JsonNode checkpointsNode) throws IOException {
-        ObjectNode errorResponse = mapper.createObjectNode();
-        int testCaseCount = 0;
-        if (checkpointsNode != null && checkpointsNode.isObject()) {
-            Iterator<String> fields = checkpointsNode.fieldNames();
-            while (fields.hasNext()) {
-                String name = fields.next();
-                if (name.endsWith("_in")) {
-                    testCaseCount++;
+    public boolean validate(String jsonConfig, DataOutputStream dos) throws IOException {
+        try {
+            JsonNode root = mapper.readTree(jsonConfig);
+            JSONObject jsonObj = new JSONObject(mapper.writeValueAsString(root));
+            schema.validate(jsonObj);
+
+            JsonNode checkpoints = root.get("checkpoints");
+            boolean inOutOk = checkInOutPairs(checkpoints, dos);
+            if (inOutOk) {
+                log.info("JSON validation passed");
+            }
+            return inOutOk;
+        } catch (Exception e) {
+            return fail("Validation failed: " + e.getMessage(), dos, null);
+        }
+    }
+
+
+    private boolean fail(String message, DataOutputStream dos, JsonNode checkpoints) throws IOException {
+        log.warn(message);
+        sendErrorResponse(dos, checkpoints);
+        return false;
+    }
+
+    private boolean checkInOutPairs(JsonNode checkpoints, DataOutputStream dos) throws IOException {
+        Iterator<String> fieldNames = checkpoints.fieldNames();
+        while (fieldNames.hasNext()) {
+            String name = fieldNames.next();
+            if (name.endsWith("_in")) {
+                String outName = name.replace("_in", "_out");
+                if (!checkpoints.has(outName)) {
+                    return fail("Missing output file for input: " + name, dos, checkpoints);
                 }
             }
         }
-        testCaseCount = Math.max(testCaseCount, 1);
-        for (int i = 1; i <= testCaseCount; i++) {
+        return true;
+    }
+
+    private void sendErrorResponse(DataOutputStream dos, JsonNode checkpoints) throws IOException {
+        ObjectNode errorResponse = mapper.createObjectNode();
+        int count = 0;
+        if (checkpoints != null && checkpoints.isObject()) {
+            for (Iterator<String> it = checkpoints.fieldNames(); it.hasNext(); ) {
+                if (it.next().endsWith("_in")) count++;
+            }
+        }
+        count = Math.max(count, 1);
+        for (int i = 1; i <= count; i++) {
             errorResponse.put(i + "_res", 5);
             errorResponse.put(i + "_time", 0.0);
         }
-        String response = errorResponse.toString();
-        byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
-        dos.writeInt(responseBytes.length);
-        dos.write(responseBytes);
+
+        String responseStr = errorResponse.toString();
+        byte[] data = responseStr.getBytes(StandardCharsets.UTF_8);
+        dos.writeInt(data.length);
+        dos.write(data);
         dos.flush();
-        log.info("Response sent to client ({} bytes)", responseBytes.length);
+        log.info("Response sent to client ({} bytes):\n{}", data.length, responseStr);
     }
+
 }

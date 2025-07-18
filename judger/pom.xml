@@ -9,7 +9,6 @@
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
-        <!-- 你已有的依赖 -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -50,6 +49,11 @@
             <artifactId>lombok</artifactId>
             <version>1.18.38</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.everit.json</groupId>
+            <artifactId>org.everit.json.schema</artifactId>
+            <version>1.5.1</version>
         </dependency>
     </dependencies>
 
