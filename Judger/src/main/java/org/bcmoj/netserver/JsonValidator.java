@@ -3,6 +3,7 @@ package org.bcmoj.netserver;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
 import java.io.DataOutputStream;
@@ -10,30 +11,32 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
+@Slf4j
 public class JsonValidator {
     private static final ObjectMapper mapper = new ObjectMapper();
-    public boolean validate(String jsonConfig, DataOutputStream dos, Logger logger) throws IOException {
+
+    public boolean validate(String jsonConfig, DataOutputStream dos, Logger log) throws IOException {
         try {
             JsonNode root = mapper.readTree(jsonConfig);
             if (!root.has("timeLimit") || !root.has("securityCheck")) {
-                logger.warn("[JsonValidator] Validation Failed - Missing required fields");
-                sendErrorResponse(dos, root.path("checkpoints"), logger);
+                JsonValidator.log.warn("[JsonValidator] Validation Failed - Missing required fields");
+                sendErrorResponse(dos, root.path("checkpoints"));
                 return false;
             }
             if (!root.get("timeLimit").isInt() || root.get("timeLimit").asInt() <= 0) {
-                logger.warn("[JsonValidator] Validation Failed - Invalid timeLimit");
-                sendErrorResponse(dos, root.path("checkpoints"), logger);
+                JsonValidator.log.warn("[JsonValidator] Validation Failed - Invalid timeLimit");
+                sendErrorResponse(dos, root.path("checkpoints"));
                 return false;
             }
             if (!root.has("checkpoints")) {
-                logger.warn("[JsonValidator] Validation Failed - Missing checkpoints");
-                sendErrorResponse(dos, null, logger);
+                JsonValidator.log.warn("[JsonValidator] Validation Failed - Missing checkpoints");
+                sendErrorResponse(dos, null);
                 return false;
             }
             JsonNode checkpoints = root.get("checkpoints");
             if (!checkpoints.isObject()) {
-                logger.warn("[JsonValidator] Validation Failed - Invalid checkpoints format");
-                sendErrorResponse(dos, checkpoints, logger);
+                JsonValidator.log.warn("[JsonValidator] Validation Failed - Invalid checkpoints format");
+                sendErrorResponse(dos, checkpoints);
                 return false;
             }
             Iterator<String> fieldNames = checkpoints.fieldNames();
@@ -42,21 +45,21 @@ public class JsonValidator {
                 if (name.endsWith("_in")) {
                     String outName = name.replace("_in", "_out");
                     if (!checkpoints.has(outName)) {
-                        logger.warn("[JsonValidator] Validation Failed - Missing output for input: {}", name);
-                        sendErrorResponse(dos, checkpoints, logger);
+                        JsonValidator.log.warn("[JsonValidator] Validation Failed - Missing output for input: {}", name);
+                        sendErrorResponse(dos, checkpoints);
                         return false;
                     }
                 }
             }
             return true;
         } catch (Exception e) {
-            logger.warn("[JsonValidator] Validation Failed - Invalid JSON format: {}", e.getMessage());
-            sendErrorResponse(dos, null, logger);
+            JsonValidator.log.warn("[JsonValidator] Validation Failed - Invalid JSON format: {}", e.getMessage());
+            sendErrorResponse(dos, null);
             return false;
         }
     }
 
-    private void sendErrorResponse(DataOutputStream dos, JsonNode checkpointsNode, Logger logger) throws IOException {
+    private void sendErrorResponse(DataOutputStream dos, JsonNode checkpointsNode) throws IOException {
         ObjectNode errorResponse = mapper.createObjectNode();
         int testCaseCount = 0;
         if (checkpointsNode != null && checkpointsNode.isObject()) {
@@ -78,7 +81,6 @@ public class JsonValidator {
         dos.writeInt(responseBytes.length);
         dos.write(responseBytes);
         dos.flush();
-        logger.info("Response sent to client ({} bytes)", responseBytes.length);
+        log.info("Response sent to client ({} bytes)", responseBytes.length);
     }
-
 }

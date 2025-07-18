@@ -1,8 +1,8 @@
 package org.bcmoj.netserver;
 
 import org.bcmoj.judgeserver.JudgeServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -14,9 +14,8 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@Slf4j
 public class JCFSocketServer {
-    private static final Logger logger = LoggerFactory.getLogger(JCFSocketServer.class);
-
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private ServerSocket serverSocket;
     private final JsonValidator validator = new JsonValidator();
@@ -25,21 +24,21 @@ public class JCFSocketServer {
         try {
             serverSocket = new ServerSocket();
             serverSocket.bind(new InetSocketAddress(host, port));
-            logger.info("File server started on {}:{} with keywords file: {}", host, port, kwFilePath);
+            log.info("File server started on {}:{} with keywords file: {}", host, port, kwFilePath);
 
             while (!serverSocket.isClosed()) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    logger.info("New client connected: {}", clientSocket.getRemoteSocketAddress());
+                    log.info("New client connected: {}", clientSocket.getRemoteSocketAddress());
                     executor.submit(new ClientHandler(clientSocket, validator, kwFilePath));
                 } catch (SocketException e) {
                     if (!serverSocket.isClosed()) {
-                        logger.error("Error accepting client connection", e);
+                        log.error("Error accepting client connection", e);
                     }
                 }
             }
         } catch (IOException e) {
-            logger.error("Server startup error", e);
+            log.error("Server startup error", e);
         } finally {
             stop();
         }
@@ -51,9 +50,9 @@ public class JCFSocketServer {
                 serverSocket.close();
             }
             executor.shutdown();
-            logger.info("Server stopped gracefully");
+            log.info("Server stopped gracefully");
         } catch (IOException e) {
-            logger.error("Error stopping server", e);
+            log.error("Error stopping server", e);
         }
     }
 
@@ -61,7 +60,6 @@ public class JCFSocketServer {
         private final Socket clientSocket;
         private final JsonValidator validator;
         private final String kwFilePath;
-        private final Logger clientLogger = LoggerFactory.getLogger(ClientHandler.class);
 
         public ClientHandler(Socket socket, JsonValidator validator, String kwFilePath) {
             this.clientSocket = socket;
@@ -73,7 +71,7 @@ public class JCFSocketServer {
         public void run() {
             String clientAddress = clientSocket.getRemoteSocketAddress().toString();
             File outputFile = null;
-
+            MDC.put("client", clientAddress);
             try (DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
                  DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream())) {
 
@@ -81,12 +79,12 @@ public class JCFSocketServer {
                 byte[] fileNameBytes = new byte[fileNameLength];
                 dis.readFully(fileNameBytes);
                 String originalFileName = new String(fileNameBytes, StandardCharsets.UTF_8);
-                clientLogger.info("[{}] Received filename: {}", clientAddress, originalFileName);
+                log.info("Received filename: {}", originalFileName);
 
                 long fileSize = dis.readLong();
                 String newFileName = generateRandomName() + getFileExtension(originalFileName);
                 outputFile = new File(newFileName);
-                clientLogger.info("[{}] Receiving file ({} bytes), saving as: {}", clientAddress, fileSize, newFileName);
+                log.info("Receiving file ({} bytes), saving as: {}", fileSize, newFileName);
 
                 try (FileOutputStream fos = new FileOutputStream(outputFile)) {
                     long remaining = fileSize;
@@ -97,58 +95,53 @@ public class JCFSocketServer {
                         fos.write(buffer, 0, read);
                         remaining -= read;
                     }
-                    clientLogger.info("[{}] File received successfully. Saved {} bytes", clientAddress, (fileSize - remaining));
+                    log.info("File received successfully. Saved {} bytes", (fileSize - remaining));
                 }
 
                 int jsonLength = dis.readInt();
                 byte[] jsonBytes = new byte[jsonLength];
                 dis.readFully(jsonBytes);
                 String jsonConfig = new String(jsonBytes, StandardCharsets.UTF_8);
-                clientLogger.info("[{}] Received JSON config ({} bytes):\n{}", clientAddress, jsonLength, jsonConfig);
+                log.info("Received JSON config ({} bytes):\n{}", jsonLength, jsonConfig);
 
-                clientLogger.info("[{}] Validating JSON config...", clientAddress);
-                if (!validator.validate(jsonConfig, dos, clientLogger)) {
-                    clientLogger.warn("[{}] JSON validation failed", clientAddress);
+                log.info("Validating JSON config...");
+                if (!validator.validate(jsonConfig, dos, log)) {
+                    log.warn("JSON validation failed");
                     return;
                 }
-                clientLogger.info("[{}] JSON validation passed", clientAddress);
-                clientLogger.info("[{}] Processing with JudgeServer...", clientAddress);
+                log.info("JSON validation passed");
+                log.info("Processing with JudgeServer...");
 
                 File KWFilePath = new File(kwFilePath);
                 String jserverResponse = JudgeServer.JServer(jsonConfig, outputFile, KWFilePath);
-                clientLogger.info("[{}] JudgeServer response: {}", clientAddress, jserverResponse);
+                log.info("JudgeServer response: {}", jserverResponse);
 
                 byte[] responseBytes = jserverResponse.getBytes(StandardCharsets.UTF_8);
                 dos.writeInt(responseBytes.length);
                 dos.write(responseBytes);
                 dos.flush();
-                clientLogger.info("[{}] Response sent to client ({} bytes)", clientAddress, responseBytes.length);
-            } catch (SocketException e) {
-                clientLogger.warn("[{}] Client disconnected abruptly: {}", clientAddress, e.getMessage());
-            } catch (IOException e) {
-                clientLogger.error("[{}] Client handling error", clientAddress, e);
+                log.info("Response sent to client ({} bytes)", responseBytes.length);
             } catch (Exception e) {
-                clientLogger.error("[{}] Unexpected error", clientAddress, e);
+                if (e instanceof SocketException) {
+                    log.warn("Client {} disconnected abruptly: {}", clientAddress, e.getMessage());
+                } else {
+                    log.error("Error when handling client {}", clientAddress, e);
+                }
             } finally {
                 if (outputFile != null && outputFile.exists()) {
-                    try {
-                        if (outputFile.delete()) {
-                            clientLogger.info("[{}] Deleted temporary file: {}",
-                                    clientAddress, outputFile.getName());
-                        } else {
-                            clientLogger.warn("[{}] Failed to delete temporary file: {}",
-                                    clientAddress, outputFile.getName());
-                        }
-                    } catch (SecurityException e) {
-                        clientLogger.error("[{}] Security exception when deleting file: {}", clientAddress, e.getMessage());
+                    if (outputFile.delete()) {
+                        log.info("Deleted temporary file: {}", outputFile.getName());
+                    } else {
+                        log.warn("Failed to delete temporary file: {}", outputFile.getName());
                     }
                 }
                 try {
                     clientSocket.close();
-                    clientLogger.info("[{}] Connection closed", clientAddress);
+                    log.info("Connection closed");
                 } catch (IOException e) {
-                    clientLogger.error("[{}] Error closing socket", clientAddress, e);
+                    log.error("Error closing socket", e);
                 }
+                MDC.remove("client");
             }
         }
 

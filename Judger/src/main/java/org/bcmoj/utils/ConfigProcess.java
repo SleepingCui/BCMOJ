@@ -1,7 +1,6 @@
 package org.bcmoj.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.util.Properties;
@@ -30,8 +29,8 @@ import java.util.Properties;
  * @since 2025
  * @see Properties
  */
+@Slf4j
 public class ConfigProcess {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigProcess.class);
     private static final String CONFIG_FILE = "config.properties";
     private static Properties props = null;
 
@@ -46,7 +45,7 @@ public class ConfigProcess {
         try (InputStream input = new FileInputStream(CONFIG_FILE)) {
             props.load(input);
         } catch (IOException e) {
-            LOGGER.error("[ensureLoad] Error loading config file: {}", e.getMessage());
+            log.error("[ensureLoad] Error loading config file: {}", e.getMessage());
             setDefaultConfig();
         }
     }

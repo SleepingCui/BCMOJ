@@ -5,12 +5,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Judger {
-
-    public static Logger LOGGER = LoggerFactory.getLogger(Judger.class);
 
     public static final int COMPILE_ERROR = -4;
     public static final int WRONG_ANSWER = -3;
@@ -32,7 +30,7 @@ public class Judger {
     public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int time) {
         Random random = new Random();
         String programName = "c_" + random.nextInt(1000000);
-        LOGGER.info("Compiling program: {}", programName);
+        log.info("Compiling program: {}", programName);
 
         if (System.getProperty("os.name").toLowerCase().contains("win")) {
             programName += ".exe";
@@ -65,13 +63,13 @@ public class Judger {
             return new JudgeResult(ACCEPTED, elapsedTime);
 
         } catch (IOException | InterruptedException e) {
-            LOGGER.error("IO error occurred: {}", e.getMessage());
+            log.error("IO error occurred: {}", e.getMessage());
             return new JudgeResult(SYSTEM_ERROR, 0.0);
         } finally {
             if (executableFile.exists()) {
                 boolean isDeleted = executableFile.delete();
                 if (!isDeleted) {
-                    LOGGER.warn("Failed to delete the executable file: {}", executableFile.getAbsolutePath());
+                    log.warn("Failed to delete the executable file: {}", executableFile.getAbsolutePath());
                 }
             }
         }
@@ -84,7 +82,7 @@ public class Judger {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                LOGGER.info("[Compiler] {}",line);
+                log.info("[Compiler] {}", line);
             }
         }
         return compileProcess.waitFor();
@@ -120,10 +118,10 @@ public class Judger {
             double elapsedTime = (endTime - startTime) / 1_000_000.0;
             runProcess.destroyForcibly();
             try {
-                LOGGER.debug("Waiting for process {} resources to be released...", runProcess.exitValue());
+                log.debug("Waiting for process {} resources to be released...", runProcess.exitValue());
                 Thread.sleep(10);
             } catch (InterruptedException e) {
-                LOGGER.warn("Interrupted while waiting for process to terminate: {}", e.getMessage());
+                log.warn("Interrupted while waiting for process to terminate: {}", e.getMessage());
             }
             throw new TimeoutException("Process timed out after " + elapsedTime + " ms");
         }

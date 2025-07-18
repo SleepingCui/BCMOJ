@@ -1,9 +1,9 @@
 package org.bcmoj;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bcmoj.utils.ConfigProcess;
 import org.bcmoj.netserver.JCFSocketServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.bcmoj.utils.KWFileWriter;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -17,9 +17,8 @@ import java.util.Properties;
  * @since 2025
  * @version 1.0-SNAPSHOT
  */
-
+@Slf4j
 public class Main {
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
         logo();
@@ -46,7 +45,7 @@ public class Main {
               java -jar code.jar --host=0.0.0.0 --port=5000 --kwfile=keywords.txt
               java -jar code.jar --config=config.properties
               java -jar code.jar --config=config.properties --host=192.168.1.1
-            
+
             Note: Command line parameters have higher priority than config file values.
             """);
     }
@@ -74,9 +73,9 @@ public class Main {
                 fileProps.load(fis);
                 fileProps.forEach((k, v) -> finalProps.setProperty(k.toString(), v.toString()));
 
-                logger.info("Loaded config file: {}", configFilePath);
+                log.info("Loaded config file: {}", configFilePath);
             } catch (IOException e) {
-                logger.error("Error loading config file '{}': {}", configFilePath, e.getMessage());
+                log.error("Error loading config file '{}': {}", configFilePath, e.getMessage());
                 System.exit(1);
             }
         }
@@ -92,13 +91,13 @@ public class Main {
         boolean needDefaultConfig = isBlank(ip) || isBlank(portStr) || isBlank(kwFile);
 
         if (needDefaultConfig && !hasConfigFile) {
-            logger.error("Missing required parameters (host, port, or kwfile) and no --config file provided.");
+            log.error("Missing required parameters (host, port, or kwfile) and no --config file provided.");
             showHelp();
             System.exit(1);
         }
 
         if (needDefaultConfig) {
-            logger.info("Loading missing parameters from config file...");
+            log.info("Loading missing parameters from config file...");
 
             if (isBlank(ip)) {
                 ip = ConfigProcess.GetConfig("ServerIP");
@@ -112,19 +111,21 @@ public class Main {
         }
 
         if (isBlank(ip) || isBlank(portStr)) {
-            logger.error("Missing required parameters: host={}, port={}", ip, portStr);
+            log.error("Missing required parameters: host={}, port={}", ip, portStr);
             showHelp();
             System.exit(1);
         }
 
         if (isBlank(kwFile)) {
             kwFile = "keywords.txt";
-            logger.info("Using default keyword file: {}", kwFile);
-            try {
-                org.bcmoj.utils.KWFileWriter.createDefaultIfNotExists(kwFile);
-            } catch (IOException e) {
-                logger.warn("Could not create keyword file: {}", e.getMessage());
+            log.info("No keyword file specified, using default: {}", kwFile);
+        }
+        try {
+            if (KWFileWriter.createDefaultIfNotExists(kwFile)) {
+                log.info("Keyword file not found, created default keyword file at: {}", kwFile);
             }
+        } catch (IOException e) {
+            log.warn("Could not create keyword file '{}': {}", kwFile, e.getMessage());
         }
 
         try {
@@ -133,20 +134,19 @@ public class Main {
 
             server.start(port, ip, kwFile);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                logger.info("Server shutting down gracefully...");
+                log.info("Server shutting down gracefully...");
                 server.stop();
             }));
-            logger.info("BCMOJ Judge Server started successfully at {}:{}  keyword file: {}", ip, port, kwFile);
+            log.info("BCMOJ Judge Server started successfully at {}:{}  keyword file: {}", ip, port, kwFile);
 
         } catch (NumberFormatException e) {
-            logger.error("Invalid port number: {}", portStr);
+            log.error("Invalid port number: {}", portStr);
             System.exit(1);
         } catch (Exception e) {
-            logger.error("Failed to start server: {}", e.getMessage());
+            log.error("Failed to start server: {}", e.getMessage());
             System.exit(1);
         }
     }
-
 
     private static boolean isBlank(String str) {
         return str == null || str.trim().isEmpty();
@@ -157,8 +157,8 @@ public class Main {
                   ____   ____ __  __  ___      _       _ ____                        \s
                  | __ ) / ___|  \\/  |/ _ \\    | |     | / ___|  ___ _ ____   _____ _ __
                  |  _ \\| |   | |\\/| | | | |_  | |  _  | \\___ \\ / _ \\ '__\\ \\ / / _ \\ '__|
-                 | |_) | |___| |  | | |_| | |_| | | |_| |___) |  __/ |   \\ V /  __/ |  \s
-                 |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_|  \s
+                 | |_) | |___| |  | | |_| | |_| | | |_| |___) |  __/ |   \\ V /  __/ | \s
+                 |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_| \s
 
                 BCMOJ Judge Server v1.0-SNAPSHOT  Developed by SleepingCui & MxingFoew1034
                \s""";
