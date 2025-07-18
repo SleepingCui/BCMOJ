@@ -1,6 +1,5 @@
 package org.bcmoj.judgeserver;
 
-import org.slf4j.Logger;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
