@@ -1,16 +1,16 @@
-name: Judger
+name: judger
 
 on:
   push:
     branches:
       - master
     paths:
-      - 'Judger/**'
+      - 'judger/**'
   pull_request:
     branches:
       - master
     paths:
-      - 'Judger/**'
+      - 'judger/**'
 
 jobs:
   build:
@@ -29,12 +29,12 @@ jobs:
         java-version: '21'
 
     - name: Build with Maven
-      working-directory: ./Judger
+      working-directory: ./judger
       run: |
         mvn clean package
 
     - name: Rename and Prepare Artifacts
-      working-directory: ./Judger
+      working-directory: ./judger
       run: |
         echo "Contents of target/:"
         ls -lh target/
@@ -57,16 +57,16 @@ jobs:
           exit 1
         fi
 
-        NEW_NAME_DEP="Judger-${COMMIT_ID}-${VERSION}-with-dependencies.jar"
+        NEW_NAME_DEP="judger-${COMMIT_ID}-${VERSION}-with-dependencies.jar"
         echo "Renaming $JAR_DEP_PATH to $NEW_NAME_DEP"
         mv "$JAR_DEP_PATH" "target/$NEW_NAME_DEP"
 
-        NEW_NAME="Judger-${COMMIT_ID}-${VERSION}.jar"
+        NEW_NAME="judger-${COMMIT_ID}-${VERSION}.jar"
         echo "Renaming $JAR_PATH to $NEW_NAME"
         mv "$JAR_PATH" "target/$NEW_NAME"
 
-        echo "judger_jar_path=Judger/target/$NEW_NAME" >> $GITHUB_ENV
-        echo "judger_jar_dep_path=Judger/target/$NEW_NAME_DEP" >> $GITHUB_ENV
+        echo "judger_jar_path=judger/target/$NEW_NAME" >> $GITHUB_ENV
+        echo "judger_jar_dep_path=judger/target/$NEW_NAME_DEP" >> $GITHUB_ENV
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
