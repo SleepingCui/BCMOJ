@@ -6,7 +6,7 @@
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout
-                    pattern="[%d{yyyy-mm-dd HH:mm:ss.SSS}] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{1.}}{cyan}]%replace{ [%X{client}]}{ \[\]}{} %m%n"
+                    pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{1.}}{cyan}]%replace{ [%X{client}]}{ \[\]}{} %m%n"
                     disableAnsi="false"/>
         </Console>
         <RollingFile name="rollingFile" fileName="${LOG_HOME}/log.log"
