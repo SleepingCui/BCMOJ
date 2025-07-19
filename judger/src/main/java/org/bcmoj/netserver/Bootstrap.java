@@ -1,7 +1,6 @@
 package org.bcmoj.netserver;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bcmoj.utils.ConfigProcess;
 import org.bcmoj.utils.KWFileWriter;
 
 import java.io.FileInputStream;
@@ -13,58 +12,19 @@ public class Bootstrap {
 
     public static void run(String[] args) {
         printLogo();
+
         if (args.length == 0) {
             printHelp();
             return;
         }
-        Properties props = parseArguments(args);
-        startServer(props);
-    }
 
-    private static void printHelp() {
-        System.out.println("""
-            BCMOJ Judge Server - Usage:
-
-            Required (either via command-line or config file):
-              --host=<IP>        Server IP address (e.g., 0.0.0.0)
-              --port=<PORT>      Port number (e.g., 5000)
-              --kwfile=<FILE>    Keyword file path
-
-            Optional:
-              --config=<FILE>    External config.properties path
-
-            Examples:
-              java -jar code.jar --host=0.0.0.0 --port=5000 --kwfile=keywords.txt
-              java -jar code.jar --config=config.properties
-              java -jar code.jar --config=config.properties --host=192.168.1.1
-
-            Note: Command line parameters have higher priority than config file values.
-            """);
-    }
-
-    private static void printLogo() {
-        String logo = """
-                  ____   ____ __  __  ___      _       _ ____                       \s
-                 | __ ) / ___|  \\/  |/ _ \\    | |     | / ___|  ___ _ ____   _____ _ __
-                 |  _ \\| |   | |\\/| | | | |_  | |  _  | \\___ \\ / _ \\ '__\\ \\ / / _ \\ '__|
-                 | |_) | |___| |  | | |_| | |_| | | |_| |___) |  __/ |   \\ V /  __/ |  \s
-                 |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_|  \s
-
-                BCMOJ Judge Server v1.0-SNAPSHOT  Developed by SleepingCui & MxingFoew1034
-               \s""";
-        System.out.println(logo);
-    }
-
-    private static Properties parseArguments(String[] args) {
-        Properties finalProps = new Properties();
         String configFilePath = null;
         Properties cmdLineProps = new Properties();
-
         for (String arg : args) {
             if (arg.startsWith("--")) {
                 String[] parts = arg.substring(2).split("=", 2);
                 if (parts.length == 2) {
-                    if (parts[0].equals("config")) {
+                    if ("config".equals(parts[0])) {
                         configFilePath = parts[1];
                     } else {
                         cmdLineProps.setProperty(parts[0], parts[1]);
@@ -73,45 +33,47 @@ public class Bootstrap {
             }
         }
 
+        Properties finalProps = new Properties();
         if (configFilePath != null) {
             try (FileInputStream fis = new FileInputStream(configFilePath)) {
-                Properties fileProps = new Properties();
-                fileProps.load(fis);
-                fileProps.forEach((k, v) -> finalProps.setProperty(k.toString(), v.toString()));
+                finalProps.load(fis);
                 log.info("Loaded config file: {}", configFilePath);
             } catch (IOException e) {
                 log.error("Error loading config file '{}': {}", configFilePath, e.getMessage());
                 System.exit(1);
             }
         }
-
         cmdLineProps.forEach((k, v) -> finalProps.setProperty(k.toString(), v.toString()));
-        return finalProps;
+        startServer(finalProps, configFilePath);
     }
 
-    private static void startServer(Properties props) {
+    private static void startServer(Properties props, String configFilePath) {
         String ip = props.getProperty("host");
         String portStr = props.getProperty("port");
         String kwFile = props.getProperty("kwfile");
 
-        boolean missing = isBlank(ip) || isBlank(portStr) || isBlank(kwFile);
+        boolean missingHost = isBlank(ip);
+        boolean missingPort = isBlank(portStr);
+        boolean missingKwFile = isBlank(kwFile);
 
-        if (missing) {
-            log.info("Loading missing parameters from default config...");
-            if (isBlank(ip)) ip = ConfigProcess.GetConfig("ServerIP");
-            if (isBlank(portStr)) portStr = ConfigProcess.GetConfig("ServerPort");
-            if (isBlank(kwFile)) kwFile = ConfigProcess.GetConfig("KeywordsFile");
+        if (configFilePath != null && (missingHost || missingPort || missingKwFile)) {
+            Properties fileProps = new Properties();
+            try (FileInputStream fis = new FileInputStream(configFilePath)) {
+                fileProps.load(fis);
+                if (missingHost) ip = fileProps.getProperty("ServerIP");
+                if (missingPort) portStr = fileProps.getProperty("ServerPort");
+                if (missingKwFile) kwFile = fileProps.getProperty("KeywordsFile");
+                log.info("Loaded missing params from config file: {}", configFilePath);
+            } catch (IOException e) {
+                log.error("Failed to load config file '{}': {}", configFilePath, e.getMessage());
+                System.exit(1);
+            }
         }
 
-        if (isBlank(ip) || isBlank(portStr)) {
-            log.error("Missing required parameters: host={}, port={}", ip, portStr);
+        if (isBlank(ip) || isBlank(portStr) || isBlank(kwFile)) {
+            log.error("Missing required parameters: host={}, port={}, kwfile={}", ip, portStr, kwFile);
             printHelp();
             System.exit(1);
-        }
-
-        if (isBlank(kwFile)) {
-            kwFile = "keywords.txt";
-            log.info("No keyword file specified, using default: {}", kwFile);
         }
 
         try {
@@ -138,5 +100,39 @@ public class Bootstrap {
 
     private static boolean isBlank(String str) {
         return str == null || str.trim().isEmpty();
+    }
+
+    private static void printLogo() {
+        String logo = """
+              ____   ____ __  __  ___      _       _ ____                      \s
+             | __ ) / ___|  \\/  |/ _ \\    | |     | / ___|  ___ _ ____   _____ _ __
+             |  _ \\| |   | |\\/| | | | |_  | |  _  | \\___ \\ / _ \\ '__\\ \\ / / _ \\ '__|
+             | |_) | |___| |  | | |_| | |_| | | |_| |___) |  __/ |   \\ V /  __/ | \s
+             |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_| \s
+
+            BCMOJ Judge Server v1.0-SNAPSHOT  Developed by SleepingCui & MxingFoew1034
+          \s""";
+        System.out.println(logo);
+    }
+
+    private static void printHelp() {
+        System.out.println("""
+            BCMOJ Judge Server - Usage:
+
+            Required (either via command-line or config file):
+              --host=<IP>        Server IP address (e.g., 0.0.0.0)
+              --port=<PORT>      Port number (e.g., 5000)
+              --kwfile=<FILE>    Keyword file path
+
+            Optional:
+              --config=<FILE>    External config.properties path
+
+            Examples:
+              java -jar code.jar --host=0.0.0.0 --port=5000 --kwfile=keywords.txt
+              java -jar code.jar --config=config.properties
+              java -jar code.jar --config=config.properties --host=192.168.1.1
+
+            Note: Command line parameters have higher priority than config file values.
+            """);
     }
 }
