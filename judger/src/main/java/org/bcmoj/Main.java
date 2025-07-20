@@ -1,6 +1,6 @@
 package org.bcmoj;
 
-import org.bcmoj.netserver.Bootstrap;
+import org.bcmoj.bootstrap.Bootstrap;
 
 public class Main {
     public static void main(String[] args) {

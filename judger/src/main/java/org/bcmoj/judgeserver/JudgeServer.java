@@ -4,6 +4,8 @@ import org.bcmoj.judger.Judger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import org.bcmoj.judgeserver.security.RegexSecurityCheck;
+import org.bcmoj.judgeserver.security.SecurityChecker;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,7 +31,8 @@ public class JudgeServer {
             List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
             boolean securityCheckFailed;
             if (config.securityCheck) {
-                int securityCheckResult = SecurityCheck.CodeSecurityCheck(cppFilePath, keywordsFilePath);
+                SecurityChecker checker = new RegexSecurityCheck();
+                int securityCheckResult = checker.check(cppFilePath, keywordsFilePath);
                 securityCheckFailed = (securityCheckResult == -5);
             } else {
                 securityCheckFailed = false;
@@ -69,38 +72,12 @@ public class JudgeServer {
                 String status = getStatusDescription(result.statusCode);
                 log.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.time);
             }
-            return buildJudgeResult(results, securityCheckFailed, false, checkpointsCount);
+            return ResultBuilder.buildResult(results, securityCheckFailed, false, checkpointsCount);
         } catch (Exception e) {
             log.error("Failed to execute judge tasks: {}", e.getMessage());
-            return buildJudgeResult(null, false, true, 0);
+            return ResultBuilder.buildResult(null, false, true, 0);
         }
     }
-
-    private static String buildJudgeResult(List<Judger.JudgeResult> results, boolean isSecurityCheckFailed,
-                                           boolean isSystemError, int checkpointsCount) {
-        StringBuilder jsonResult = new StringBuilder();
-        jsonResult.append("{");
-        int actualCount = isSecurityCheckFailed || isSystemError ? checkpointsCount : (results != null ? results.size() : 0);
-        for (int i = 0; i < actualCount; i++) {
-            if (i > 0) {
-                jsonResult.append(",");
-            }
-            if (isSecurityCheckFailed) {
-                jsonResult.append("\"").append(i + 1).append("_res\":").append(-5)
-                        .append(",\"").append(i + 1).append("_time\":").append(0.0);
-            } else if (isSystemError) {
-                jsonResult.append("\"").append(i + 1).append("_res\":").append(5)
-                        .append(",\"").append(i + 1).append("_time\":").append(0.0);
-            } else {
-                Judger.JudgeResult result = results.get(i);
-                jsonResult.append("\"").append(i + 1).append("_res\":").append(result.statusCode)
-                        .append(",\"").append(i + 1).append("_time\":").append(result.time);
-            }
-        }
-        jsonResult.append("}");
-        return jsonResult.toString();
-    }
-
     private static String getStatusDescription(int statusCode) {
         return switch (statusCode) {
             case -5 -> "Security Check Failed";

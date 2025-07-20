@@ -1,27 +1,25 @@
-package org.bcmoj.judgeserver;
+package org.bcmoj.judgeserver.security;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 @Slf4j
-public class SecurityCheck {
+public class RegexSecurityCheck implements SecurityChecker {
 
     private static final String REGEX_PREFIX = "regex:";
 
-    public static int CodeSecurityCheck(File fileName, File keywordsFile) {
-        List<Pattern> keywordPatterns = loadKeywords(keywordsFile);
+    @Override
+    public int check(File sourceFile, File ruleFile) {
+        List<Pattern> keywordPatterns = loadKeywords(ruleFile);
         if (keywordPatterns.isEmpty()) {
             log.error("No security keywords loaded");
             return -5;
         }
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
             String line;
             int lineNumber = 0;
             while ((line = reader.readLine()) != null) {
@@ -34,16 +32,16 @@ public class SecurityCheck {
                 }
             }
         } catch (IOException e) {
-            log.error("Failed to read file: {}", fileName, e);
+            log.error("Failed to read file: {}", sourceFile, e);
             return -5;
         }
         log.info("Security check passed");
         return 0;
     }
 
-    private static List<Pattern> loadKeywords(File keywordsFile) {
+    private List<Pattern> loadKeywords(File ruleFile) {
         List<Pattern> patterns = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(keywordsFile))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(ruleFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
@@ -61,8 +59,6 @@ public class SecurityCheck {
                     }
                 }
             }
-            log.info("Loaded {} keyword patterns ({} regex)", patterns.size(),
-                    patterns.stream().filter(p -> !p.pattern().startsWith("\\b")).count());
         } catch (IOException e) {
             log.error("Failed to read keywords file", e);
         }
