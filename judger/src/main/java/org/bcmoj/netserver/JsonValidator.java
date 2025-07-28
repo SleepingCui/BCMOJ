@@ -2,23 +2,23 @@ package org.bcmoj.netserver;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bcmoj.utils.JudgeResultBuilder;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
+@Getter
 @Slf4j
 public class JsonValidator {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static Schema schema;
+    private String lastErrorJson = null;
 
     static {
         try (InputStream in = JsonValidator.class.getResourceAsStream("/problem.schema.json")) {
@@ -28,35 +28,39 @@ public class JsonValidator {
             JSONObject rawSchema = new JSONObject(new JSONTokener(in));
             schema = SchemaLoader.load(rawSchema);
         } catch (Exception e) {
-            log.error("Failed to load schema: {}", e.getMessage());
+            log.error("Failed to load schema: {}", e.getMessage(), e);
         }
     }
 
-    public boolean validate(String jsonConfig, DataOutputStream dos) throws IOException {
+    public boolean validate(String jsonConfig) {
         try {
             JsonNode root = mapper.readTree(jsonConfig);
             JSONObject jsonObj = new JSONObject(mapper.writeValueAsString(root));
             schema.validate(jsonObj);
 
             JsonNode checkpoints = root.get("checkpoints");
-            boolean inOutOk = checkInOutPairs(checkpoints, dos);
+            boolean inOutOk = checkInOutPairs(checkpoints);
             if (inOutOk) {
                 log.info("JSON validation passed");
             }
             return inOutOk;
         } catch (Exception e) {
-            return fail("Validation failed: " + e.getMessage(), dos, null);
+            log.error("Schema validation failed", e);
+            lastErrorJson = JudgeResultBuilder.buildResult(
+                    null, false, true, 1
+            );
+            return false;
         }
     }
 
-
-    private boolean fail(String message, DataOutputStream dos, JsonNode checkpoints) throws IOException {
+    private boolean fail(String message, JsonNode checkpoints) {
         log.warn(message);
-        sendErrorResponse(dos, checkpoints);
+        int count = countInFiles(checkpoints);
+        lastErrorJson = JudgeResultBuilder.buildResult(null, false, true, count);
         return false;
     }
 
-    private boolean checkInOutPairs(JsonNode checkpoints, DataOutputStream dos) throws IOException {
+    private boolean checkInOutPairs(JsonNode checkpoints) {
         int inCount = 0;
         int outCount = 0;
         Iterator<String> fieldNames = checkpoints.fieldNames();
@@ -66,46 +70,32 @@ public class JsonValidator {
                 inCount++;
                 String outName = name.replace("_in", "_out");
                 if (!checkpoints.has(outName)) {
-                    return fail("Missing output file for input: " + name, dos, checkpoints);
+                    return fail("Missing output file for input: " + name, checkpoints);
                 }
             } else if (name.endsWith("_out")) {
                 outCount++;
                 String inName = name.replace("_out", "_in");
                 if (!checkpoints.has(inName)) {
-                    return fail("Missing input file for output: " + name, dos, checkpoints);
+                    return fail("Missing input file for output: " + name, checkpoints);
                 }
             }
         }
         if (inCount == 0) {
-            return fail("At least one _in/_out pair is required", dos, checkpoints);
+            return fail("At least one _in/_out pair is required", checkpoints);
         }
         if (inCount != outCount) {
-            return fail("Mismatch between _in and _out files (in: " + inCount + ", out: " + outCount + ")", dos, checkpoints);
+            return fail("Mismatch between _in and _out files (in: " + inCount + ", out: " + outCount + ")", checkpoints);
         }
         return true;
     }
 
-
-    private void sendErrorResponse(DataOutputStream dos, JsonNode checkpoints) throws IOException {
-        ObjectNode errorResponse = mapper.createObjectNode();
+    private int countInFiles(JsonNode checkpoints) {
         int count = 0;
         if (checkpoints != null && checkpoints.isObject()) {
             for (Iterator<String> it = checkpoints.fieldNames(); it.hasNext(); ) {
                 if (it.next().endsWith("_in")) count++;
             }
         }
-        count = Math.max(count, 1);
-        for (int i = 1; i <= count; i++) {
-            errorResponse.put(i + "_res", 5);
-            errorResponse.put(i + "_time", 0.0);
-        }
-
-        String responseStr = errorResponse.toString();
-        byte[] data = responseStr.getBytes(StandardCharsets.UTF_8);
-        dos.writeInt(data.length);
-        dos.write(data);
-        dos.flush();
-        log.info("Response sent to client ({} bytes):\n{}", data.length, responseStr);
+        return Math.max(count, 1);
     }
-
 }

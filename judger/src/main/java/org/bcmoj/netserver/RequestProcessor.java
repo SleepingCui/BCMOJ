@@ -5,10 +5,11 @@ import org.bcmoj.judgeserver.JudgeServer;
 import org.slf4j.MDC;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
+import java.util.UUID;
 
 @Slf4j
 public class RequestProcessor implements Runnable {
@@ -25,8 +26,9 @@ public class RequestProcessor implements Runnable {
 
     @Override
     public void run() {
-        String clientAddress = clientSocket.getRemoteSocketAddress().toString();
+        String clientAddress = String.format("%s:%d", ((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getAddress().getHostAddress(), ((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getPort());
         MDC.put("client", clientAddress);
+
         File outputFile = null;
 
         try (DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
@@ -34,23 +36,28 @@ public class RequestProcessor implements Runnable {
 
             String originalFileName = receiveFileName(dis);
             long fileSize = dis.readLong();
-            String newFileName = generateRandomName() + getFileExtension(originalFileName);
-            outputFile = new File(newFileName);
+            String fileExtension = getFileExtension(originalFileName);
 
-            log.info("Receiving file '{}' ({} bytes), saving as: {}", originalFileName, fileSize, newFileName);
+            outputFile = File.createTempFile(UUID.randomUUID().toString(), fileExtension);
+            log.info("Receiving file '{}' ({} bytes), saving as: {}", originalFileName, fileSize, outputFile.getAbsolutePath());
+
             receiveFile(dis, outputFile, fileSize);
 
             String jsonConfig = receiveJsonConfig(dis);
             log.info("Validating JSON config...");
-            if (!validator.validate(jsonConfig, dos)) {
+            if (!validator.validate(jsonConfig)) {
                 log.warn("JSON validation failed");
+                String errorJson = validator.getLastErrorJson();
+                if (errorJson != null) {
+                    sendResponse(dos, errorJson);
+                }
                 return;
             }
 
             log.info("Processing with JudgeServer...");
-            String jserverResponse = JudgeServer.JServer(jsonConfig, outputFile, new File(kwFilePath));
-            log.info("JudgeServer response: {}", jserverResponse);
-            sendResponse(dos, jserverResponse);
+            String serverResponse = JudgeServer.JServer(jsonConfig, outputFile, new File(kwFilePath));
+            log.info("JudgeServer response: {}", serverResponse);
+            sendResponse(dos, serverResponse);
 
         } catch (SocketException e) {
             log.warn("Client {} disconnected abruptly: {}", clientAddress, e.getMessage());
@@ -111,16 +118,7 @@ public class RequestProcessor implements Runnable {
         dos.writeInt(responseBytes.length);
         dos.write(responseBytes);
         dos.flush();
-        log.info("Response sent to client ({} bytes)", responseBytes.length);
-    }
-
-    private static String generateRandomName() {
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder(10);
-        for (int i = 0; i < 10; i++) {
-            sb.append(random.nextInt(10));
-        }
-        return sb.toString();
+        log.info("Response sent to client ({} bytes):\n{} ", responseBytes.length, response);
     }
 
     private static String getFileExtension(String filename) {

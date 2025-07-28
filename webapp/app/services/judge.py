@@ -2,7 +2,9 @@ import os
 import json
 import socket
 import shutil
+import uuid
 from datetime import datetime
+from pathlib import Path
 from flask import current_app as app, session
 from werkzeug.utils import secure_filename
 from app.core.db import db, Problem, Example, JudgeResult, CheckpointResult
@@ -13,15 +15,21 @@ config = get_config()
 SERVER_HOST = config['judge_config']['judge_host']
 SERVER_PORT = config['judge_config']['judge_port']
 ENABLE_SECURITY_CHECK = config['judge_config']['enable_code_security_check']
-USERDATA_PATH = config['app_settings']['userdata_folder']
+USERDATA_PATH = Path(config['app_settings']['userdata_folder'])
+
 
 def submit_solution(problem_id, cpp_file):
     if not cpp_file:
         return {'error': 'No file uploaded'}, 400
 
-    filename = secure_filename(cpp_file.filename)
-    temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    cpp_file.save(temp_path)
+    filename = f"{uuid.uuid4().hex}.cpp"
+    app.logger.info(f"File : {filename}")
+
+    upload_folder = Path(app.config['UPLOAD_FOLDER'])
+    upload_folder.mkdir(parents=True, exist_ok=True)
+
+    temp_path = upload_folder / filename
+    cpp_file.save(str(temp_path))
 
     try:
         problem = Problem.query.filter_by(problem_id=problem_id).first()
@@ -29,32 +37,29 @@ def submit_solution(problem_id, cpp_file):
             return {'error': 'Problem not found'}, 404
 
         examples = Example.query.filter_by(problem_id=problem_id).order_by(Example.example_id).all()
+        checkpoints = {}
+        for idx, ex in enumerate(examples, 1):
+            checkpoints[f"{idx}_in"] = ex.input
+            checkpoints[f"{idx}_out"] = ex.output
 
-        checkpoints = {
-            f"{idx}_in": ex.input for idx, ex in enumerate(examples, 1)
-        }
-        checkpoints.update({
-            f"{idx}_out": ex.output for idx, ex in enumerate(examples, 1)
-        })
-
-        config = {
+        config_data = {
             "timeLimit": problem.time_limit,
             "checkpoints": checkpoints,
             "securityCheck": ENABLE_SECURITY_CHECK
         }
-        json_data = json.dumps(config)
+        json_data = json.dumps(config_data)
         app.logger.info(f"Problem Data : {json_data}")
 
         results = []
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(30)
             sock.connect((SERVER_HOST, SERVER_PORT))
-            sock.sendall(len(filename).to_bytes(4, 'big'))
+            sock.sendall(len(filename.encode('utf-8')).to_bytes(4, 'big'))
             sock.sendall(filename.encode('utf-8'))
-            filesize = os.path.getsize(temp_path)
-            sock.sendall(filesize.to_bytes(8, 'big'))
 
-            with open(temp_path, 'rb') as f:
+            filesize = temp_path.stat().st_size
+            sock.sendall(filesize.to_bytes(8, 'big'))
+            with temp_path.open('rb') as f:
                 for chunk in iter(lambda: f.read(4096), b''):
                     sock.sendall(chunk)
 
@@ -86,30 +91,35 @@ def submit_solution(problem_id, cpp_file):
                             'time': data.get(f"{idx}_time", 0.0)
                         })
 
-                user_id = session.get('user_id')
-                submit_time = datetime.now()
+        user_id = session.get('user_id')
+        if not user_id:
+            return {'error': 'User not logged in'}, 401
 
-                judge_result = JudgeResult(userid=user_id, problemid=problem_id, time=submit_time, filepath='')
-                db.session.add(judge_result)
-                db.session.flush()
+        submit_time = datetime.now()
 
-                target_dir = os.path.join(USERDATA_PATH, str(user_id), "upload_problem_answers", str(problem_id), str(judge_result.result_id))
-                os.makedirs(target_dir, exist_ok=True)
-                cpp_target_path = os.path.join(target_dir, "answer.cpp")
-                shutil.copy(temp_path, cpp_target_path)
 
-                judge_result.filepath = cpp_target_path
+        judge_result = JudgeResult(userid=user_id, problemid=problem_id, time=submit_time, filepath='')
+        db.session.add(judge_result)
+        db.session.flush()
 
-                for result in results:
-                    db.session.add(CheckpointResult(
-                        result_id=judge_result.result_id,
-                        checkpoint_id=int(result['checkpoint']),
-                        result=result['result'],
-                        time=result['time']
-                    ))
+        target_dir = USERDATA_PATH / str(user_id) / "upload_problem_answers" / str(problem_id) / str(judge_result.result_id)
+        target_dir.mkdir(parents=True, exist_ok=True)
 
-                db.session.commit()
-                app.logger.info("Transaction committed successfully.")
+        cpp_target_path = target_dir / "answer.cpp"
+        shutil.copy(str(temp_path), str(cpp_target_path))
+
+        judge_result.filepath = str(cpp_target_path)
+
+        for result in results:
+            db.session.add(CheckpointResult(
+                result_id=judge_result.result_id,
+                checkpoint_id=int(result['checkpoint']),
+                result=result['result'],
+                time=result['time']
+            ))
+
+        db.session.commit()
+        app.logger.info("Transaction committed successfully.")
 
         return {'status': 'ok', 'results': results}, 200
 
@@ -119,5 +129,8 @@ def submit_solution(problem_id, cpp_file):
         return {'error': str(e)}, 500
 
     finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+        try:
+            if temp_path.exists():
+                temp_path.unlink()
+        except Exception as e:
+            app.logger.warning(f"Failed to delete temp file: {e}")

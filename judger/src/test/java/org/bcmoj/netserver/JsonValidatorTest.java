@@ -45,7 +45,7 @@ public class JsonValidatorTest {
             }
             """;
 
-        boolean result = validator.validate(json, dos);
+        boolean result = validator.validate(json);
         assertTrue("Expected validation to pass", result);
         assertEquals(0, baos.size());
     }
@@ -62,7 +62,7 @@ public class JsonValidatorTest {
             }
             """;
 
-        boolean result = validator.validate(json, dos);
+        boolean result = validator.validate(json);
         assertFalse("Expected validation to fail due to missing _out pair", result);
         byte[] responseBytes = baos.toByteArray();
         assertTrue(responseBytes.length > 0);
@@ -85,7 +85,7 @@ public class JsonValidatorTest {
             }
             """;
 
-        boolean result = validator.validate(json, dos);
+        boolean result = validator.validate(json);
         assertFalse(result);
         assertTrue(baos.size() > 0);
     }
@@ -100,7 +100,7 @@ public class JsonValidatorTest {
             }
             """;
 
-        boolean result = validator.validate(json, dos);
+        boolean result = validator.validate(json);
         assertFalse(result);
         assertTrue(baos.size() > 0);
     }
@@ -117,7 +117,7 @@ public class JsonValidatorTest {
             }
             """;
 
-        boolean result = validator.validate(json, dos);
+        boolean result = validator.validate(json);
         assertFalse(result);
         assertTrue(baos.size() > 0);
     }

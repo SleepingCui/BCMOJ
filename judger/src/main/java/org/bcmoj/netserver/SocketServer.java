@@ -20,7 +20,7 @@ public class SocketServer {
         try {
             serverSocket = new ServerSocket();
             serverSocket.bind(new InetSocketAddress(host, port));
-            log.info("File server started on {}:{} with keywords file: {}", host, port, kwFilePath);
+            log.info("Socket server started on {}:{} with keywords file: {}", host, port, kwFilePath);
 
             while (!stopped && !serverSocket.isClosed()) {
                 try {

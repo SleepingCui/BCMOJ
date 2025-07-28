@@ -1,4 +1,4 @@
-package org.bcmoj.judgeserver;
+package org.bcmoj.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -7,8 +7,27 @@ import org.bcmoj.judger.Judger;
 
 import java.util.List;
 
+/**
+ * Utility class for building JSON-formatted judge result responses.
+ */
 @Slf4j
-public class ResultBuilder {
+public class JudgeResultBuilder {
+
+    /**
+     * Builds a JSON string representing judge results for multiple checkpoints.
+     * <p>
+     * If security check failed or a system error occurred, all results
+     * will have status code 5 and time 0. Otherwise, results are serialized
+     * based on the provided list.
+     * </p>
+     *
+     * @param results               List of judge results, each representing a checkpoint result.
+     * @param isSecurityCheckFailed Flag indicating if the security check failed.
+     * @param isSystemError         Flag indicating if a system error occurred.
+     * @param checkpointsCount      Number of checkpoints to include in the result.
+     * @return JSON string representing the judge results, with keys in the format "index_res" and "index_time".
+     *         Returns a JSON with all status code 5 and time 0 if serialization fails.
+     */
     public static String buildResult(List<Judger.JudgeResult> results, boolean isSecurityCheckFailed, boolean isSystemError, int checkpointsCount) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();

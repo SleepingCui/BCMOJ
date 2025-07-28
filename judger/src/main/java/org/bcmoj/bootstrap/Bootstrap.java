@@ -23,8 +23,8 @@ public class Bootstrap {
             log.error("Error loading config file '{}': {}", configFilePath, e.getMessage());
             System.exit(1);
         }
-        Properties finalProps = ConfigLoader.merge(configFileProps, cmdLineProps);
-        ServerInitializer.start(finalProps, configFilePath);
+        Properties Props = ConfigLoader.merge(configFileProps, cmdLineProps);
+        ServerInitializer.start(Props, configFilePath);
     }
 
     public static void printLogo() {

@@ -1,11 +1,12 @@
 package org.bcmoj.judgeserver;
 
-import org.bcmoj.judger.Judger;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.bcmoj.judger.Judger;
 import org.bcmoj.judgeserver.security.RegexSecurityCheck;
 import org.bcmoj.judgeserver.security.SecurityChecker;
+import org.bcmoj.utils.JudgeResultBuilder;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -72,10 +73,10 @@ public class JudgeServer {
                 String status = getStatusDescription(result.statusCode);
                 log.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.time);
             }
-            return ResultBuilder.buildResult(results, securityCheckFailed, false, checkpointsCount);
+            return JudgeResultBuilder.buildResult(results, securityCheckFailed, false, checkpointsCount);
         } catch (Exception e) {
             log.error("Failed to execute judge tasks: {}", e.getMessage());
-            return ResultBuilder.buildResult(null, false, true, 0);
+            return JudgeResultBuilder.buildResult(null, false, true, 0);
         }
     }
     private static String getStatusDescription(int statusCode) {

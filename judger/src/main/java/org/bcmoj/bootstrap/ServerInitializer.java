@@ -51,6 +51,7 @@ public class ServerInitializer {
         try {
             int port = Integer.parseInt(portStr);
             SocketServer server = new SocketServer();
+            log.info("Starting server on {}:{} ... ",ip, port);
             server.start(port, ip, kwFile);
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
         } catch (NumberFormatException e) {
