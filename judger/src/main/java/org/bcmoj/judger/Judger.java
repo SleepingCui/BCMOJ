@@ -116,20 +116,18 @@ public class Judger {
             writer.write(inputContent);
             writer.flush();
         }
-
         if (!runProcess.waitFor(time, TimeUnit.MILLISECONDS)) {
             long endTime = System.nanoTime();
             double elapsedTime = (endTime - startTime) / 1_000_000.0;
             runProcess.destroyForcibly();
             try {
-                log.debug("Waiting for process {} resources to be released...", runProcess.exitValue());
+                runProcess.waitFor();
                 Thread.sleep(10);
             } catch (InterruptedException e) {
                 log.warn("Interrupted while waiting for process to terminate: {}", e.getMessage());
             }
             throw new TimeoutException("Process timed out after " + elapsedTime + " ms");
         }
-
         long endTime = System.nanoTime();
         double elapsedTime = (endTime - startTime) / 1_000_000.0;
         return new RunResult(runProcess, elapsedTime);
