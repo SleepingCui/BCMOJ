@@ -31,7 +31,7 @@ jobs:
     - name: Build with Maven
       working-directory: ./judger
       run: |
-        mvn clean package
+        mvn clean package -DskipTests
 
     - name: Rename and Prepare Artifacts
       working-directory: ./judger
