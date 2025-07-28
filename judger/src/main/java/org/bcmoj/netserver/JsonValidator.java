@@ -57,18 +57,34 @@ public class JsonValidator {
     }
 
     private boolean checkInOutPairs(JsonNode checkpoints, DataOutputStream dos) throws IOException {
+        int inCount = 0;
+        int outCount = 0;
         Iterator<String> fieldNames = checkpoints.fieldNames();
         while (fieldNames.hasNext()) {
             String name = fieldNames.next();
             if (name.endsWith("_in")) {
+                inCount++;
                 String outName = name.replace("_in", "_out");
                 if (!checkpoints.has(outName)) {
                     return fail("Missing output file for input: " + name, dos, checkpoints);
                 }
+            } else if (name.endsWith("_out")) {
+                outCount++;
+                String inName = name.replace("_out", "_in");
+                if (!checkpoints.has(inName)) {
+                    return fail("Missing input file for output: " + name, dos, checkpoints);
+                }
             }
+        }
+        if (inCount == 0) {
+            return fail("At least one _in/_out pair is required", dos, checkpoints);
+        }
+        if (inCount != outCount) {
+            return fail("Mismatch between _in and _out files (in: " + inCount + ", out: " + outCount + ")", dos, checkpoints);
         }
         return true;
     }
+
 
     private void sendErrorResponse(DataOutputStream dos, JsonNode checkpoints) throws IOException {
         ObjectNode errorResponse = mapper.createObjectNode();
