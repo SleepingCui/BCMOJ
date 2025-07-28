@@ -32,38 +32,32 @@ public class Judger {
         String programName = "c_" + random.nextInt(1000000);
         log.info("Compiling program: {}", programName);
 
-        if (System.getProperty("os.name").toLowerCase().contains("win")) {
-            programName += ".exe";
-        }
+        if (System.getProperty("os.name").toLowerCase().contains("win")) programName += ".exe";
         File executableFile = new File(programName);
         try {
             if (compileProgram(programPath, executableFile) != 0) {
                 return new JudgeResult(COMPILE_ERROR, 0.0);
             }
-            String processedInput = unescapeString(inputContent);
 
+            String processedInput = unescapeString(inputContent);
             Process runProcess;
             double elapsedTime = 0.0;
+            int exitCode;
             try {
                 RunResult runResult = runProgram(executableFile, processedInput, time);
                 runProcess = runResult.process;
                 elapsedTime = runResult.elapsedTime;
-            } catch (TimeoutException e) {
-                return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, elapsedTime);
-            } catch (IOException | InterruptedException e) {
-                return new JudgeResult(SYSTEM_ERROR, 0.0);
-            }
-            int exitCode;
+            } catch (TimeoutException e) { return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, elapsedTime); }
+              catch (IOException | InterruptedException e) { return new JudgeResult(SYSTEM_ERROR, 0.0); }
             if (runProcess.isAlive()) {
                 log.debug("Waiting for process termination...");
                 exitCode = runProcess.waitFor();
             } else exitCode = runProcess.exitValue();
-            if (exitCode != 0) return new JudgeResult(RUNTIME_ERROR, elapsedTime);
 
+            if (exitCode != 0) return new JudgeResult(RUNTIME_ERROR, elapsedTime);
             String processedExpected = unescapeString(expectedOutputContent);
-            if (!compareOutput(runProcess.getInputStream(), processedExpected)) {
-                return new JudgeResult(WRONG_ANSWER, elapsedTime);
-            }
+            if (!compareOutput(runProcess.getInputStream(), processedExpected)) return new JudgeResult(WRONG_ANSWER, elapsedTime);
+
             return new JudgeResult(ACCEPTED, elapsedTime);
 
         } catch (IOException | InterruptedException e) {
@@ -102,11 +96,8 @@ public class Judger {
         }
     }
 
-    private static RunResult runProgram(File executableFile, String inputContent, int time)
-            throws IOException, InterruptedException, TimeoutException {
-        String command = System.getProperty("os.name").toLowerCase().contains("win")
-                ? executableFile.getName()
-                : "./" + executableFile.getName();
+    private static RunResult runProgram(File executableFile, String inputContent, int time) throws IOException, InterruptedException, TimeoutException {
+        String command = System.getProperty("os.name").toLowerCase().contains("win") ? executableFile.getName() : "./" + executableFile.getName();
         ProcessBuilder runBuilder = new ProcessBuilder(command);
         runBuilder.redirectErrorStream(true);
         Process runProcess = runBuilder.start();
