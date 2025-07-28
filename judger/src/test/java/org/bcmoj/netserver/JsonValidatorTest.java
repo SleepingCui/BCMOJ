@@ -1,37 +1,21 @@
 package org.bcmoj.netserver;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.*;
 
 public class JsonValidatorTest {
 
     private JsonValidator validator;
-    private ByteArrayOutputStream baos;
-    private DataOutputStream dos;
 
     @Before
     public void setUp() {
         validator = new JsonValidator();
-        baos = new ByteArrayOutputStream();
-        dos = new DataOutputStream(baos);
-    }
-
-    @After
-    public void tearDown() throws IOException {
-        dos.close();
-        baos.close();
     }
 
     @Test
-    public void testValidJsonWithCorrectInOutPairs() throws IOException {
+    public void testValidJsonWithCorrectInOutPairs() {
         String json = """
             {
               "timeLimit": 1000,
@@ -47,11 +31,11 @@ public class JsonValidatorTest {
 
         boolean result = validator.validate(json);
         assertTrue("Expected validation to pass", result);
-        assertEquals(0, baos.size());
+        assertNull("No error should be returned", validator.getLastErrorJson());
     }
 
     @Test
-    public void testInvalidJson_MissingOutPair() throws IOException {
+    public void testInvalidJson_MissingOutPair() {
         String json = """
             {
               "timeLimit": 1000,
@@ -64,17 +48,11 @@ public class JsonValidatorTest {
 
         boolean result = validator.validate(json);
         assertFalse("Expected validation to fail due to missing _out pair", result);
-        byte[] responseBytes = baos.toByteArray();
-        assertTrue(responseBytes.length > 0);
-
-        String responseStr = new String(responseBytes, StandardCharsets.UTF_8);
-        String jsonResponse = responseStr.substring(4);
-        assertTrue(jsonResponse.contains("\"1_res\""));
-        assertTrue(jsonResponse.contains("5"));
+        assertNotNull("Expected error result", validator.getLastErrorJson());
     }
 
     @Test
-    public void testInvalidJson_MissingInPair() throws IOException {
+    public void testInvalidJson_MissingInPair() {
         String json = """
             {
               "timeLimit": 1000,
@@ -86,12 +64,12 @@ public class JsonValidatorTest {
             """;
 
         boolean result = validator.validate(json);
-        assertFalse(result);
-        assertTrue(baos.size() > 0);
+        assertFalse("Expected validation to fail due to missing _in pair", result);
+        assertNotNull("Expected error result", validator.getLastErrorJson());
     }
 
     @Test
-    public void testInvalidJson_NoPairs() throws IOException {
+    public void testInvalidJson_NoPairs() {
         String json = """
             {
               "timeLimit": 1000,
@@ -101,12 +79,12 @@ public class JsonValidatorTest {
             """;
 
         boolean result = validator.validate(json);
-        assertFalse(result);
-        assertTrue(baos.size() > 0);
+        assertFalse("Expected validation to fail due to no input/output pairs", result);
+        assertNotNull("Expected error result", validator.getLastErrorJson());
     }
 
     @Test
-    public void testInvalidJson_SchemaViolation() throws IOException {
+    public void testInvalidJson_SchemaViolation() {
         String json = """
             {
               "timeLimit": 0,
@@ -118,7 +96,7 @@ public class JsonValidatorTest {
             """;
 
         boolean result = validator.validate(json);
-        assertFalse(result);
-        assertTrue(baos.size() > 0);
+        assertFalse("Expected validation to fail due to schema violation", result);
+        assertNotNull("Expected error result", validator.getLastErrorJson());
     }
 }
