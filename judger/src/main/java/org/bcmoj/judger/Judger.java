@@ -53,9 +53,13 @@ public class Judger {
             } catch (IOException | InterruptedException e) {
                 return new JudgeResult(SYSTEM_ERROR, 0.0);
             }
-            if (runProcess.exitValue() != 0) {
-                return new JudgeResult(RUNTIME_ERROR, elapsedTime);
-            }
+            int exitCode;
+            if (runProcess.isAlive()) {
+                log.debug("Waiting for process termination...");
+                exitCode = runProcess.waitFor();
+            } else exitCode = runProcess.exitValue();
+            if (exitCode != 0) return new JudgeResult(RUNTIME_ERROR, elapsedTime);
+
             String processedExpected = unescapeString(expectedOutputContent);
             if (!compareOutput(runProcess.getInputStream(), processedExpected)) {
                 return new JudgeResult(WRONG_ANSWER, elapsedTime);
