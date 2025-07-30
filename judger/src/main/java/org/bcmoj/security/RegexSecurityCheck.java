@@ -1,4 +1,4 @@
-package org.bcmoj.judgeserver.security;
+package org.bcmoj.security;
 
 import lombok.extern.slf4j.Slf4j;
 

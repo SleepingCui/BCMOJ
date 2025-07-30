@@ -1,17 +1,18 @@
 package org.bcmoj.netserver;
 
+import org.bcmoj.utils.JsonValidateUtil;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class JsonValidatorTest {
+public class JsonValidateUtilTest {
 
-    private JsonValidator validator;
+    private JsonValidateUtil validator;
 
     @Before
     public void setUp() {
-        validator = new JsonValidator();
+        validator = new JsonValidateUtil();
     }
 
     @Test

@@ -1,5 +1,6 @@
 package org.bcmoj.judgeserver.security;
 
+import org.bcmoj.security.RegexSecurityCheck;
 import org.bcmoj.utils.TestFileUtils;
 import org.junit.*;
 

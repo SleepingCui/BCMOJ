@@ -1,3 +1,4 @@
+import hashlib
 import os
 import json
 import socket
@@ -16,6 +17,14 @@ SERVER_HOST = config['judge_config']['judge_host']
 SERVER_PORT = config['judge_config']['judge_port']
 ENABLE_SECURITY_CHECK = config['judge_config']['enable_code_security_check']
 USERDATA_PATH = Path(config['app_settings']['userdata_folder'])
+
+
+def calculate_file_sha256(file_path):
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
 
 
 def submit_solution(problem_id, cpp_file):
@@ -50,23 +59,40 @@ def submit_solution(problem_id, cpp_file):
         json_data = json.dumps(config_data)
         app.logger.info(f"Problem Data : {json_data}")
 
+        # 计算文件哈希
+        file_hash = calculate_file_sha256(temp_path)
+        app.logger.info(f"Calculated file hash: {file_hash}")
+
         results = []
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(30)
             sock.connect((SERVER_HOST, SERVER_PORT))
+
+            # 发送文件名长度+内容
             sock.sendall(len(filename.encode('utf-8')).to_bytes(4, 'big'))
             sock.sendall(filename.encode('utf-8'))
 
+            # 发送文件大小+文件内容
             filesize = temp_path.stat().st_size
             sock.sendall(filesize.to_bytes(8, 'big'))
             with temp_path.open('rb') as f:
                 for chunk in iter(lambda: f.read(4096), b''):
                     sock.sendall(chunk)
 
+            # **先发送 JSON 配置长度 + 内容**
             json_bytes = json_data.encode('utf-8')
             sock.sendall(len(json_bytes).to_bytes(4, 'big'))
             sock.sendall(json_bytes)
 
+            # **再发送哈希长度 + 哈希字符串**
+            if file_hash:
+                hash_bytes = file_hash.encode('utf-8')
+                sock.sendall(len(hash_bytes).to_bytes(4, 'big'))
+                sock.sendall(hash_bytes)
+            else:
+                sock.sendall((0).to_bytes(4, 'big'))
+
+            # 接收响应，循环读取直到结束
             while True:
                 length_bytes = sock.recv(4)
                 if not length_bytes or int.from_bytes(length_bytes, 'big') == 0:
@@ -96,7 +122,6 @@ def submit_solution(problem_id, cpp_file):
             return {'error': 'User not logged in'}, 401
 
         submit_time = datetime.now()
-
 
         judge_result = JudgeResult(userid=user_id, problemid=problem_id, time=submit_time, filepath='')
         db.session.add(judge_result)

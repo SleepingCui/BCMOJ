@@ -26,7 +26,7 @@ public class JudgerTest {
     //compile error
     @Test
     public void testCompileError() throws IOException {
-        String brokenCode = "#include<iostream>\nint main(){ THIS_WILL_NOT_COMPILE }";
+        String brokenCode = "#include<iostream>\nint main(){ FUCK_YOU }";
         File cppFile = createTempCppFile(brokenCode);
         JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000);
         assertEquals(Judger.COMPILE_ERROR, result.statusCode);

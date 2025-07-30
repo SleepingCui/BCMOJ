@@ -18,6 +18,7 @@ public class SocketServer {
 
     public void start(int port, String host, String kwFilePath) {
         try {
+            log.info("Starting server on {}:{} ...", host, port);
             serverSocket = new ServerSocket();
             serverSocket.bind(new InetSocketAddress(host, port));
             log.info("Socket server started on {}:{} with keywords file: {}", host, port, kwFilePath);

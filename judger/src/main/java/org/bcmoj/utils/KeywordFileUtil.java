@@ -21,7 +21,7 @@ import java.util.List;
  * @version 1.0
  * @since 2025
  */
-public class KWFileWriter {
+public class KeywordFileUtil {
     /**
      * Default security keywords that should be blocked
      */

@@ -18,13 +18,13 @@ public class TestFileUtils {
     public static File createTempKeywordFile(List<String> keywords) throws IOException {
         File tmp = File.createTempFile("temp_keywords_", ".txt");
         tmp.deleteOnExit();
-        KWFileWriter.writeKeywords(tmp.getAbsolutePath(), keywords);
+        KeywordFileUtil.writeKeywords(tmp.getAbsolutePath(), keywords);
         return tmp;
     }
     public static File createTempDefaultKeywordFile() throws IOException {
         File tmp = File.createTempFile("temp_default_keywords_", ".txt");
         tmp.deleteOnExit();
-        KWFileWriter.writeDefaultKeywords(tmp.getAbsolutePath());
+        KeywordFileUtil.writeDefaultKeywords(tmp.getAbsolutePath());
         return tmp;
     }
 }

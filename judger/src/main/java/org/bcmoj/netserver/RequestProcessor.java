@@ -1,7 +1,12 @@
 package org.bcmoj.netserver;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bcmoj.judgeserver.JudgeServer;
+import org.bcmoj.utils.FileHashUtil;
+import org.bcmoj.utils.JsonValidateUtil;
+import org.bcmoj.utils.JudgeResultUtil;
 import org.slf4j.MDC;
 
 import java.io.*;
@@ -9,6 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -17,7 +23,8 @@ public class RequestProcessor implements Runnable {
 
     private final Socket clientSocket;
     private final String kwFilePath;
-    private final JsonValidator validator = new JsonValidator();
+    private final JsonValidateUtil validator = new JsonValidateUtil();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public RequestProcessor(Socket clientSocket, String kwFilePath) {
         this.clientSocket = clientSocket;
@@ -30,20 +37,47 @@ public class RequestProcessor implements Runnable {
         MDC.put("client", clientAddress);
 
         File outputFile = null;
-
-        try (DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
-             DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream())) {
+        try (DataInputStream dis = new DataInputStream(clientSocket.getInputStream()); DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream())) {
 
             String originalFileName = receiveFileName(dis);
             long fileSize = dis.readLong();
             String fileExtension = getFileExtension(originalFileName);
-
             outputFile = File.createTempFile(UUID.randomUUID().toString(), fileExtension);
             log.info("Receiving file '{}' ({} bytes), saving as: {}", originalFileName, fileSize, outputFile.getAbsolutePath());
 
             receiveFile(dis, outputFile, fileSize);
-
             String jsonConfig = receiveJsonConfig(dis);
+            int checkpointCount = 1;
+            try {
+                JsonNode rootNode = mapper.readTree(jsonConfig);
+                JsonNode checkpointsNode = rootNode.get("checkpoints");
+                checkpointCount = validator.countInFiles(checkpointsNode);
+                if (checkpointCount <= 0) checkpointCount = 1;
+            } catch (Exception e) {
+                log.warn("Failed to parse checkpoints count from JSON config, using default 1");
+            }
+            try {
+                int hashLength = dis.readInt();
+                if (hashLength > 0) {
+                    byte[] hashBytes = new byte[hashLength];
+                    dis.readFully(hashBytes);
+                    String declaredHash = new String(hashBytes, StandardCharsets.UTF_8);
+                    String actualHash = FileHashUtil.calculateSHA256(outputFile);
+                    log.info("Declared hash: {}", declaredHash);
+                    log.info("Actual   hash: {}", actualHash);
+                    if (!actualHash.equalsIgnoreCase(declaredHash)) {
+                        log.warn("File hash mismatch! Sending default error result...");
+                        String errorJson = JudgeResultUtil.buildResult(List.of(), false, true, checkpointCount);
+                        sendResponse(dos, errorJson);
+                        return;
+                    }
+                } else {
+                    log.warn("Client did not send hash, skipping hash verification.");
+                }
+            } catch (IOException e) {
+                log.warn("Failed to read hash info from client, skipping verification: {}", e.getMessage());
+            }
+
             log.info("Validating JSON config...");
             if (!validator.validate(jsonConfig)) {
                 log.warn("JSON validation failed");
@@ -53,7 +87,6 @@ public class RequestProcessor implements Runnable {
                 }
                 return;
             }
-
             log.info("Processing with JudgeServer...");
             String serverResponse = JudgeServer.JServer(jsonConfig, outputFile, new File(kwFilePath));
             log.info("JudgeServer response: {}", serverResponse);

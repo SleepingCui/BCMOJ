@@ -11,7 +11,7 @@ import java.util.List;
  * Utility class for building JSON-formatted judge result responses.
  */
 @Slf4j
-public class JudgeResultBuilder {
+public class JudgeResultUtil {
 
     /**
      * Builds a JSON string representing judge results for multiple checkpoints.
