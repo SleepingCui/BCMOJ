@@ -19,8 +19,6 @@ import java.util.UUID;
 
 @Slf4j
 public class RequestProcessor implements Runnable {
-    private static final int BUFFER_SIZE = 4096;
-
     private final Socket clientSocket;
     private final String kwFilePath;
     private final JsonValidateUtil validator = new JsonValidateUtil();
@@ -126,9 +124,9 @@ public class RequestProcessor implements Runnable {
     private void receiveFile(DataInputStream dis, File outputFile, long fileSize) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             long remaining = fileSize;
-            byte[] buffer = new byte[BUFFER_SIZE];
+            byte[] buffer = new byte[4096];
             while (remaining > 0) {
-                int read = dis.read(buffer, 0, (int) Math.min(BUFFER_SIZE, remaining));
+                int read = dis.read(buffer, 0, (int) Math.min(4096, remaining));
                 if (read < 0) throw new EOFException("Unexpected end of stream while receiving file");
                 fos.write(buffer, 0, read);
                 remaining -= read;

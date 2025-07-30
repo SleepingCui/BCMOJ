@@ -11,18 +11,18 @@ import java.util.Properties;
 @Slf4j
 public class ServerInitializer {
 
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
+    }
+
     public static void start(Properties props, String configFilePath) {
-
-        log.info("Operating System: {} {}", System.getProperty("os.name"), System.getProperty("os.version"));
-        log.info("Java Version: {}", System.getProperty("java.version"));
-        log.info("Working Directory: {}", System.getProperty("user.dir"));
-
         String host = props.getProperty("host");
         String portStr = props.getProperty("port");
         String kwFile = props.getProperty("kwfile");
-        boolean missingHost = host.isBlank();
-        boolean missingPort = portStr.isBlank();
-        boolean missingKwFile = kwFile.isBlank();
+
+        boolean missingHost = isBlank(host);
+        boolean missingPort = isBlank(portStr);
+        boolean missingKwFile = isBlank(kwFile);
 
         if (configFilePath != null && (missingHost || missingPort || missingKwFile)) {
             Properties fileProps = new Properties();
@@ -38,7 +38,7 @@ public class ServerInitializer {
             }
         }
 
-        if (host.isBlank() || portStr.isBlank() || kwFile.isBlank()) {
+        if (isBlank(host) || isBlank(portStr) || isBlank(kwFile)) {
             log.error("Missing required parameters: host={}, port={}, kwfile={}", host, portStr, kwFile);
             Bootstrap.printHelp();
             System.exit(1);

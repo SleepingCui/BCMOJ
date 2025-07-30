@@ -1,6 +1,7 @@
 package org.bcmoj.bootstrap;
 
 import lombok.extern.slf4j.Slf4j;
+import org.bcmoj.utils.VersionUtil;
 
 import java.util.Properties;
 
@@ -26,19 +27,21 @@ public class Bootstrap {
         Properties Props = ConfigLoader.merge(configFileProps, cmdLineProps);
         ServerInitializer.start(Props, configFilePath);
     }
-
+    
     public static void printLogo() {
-        String logo = """
-              ____   ____ __  __  ___      _       _ ____                      \s
-             | __ ) / ___|  \\/  |/ _ \\    | |     | / ___|  ___ _ ____   _____ _ __
-             |  _ \\| |   | |\\/| | | | |_  | |  _  | \\___ \\ / _ \\ '__\\ \\ / / _ \\ '__|
-             | |_) | |___| |  | | |_| | |_| | | |_| |___) |  __/ |   \\ V /  __/ | \s
-             |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_| \s
+        String version = VersionUtil.getVersion();
+        String logo = String.format("""
+          ____   ____ __  __  ___      _       _ ____                     \s
+         | __ ) / ___|  \\/  |/ _ \\    | |     | / ___|  ___ _ ____   _____ _ __
+         |  _ \\| |   | |\\/| | | | |_  | |  _  | \\___ \\ / _ \\ '__\\ \\ / / _ \\ '__|
+         | |_) | |___| |  | | |_| | |_| | | |_| |___) |  __/ |   \\ V /  __/ |\s
+         |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_|\s
 
-            BCMOJ Judge Server v1.0-SNAPSHOT  Developed by SleepingCui & MxingFoew1034
-          \s""";
+        BCMOJ Judge Server v%s  Developed by SleepingCui & MxingFoew1034
+       \s""", version);
         System.out.println(logo);
     }
+
     public static void printHelp() {
         System.out.println("""
             BCMOJ Judge Server - Usage:
