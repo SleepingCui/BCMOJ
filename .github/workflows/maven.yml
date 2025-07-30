@@ -1,4 +1,4 @@
-name: judger
+name: judger-build
 
 on:
   push:
