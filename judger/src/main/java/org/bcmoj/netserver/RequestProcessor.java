@@ -14,11 +14,13 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.UUID;
 
 @Slf4j
 public class RequestProcessor implements Runnable {
+    private static final int BUFFER_SIZE = 4096;
     private final Socket clientSocket;
     private final String kwFilePath;
     private final JsonValidateUtil validator = new JsonValidateUtil();
@@ -31,102 +33,110 @@ public class RequestProcessor implements Runnable {
 
     @Override
     public void run() {
-        String clientAddress = String.format("%s:%d", ((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getAddress().getHostAddress(), ((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getPort());
+        InetSocketAddress remote = (InetSocketAddress) clientSocket.getRemoteSocketAddress();
+        String clientAddress =  remote.toString().replace("/", "");
         MDC.put("client", clientAddress);
 
         File outputFile = null;
         try (DataInputStream dis = new DataInputStream(clientSocket.getInputStream()); DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream())) {
-
-            String originalFileName = receiveFileName(dis);
-            long fileSize = dis.readLong();
-            String fileExtension = getFileExtension(originalFileName);
-            outputFile = File.createTempFile(UUID.randomUUID().toString(), fileExtension);
-            log.info("Receiving file '{}' ({} bytes), saving as: {}", originalFileName, fileSize, outputFile.getAbsolutePath());
-
-            receiveFile(dis, outputFile, fileSize);
+            outputFile = handleFileReception(dis);
             String jsonConfig = receiveJsonConfig(dis);
-            int checkpointCount = 1;
-            try {
-                JsonNode rootNode = mapper.readTree(jsonConfig);
-                JsonNode checkpointsNode = rootNode.get("checkpoints");
-                checkpointCount = validator.countInFiles(checkpointsNode);
-                if (checkpointCount <= 0) checkpointCount = 1;
-            } catch (Exception e) {
-                log.warn("Failed to parse checkpoints count from JSON config, using default 1");
-            }
-            try {
-                int hashLength = dis.readInt();
-                if (hashLength > 0) {
-                    byte[] hashBytes = new byte[hashLength];
-                    dis.readFully(hashBytes);
-                    String declaredHash = new String(hashBytes, StandardCharsets.UTF_8);
-                    String actualHash = FileHashUtil.calculateSHA256(outputFile);
-                    log.info("Declared hash: {}", declaredHash);
-                    log.info("Actual   hash: {}", actualHash);
-                    if (!actualHash.equalsIgnoreCase(declaredHash)) {
-                        log.warn("File hash mismatch! Sending default error result...");
-                        String errorJson = JudgeResultUtil.buildResult(List.of(), false, true, checkpointCount);
-                        sendResponse(dos, errorJson);
-                        return;
-                    }
-                } else {
-                    log.warn("Client did not send hash, skipping hash verification.");
-                }
-            } catch (IOException e) {
-                log.warn("Failed to read hash info from client, skipping verification: {}", e.getMessage());
-            }
-
-            log.info("Validating JSON config...");
-            if (!validator.validate(jsonConfig)) {
-                log.warn("JSON validation failed");
-                String errorJson = validator.getLastErrorJson();
-                if (errorJson != null) {
-                    sendResponse(dos, errorJson);
-                }
-                return;
-            }
-            log.info("Processing with JudgeServer...");
-            String serverResponse = JudgeServer.JServer(jsonConfig, outputFile, new File(kwFilePath));
-            log.info("JudgeServer response: {}", serverResponse);
-            sendResponse(dos, serverResponse);
-
+            int checkpointCount = parseCheckpointCount(jsonConfig);
+            if (!verifyHash(dis, outputFile, checkpointCount, dos)) return;
+            if (!validateJson(jsonConfig, dos)) return;
+            runJudgeServer(jsonConfig, outputFile, dos);
         } catch (SocketException e) {
             log.warn("Client {} disconnected abruptly: {}", clientAddress, e.getMessage());
         } catch (Exception e) {
             log.error("Error when handling client {}", clientAddress, e);
         } finally {
-            if (outputFile != null && outputFile.exists()) {
-                if (outputFile.delete()) {
-                    log.info("Deleted temporary file: {}", outputFile.getName());
-                } else {
-                    log.warn("Failed to delete temporary file: {}", outputFile.getName());
-                }
-            }
-            try {
-                clientSocket.close();
-                log.info("Connection closed");
-            } catch (IOException e) {
-                log.error("Error closing socket", e);
-            }
+            cleanup(outputFile);
             MDC.remove("client");
         }
     }
 
-    private String receiveFileName(DataInputStream dis) throws IOException {
-        int length = dis.readInt();
-        byte[] bytes = new byte[length];
-        dis.readFully(bytes);
-        String filename = new String(bytes, StandardCharsets.UTF_8);
+    private File handleFileReception(DataInputStream dis) throws IOException {
+        String filename = new String(dis.readNBytes(dis.readInt()), StandardCharsets.UTF_8);
         log.info("Received filename: {}", filename);
-        return filename;
+        long fileSize = dis.readLong();
+        File outputFile = File.createTempFile(UUID.randomUUID().toString(), getFileExtension(filename));
+        log.info("Receiving file '{}' ({} bytes), saving as: {}", filename, fileSize, outputFile.getAbsolutePath());
+        receiveFile(dis, outputFile, fileSize);
+        return outputFile;
+    }
+
+    private int parseCheckpointCount(String jsonConfig) {
+        try {
+            JsonNode checkpointsNode = mapper.readTree(jsonConfig).get("checkpoints");
+            int count = validator.countInFiles(checkpointsNode);
+            return count <= 0 ? 1 : count;
+        } catch (Exception e) {
+            log.warn("Failed to parse checkpoints count from JSON config, using default 1");
+            return 1;
+        }
+    }
+
+    private boolean verifyHash(DataInputStream dis, File file, int checkpointCount, DataOutputStream dos) {
+        try {
+            int hashLength = dis.readInt();
+            if (hashLength <= 0) {
+                log.warn("Client did not send hash, skipping verification.");
+                return true;
+            }
+            byte[] hashBytes = new byte[hashLength];
+            dis.readFully(hashBytes);
+            String declaredHash = new String(hashBytes, StandardCharsets.UTF_8);
+            String actualHash = FileHashUtil.calculateSHA256(file);
+            log.info("Declared hash: {}", declaredHash);
+            log.info("Actual   hash: {}", actualHash);
+            if (!actualHash.equalsIgnoreCase(declaredHash)) {
+                log.warn("File hash mismatch! Sending error result...");
+                sendResponse(dos, JudgeResultUtil.buildResult(List.of(), false, true, checkpointCount));
+                return false;
+            }
+        } catch (IOException | NoSuchAlgorithmException e) {
+            log.warn("Failed to read hash info from client: {}", e.getMessage());
+        }
+        return true;
+    }
+
+    private boolean validateJson(String jsonConfig, DataOutputStream dos) throws IOException {
+        log.info("Validating JSON config...");
+        if (validator.validate(jsonConfig)) return true;
+        log.warn("JSON validation failed");
+        String errorJson = validator.getLastErrorJson();
+        if (errorJson != null) sendResponse(dos, errorJson); return false;
+    }
+
+    private void runJudgeServer(String jsonConfig, File file, DataOutputStream dos) throws IOException {
+        log.info("Processing with JudgeServer...");
+        String response = JudgeServer.JServer(jsonConfig, file, new File(kwFilePath));
+        log.info("JudgeServer response: {}", response);
+        sendResponse(dos, response);
+    }
+
+    private void cleanup(File outputFile) {
+        if (outputFile != null && outputFile.exists()) {
+            if (outputFile.delete()) {
+                log.info("Deleted temporary file: {}", outputFile.getName());
+            } else {
+                log.warn("Failed to delete temporary file: {}", outputFile.getName());
+            }
+        }
+        try {
+            clientSocket.close();
+            log.info("Connection closed");
+        } catch (IOException e) {
+            log.error("Error closing socket", e);
+        }
     }
 
     private void receiveFile(DataInputStream dis, File outputFile, long fileSize) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             long remaining = fileSize;
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[BUFFER_SIZE];
             while (remaining > 0) {
-                int read = dis.read(buffer, 0, (int) Math.min(4096, remaining));
+                int read = dis.read(buffer, 0, (int) Math.min(buffer.length, remaining));
                 if (read < 0) throw new EOFException("Unexpected end of stream while receiving file");
                 fos.write(buffer, 0, read);
                 remaining -= read;
@@ -139,9 +149,9 @@ public class RequestProcessor implements Runnable {
         int length = dis.readInt();
         byte[] bytes = new byte[length];
         dis.readFully(bytes);
-        String jsonConfig = new String(bytes, StandardCharsets.UTF_8);
-        log.info("Received JSON config ({} bytes):\n{}", length, jsonConfig);
-        return jsonConfig;
+        String json = new String(bytes, StandardCharsets.UTF_8);
+        log.info("Received JSON config ({} bytes):\n{}", length, json);
+        return json;
     }
 
     private void sendResponse(DataOutputStream dos, String response) throws IOException {
@@ -149,7 +159,7 @@ public class RequestProcessor implements Runnable {
         dos.writeInt(responseBytes.length);
         dos.write(responseBytes);
         dos.flush();
-        log.info("Response sent to client ({} bytes):\n{} ", responseBytes.length, response);
+        log.info("Response sent to client ({} bytes):\n{}", responseBytes.length, response);
     }
 
     private static String getFileExtension(String filename) {
@@ -157,3 +167,4 @@ public class RequestProcessor implements Runnable {
         return (dotIndex == -1) ? "" : filename.substring(dotIndex);
     }
 }
+

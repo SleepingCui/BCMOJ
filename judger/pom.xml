@@ -6,7 +6,7 @@
 
     <groupId>org.bcmoj.judger</groupId>
     <artifactId>judger</artifactId>
-    <version>1.0.7-beta</version>
+    <version>1.0.8-beta</version>
 
     <dependencies>
         <dependency>

@@ -6,15 +6,11 @@ import org.bcmoj.utils.VersionUtil;
 import java.util.Properties;
 
 @Slf4j
-public class Bootstrap {
+public class  Bootstrap {
 
     public static void run(String[] args) {
         printLogo();
-        if (args.length == 0) {
-            printHelp();
-            return;
-        }
-
+        if (args.length == 0) { printHelp();return; }
         Properties cmdLineProps = CommandParser.parse(args);
         String configFilePath = cmdLineProps.getProperty("config");
         Properties configFileProps = null;
