@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/SleepingCui/BCMOJ/master/imgs/logo.png" alt="logo" width=30%/>
-</p>
+![BCMOJ](https://socialify.git.ci/SleepingCui/BCMOJ/image?custom_language=Java&description=1&font=Raleway&pattern=Circuit+Board&theme=Auto)
 
 ![GitHub License](https://img.shields.io/github/license/SleepingCui/BCMOJ)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr/SleepingCui/BCMOJ)
