@@ -1,9 +1,11 @@
-from werkzeug.serving import run_simple, WSGIRequestHandler
+from werkzeug.serving import run_simple
 from app.core.config import write_default_config
+from app.core.logger import CustomRequestHandler
 from pathlib import Path
 import logging
 import click
 import sys
+import os
 
 logo = r"""
   ____   ____ __  __  ___      _   ____            _           _    
@@ -15,26 +17,6 @@ logo = r"""
   Developed by SleepingCui    https://github.com/SleepingCui/BCMOJ/
 """
 
-
-class CustomRequestHandler(WSGIRequestHandler):
-    def log(self, type, message, *args):
-        if args:
-            message = message % args
-        logger = logging.getLogger('werkzeug')
-        level = {
-            'info': logging.INFO,
-            'warning': logging.WARNING,
-            'error': logging.ERROR,
-        }.get(type, logging.INFO)
-        client_ip = self.client_address[0]
-        try:
-            from app.core.logger import log_route_context
-            route_name = log_route_context.get('werkzeug') if log_route_context.get() == 'main' else log_route_context.get()
-        except ImportError:
-            route_name = 'app'
-        logger.log(level, '[%s] %s - %s', route_name, client_ip, message)
-
-
 @click.group(invoke_without_command=True)
 @click.pass_context
 def cli(ctx):
@@ -44,12 +26,13 @@ def cli(ctx):
     \b
     Usage:
       python manage.py run --host=HOST --port=PORT [--wsgi]
+      python manage.py db upgrade
     
     \b
     Examples:
       python manage.py run --host=0.0.0.0 --port=80 --wsgi
       python manage.py run --host=127.0.0.1 --port=5000
-      python manage.py run --host=0.0.0.0 --port=8080 --wsgi
+      python manage.py db upgrade
     """
     if ctx.invoked_subcommand is None:
         from app.core import version
@@ -122,14 +105,103 @@ def run(host, port, wsgi, debug):
             click.echo(f"[initialize] Starting development server on http://{host}:{port}")
             click.echo("[initialize] Debug mode: OFF")
             
-        run_simple(
-            hostname=host,
-            port=port,
-            application=app,
-            use_reloader=debug,
-            use_debugger=debug,
-            request_handler=CustomRequestHandler
-        )
+        run_simple(hostname=host,port=port, application=app, use_reloader=debug, use_debugger=debug, request_handler=CustomRequestHandler)
+
+
+def check_database_exists():
+    """检查数据库是否存在"""
+    try:
+        from app.core.config import get_config
+        from sqlalchemy import create_engine, text
+        
+        config = get_config()
+        raw_db_config = config['db_config']
+        base_uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@" \
+                   f"{raw_db_config['db_host']}:{raw_db_config['db_port']}"
+        
+        engine = create_engine(base_uri, echo=False)
+        
+        with engine.connect() as conn:
+            result = conn.execute(text(f"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{raw_db_config['db_name']}'"))
+            db_exists = result.fetchone() is not None
+            
+            if not db_exists:
+                return False, f"Database '{raw_db_config['db_name']}' does not exist"
+            full_uri = f"{base_uri}/{raw_db_config['db_name']}"
+            db_engine = create_engine(full_uri, echo=False)
+            
+            with db_engine.connect() as db_conn:
+                result = db_conn.execute(text("SHOW TABLES"))
+                tables = result.fetchall()
+                
+                if not tables:
+                    return False, f"Database '{raw_db_config['db_name']}' exists but has no tables"
+                
+                return True, f"Database '{raw_db_config['db_name']}' exists with {len(tables)} tables"
+                
+    except Exception as e:
+        return False, f"Error checking database: {e}"
+
+
+@cli.group()
+def db():
+    """Database migration commands."""
+    pass
+
+
+@db.command()
+def upgrade():
+    """Automatically handle database migrations and upgrades."""
+    from flask import Flask
+    from app.core.db import init_migrate
+    from flask_migrate import init, migrate as flask_migrate, upgrade as flask_upgrade
+    import shutil
+    
+    click.echo("[DB-Upgrade] Starting database upgrade process...")
+    db_exists, message = check_database_exists()
+    if not db_exists:
+        click.echo(f"[DB-Upgrade] {message}")
+        click.echo("[DB-Upgrade] ERROR: Database not found or empty!")
+        click.echo("")
+        click.echo("Please run the web server first to initialize the database:")
+        click.echo("  python manage.py run --port=5000")
+        click.echo("")
+        click.echo("After the web server starts successfully, stop it (Ctrl+C) and then run:")
+        click.echo("  python manage.py db upgrade")
+        sys.exit(1)
+    click.echo(f"[DB-Upgrade] {message}")
+    app = Flask(__name__)
+    init_migrate(app)
+    migrations_dir = "migrations"
+    with app.app_context():
+        try:
+            if not os.path.exists(migrations_dir):
+                click.echo("[DB-Upgrade] Migrations directory not found. Initializing...")
+                init()
+                click.echo("[DB-Upgrade] Migration repository initialized.")
+            versions_dir = os.path.join(migrations_dir, "versions")
+            if not os.path.exists(versions_dir) or len(os.listdir(versions_dir)) == 0:
+                click.echo("[DB-Upgrade] No migration files found. Generating initial migration...")
+                flask_migrate(message="Initial migration with example_visible_count field")
+                click.echo("[DB-Upgrade] Initial migration generated.")
+            else:
+                click.echo("[DB-Upgrade] Checking for model changes...")
+                try:
+                    flask_migrate(message="Auto migration for model changes")
+                    click.echo("[DB-Upgrade] New migration generated for model changes.")
+                except Exception as e:
+                    if "No changes in schema detected" in str(e):
+                        click.echo("[DB-Upgrade] No schema changes detected.")
+                    else:
+                        click.echo(f"[DB-Upgrade] Migration generation completed: {e}")
+            click.echo("[DB-Upgrade] Applying migrations...")
+            flask_upgrade()
+            click.echo("[DB-Upgrade] Database upgraded successfully.")
+            
+        except Exception as e:
+            click.echo(f"[DB-Upgrade] Error during database upgrade: {e}")
+            sys.exit(1)
+
 
 if __name__ == "__main__":
     if not Path("config.yml").exists():
@@ -137,5 +209,4 @@ if __name__ == "__main__":
         click.echo("[initialize] config.yml not found. Default configuration file has been generated.")
         click.echo("[initialize] Please edit config.yml before running BCMOJ again.")
         sys.exit(0)
-    
     cli()

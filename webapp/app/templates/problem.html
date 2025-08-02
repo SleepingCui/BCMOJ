@@ -37,21 +37,22 @@
     <p><strong>时间限制:</strong> {{ problem.time_limit }} ms</p>
   </div>
 
-  <div class="examples">
-    <h2>示例</h2>
-    {% for example in examples %}
-      <div class="example-pair">
-        <div class="example-half">
-          <h4>输入 {{ loop.index }}:</h4>
-          <pre><code class="language-plaintext">{{ example.input }}</code></pre>
-        </div>
-        <div class="example-half">
-          <h4>输出 {{ loop.index }}:</h4>
-          <pre><code class="language-plaintext">{{ example.output }}</code></pre>
-        </div>
+<div class="examples">
+  <h2>示例</h2>
+  {% for example in examples[:problem.example_visible_count] %}
+    <div class="example-pair">
+      <div class="example-half">
+        <h4>输入 {{ loop.index }}:</h4>
+        <pre><code class="language-plaintext">{{ example.input }}</code></pre>
       </div>
-    {% endfor %}
-  </div>
+      <div class="example-half">
+        <h4>输出 {{ loop.index }}:</h4>
+        <pre><code class="language-plaintext">{{ example.output }}</code></pre>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
 
   <div class="upload-area">
     <h2>提交你的代码</h2>

@@ -16,3 +16,4 @@ keywords.txt
 *.pyc
 /Judger/logs/
 *.log
+/migrations/
