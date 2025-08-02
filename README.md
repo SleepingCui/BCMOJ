@@ -1,4 +1,4 @@
-![BCMOJ](https://socialify.git.ci/SleepingCui/BCMOJ/image?custom_language=Java&font=Raleway&language=1&name=1&owner=1&pattern=Circuit+Board&theme=Auto)
+![BCMOJ](https://socialify.git.ci/SleepingCui/BCMOJ/image?custom_language=Java&description=1&font=Raleway&language=1&name=1&owner=1&pattern=Circuit+Board&theme=Auto)
 
 ![GitHub License](https://img.shields.io/github/license/SleepingCui/BCMOJ)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr/SleepingCui/BCMOJ)
