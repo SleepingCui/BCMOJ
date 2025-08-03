@@ -110,7 +110,7 @@ public class RequestProcessor implements Runnable {
 
     private void runJudgeServer(String jsonConfig, File file, DataOutputStream dos) throws IOException {
         log.info("Processing with JudgeServer...");
-        String response = JudgeServer.JServer(jsonConfig, file, new File(kwFilePath));
+        String response = JudgeServer.serve(jsonConfig, file, new File(kwFilePath));
         log.info("JudgeServer response: {}", response);
         sendResponse(dos, response);
     }

@@ -27,6 +27,7 @@ public class Judger {
         public JudgeResult(int statusCode, double time) {
             this.statusCode = statusCode;
             this.time = time;
+            log.debug("Judge process finished. Status code: {}, Elapsed time: {} ms", statusCode, time);
         }
     }
 
@@ -141,6 +142,9 @@ public class Judger {
                 actual.append(line).append("\n");
             }
             if (!actual.isEmpty()) actual.setLength(actual.length() - 1);
+            String actualStr = actual.toString();
+            log.debug("Expected output: {}", expectedOutputContent);
+            log.debug("Actual output: {}", actualStr);
             return expectedOutputContent.contentEquals(actual);
         }
     }

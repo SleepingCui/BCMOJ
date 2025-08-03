@@ -33,10 +33,8 @@ def submit_solution(problem_id, cpp_file):
 
     filename = f"{uuid.uuid4().hex}.cpp"
     app.logger.info(f"File : {filename}")
-
     upload_folder = Path(app.config['UPLOAD_FOLDER'])
     upload_folder.mkdir(parents=True, exist_ok=True)
-
     temp_path = upload_folder / filename
     cpp_file.save(str(temp_path))
 
@@ -52,7 +50,6 @@ def submit_solution(problem_id, cpp_file):
             checkpoints[f"{idx}_out"] = ex.output
 
         enable_o2 = request.values.get("enableO2", "false").lower() == "true"
-
         config_data = {
             "timeLimit": problem.time_limit,
             "checkpoints": checkpoints,
@@ -62,7 +59,6 @@ def submit_solution(problem_id, cpp_file):
 
         json_data = json.dumps(config_data)
         app.logger.info(f"Problem Data : {json_data}")
-
         file_hash = calculate_file_sha256(temp_path)
         app.logger.info(f"Calculated file hash: {file_hash}")
 
@@ -72,7 +68,6 @@ def submit_solution(problem_id, cpp_file):
             sock.connect((SERVER_HOST, SERVER_PORT))
             sock.sendall(len(filename.encode('utf-8')).to_bytes(4, 'big'))
             sock.sendall(filename.encode('utf-8'))
-
             filesize = temp_path.stat().st_size
             sock.sendall(filesize.to_bytes(8, 'big'))
             with temp_path.open('rb') as f:
@@ -88,7 +83,6 @@ def submit_solution(problem_id, cpp_file):
                 sock.sendall(hash_bytes)
             else:
                 sock.sendall((0).to_bytes(4, 'big'))
-
             while True:
                 length_bytes = sock.recv(4)
                 if not length_bytes or int.from_bytes(length_bytes, 'big') == 0:
@@ -103,7 +97,6 @@ def submit_solution(problem_id, cpp_file):
 
                 data = json.loads(received.decode('utf-8'))
                 app.logger.info(f"Received data : {data}")
-
                 for key in data:
                     if key.endswith('_res'):
                         idx = key.split('_')[0]
@@ -118,19 +111,15 @@ def submit_solution(problem_id, cpp_file):
             return {'error': 'User not logged in'}, 401
 
         submit_time = datetime.now()
-
         judge_result = JudgeResult(userid=user_id, problemid=problem_id, time=submit_time, filepath='')
         db.session.add(judge_result)
         db.session.flush()
-
         target_dir = USERDATA_PATH / str(user_id) / "upload_problem_answers" / str(problem_id) / str(judge_result.result_id)
         target_dir.mkdir(parents=True, exist_ok=True)
-
         cpp_target_path = target_dir / "answer.cpp"
         shutil.copy(str(temp_path), str(cpp_target_path))
 
         judge_result.filepath = str(cpp_target_path)
-
         for result in results:
             db.session.add(CheckpointResult(
                 result_id=judge_result.result_id,
@@ -141,14 +130,12 @@ def submit_solution(problem_id, cpp_file):
 
         db.session.commit()
         app.logger.info("Transaction committed successfully.")
-
         return {'status': 'ok', 'results': results}, 200
 
     except Exception as e:
         app.logger.error(f"Error in submit_solution: {e}")
         db.session.rollback()
         return {'error': str(e)}, 500
-
     finally:
         try:
             if temp_path.exists():

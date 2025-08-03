@@ -23,7 +23,7 @@ public class JudgeServer {
         public boolean enableO2;
     }
 
-    public static String JServer(String jsonConfig, File cppFilePath, File keywordsFilePath) {
+    public static String serve(String jsonConfig, File cppFilePath, File keywordsFilePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
