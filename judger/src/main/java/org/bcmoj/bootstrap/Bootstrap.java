@@ -15,8 +15,6 @@ public class  Bootstrap {
             return;
         }
         Properties cmdLineProps = CommandParser.parse(args);
-
-        // 解析debug参数
         boolean debug = false;
         for (String arg : args) {
             if ("--debug".equalsIgnoreCase(arg)) {
@@ -24,7 +22,6 @@ public class  Bootstrap {
                 break;
             }
         }
-
         String configFilePath = cmdLineProps.getProperty("config");
         Properties configFileProps = null;
         try {
@@ -34,10 +31,8 @@ public class  Bootstrap {
             System.exit(1);
         }
         Properties Props = ConfigLoader.merge(configFileProps, cmdLineProps);
-
-        ServerInitializer.start(Props, configFilePath, debug);  // 传入debug参数
+        ServerInitializer.start(Props, configFilePath, debug);
     }
-
 
     public static void printLogo() {
         String version = VersionUtil.getVersion();
