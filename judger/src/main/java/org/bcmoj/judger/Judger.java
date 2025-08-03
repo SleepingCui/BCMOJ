@@ -57,11 +57,11 @@ public class Judger {
             log.error("Compilation failed: {}", e.getMessage());
             return new JudgeResult(COMPILE_ERROR, 0.0);
         }
-
         try {
             String processedInput = unescapeString(inputContent);
             RunResult runResult = runProgram(executableFile, processedInput, time);
             Process runProcess = runResult.process;
+
             double elapsedTime = runResult.elapsedTime;
             int exitCode = runProcess.isAlive() ? runProcess.waitFor() : runProcess.exitValue();
             if (exitCode != 0) return new JudgeResult(RUNTIME_ERROR, elapsedTime);
@@ -95,9 +95,7 @@ public class Judger {
         command.add(executableFile.getName());
         command.add(programPath.getAbsolutePath());
         command.add("-std=c++11");
-        if (enableO2) {
-            command.add("-O2");
-        }
+        if (enableO2) command.add("-O2");
         log.debug("Command: {}", command);
         ProcessBuilder builder = new ProcessBuilder(command);
         builder.redirectErrorStream(true);
@@ -110,7 +108,6 @@ public class Judger {
 
     private static RunResult runProgram(File executableFile, String inputContent, int time) throws IOException, InterruptedException {
         String command = System.getProperty("os.name").toLowerCase().contains("win") ? executableFile.getName() : "./" + executableFile.getName();
-
         ProcessBuilder builder = new ProcessBuilder(command);
         builder.redirectErrorStream(true);
         Process process = builder.start();
@@ -120,11 +117,9 @@ public class Judger {
             writer.write(inputContent);
             writer.flush();
         }
-
         boolean finished = process.waitFor(time, TimeUnit.MILLISECONDS);
         long endTime = System.nanoTime();
         double elapsedTime = (endTime - startTime) / 1_000_000.0;
-
         if (!finished) {
             process.destroyForcibly();
             try {
@@ -135,7 +130,6 @@ public class Judger {
             }
             throw new RuntimeException("TIMEOUT:" + elapsedTime);
         }
-
         return new RunResult(process, elapsedTime);
     }
 
