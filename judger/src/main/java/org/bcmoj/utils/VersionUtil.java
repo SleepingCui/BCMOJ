@@ -21,8 +21,7 @@ public class VersionUtil {
                 props.load(in);
                 return props.getProperty("version", "UNKNOWN");
             } else {
-                log.warn("version.properties not found in classpath.Make sure you are using the latest version.\nThis is normal if you are running from an IDE or development build.");
-
+                log.warn("version.properties not found in classpath.Make sure you are using the latest version.");
             }
         }
         catch (IOException e) {
