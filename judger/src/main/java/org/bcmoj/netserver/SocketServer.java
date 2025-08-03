@@ -44,7 +44,6 @@ public class SocketServer {
     public void stop() {
         if (stopped) return;
         stopped = true;
-
         try {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();

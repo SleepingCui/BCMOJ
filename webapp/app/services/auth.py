@@ -13,16 +13,9 @@ def verify_user_login(username_or_email, password):
     hashed_password_sha256 = hashlib.sha256(password.encode()).hexdigest()
     hashed_password_sha1 = hashlib.sha1(password.encode()).hexdigest()
 
-    user = User.query.filter(
-        (User.username == username_or_email) | (User.email == username_or_email),
-        User.passwd == hashed_password_sha256
-    ).first()
-
+    user = User.query.filter((User.username == username_or_email) | (User.email == username_or_email),User.passwd == hashed_password_sha256).first()
     if not user:
-        user = User.query.filter(
-            (User.username == username_or_email) | (User.email == username_or_email),
-            User.passwd == hashed_password_sha1
-        ).first()
+        user = User.query.filter((User.username == username_or_email) | (User.email == username_or_email),User.passwd == hashed_password_sha1).first()
         if user:
             user.passwd = hashed_password_sha256
             db.session.commit()

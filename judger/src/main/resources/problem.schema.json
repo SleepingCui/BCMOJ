@@ -9,6 +9,10 @@
     "securityCheck": {
       "type": "boolean"
     },
+    "enableO2": {
+      "type": "boolean",
+      "default": false
+    },
     "checkpoints": {
       "type": "object",
       "patternProperties": {

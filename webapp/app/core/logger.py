@@ -1,4 +1,5 @@
 from logging.handlers import RotatingFileHandler
+from werkzeug.serving import WSGIRequestHandler
 from datetime import datetime
 from colorlog import ColoredFormatter
 import os
@@ -75,3 +76,21 @@ def setup_logging(app=None):
     werkzeug_logger.addHandler(console_handler)
     werkzeug_logger.setLevel(logging.INFO)
     werkzeug_logger.addFilter(RouteNameFilter())
+
+class CustomRequestHandler(WSGIRequestHandler):
+    def log(self, type, message, *args):
+        if args:
+            message = message % args
+        logger = logging.getLogger('werkzeug')
+        level = {
+            'info': logging.INFO,
+            'warning': logging.WARNING,
+            'error': logging.ERROR,
+        }.get(type, logging.INFO)
+        client_ip = self.client_address[0]
+        try:
+            from app.core.logger import log_route_context
+            route_name = log_route_context.get('werkzeug') if log_route_context.get() == 'main' else log_route_context.get()
+        except ImportError:
+            route_name = 'app'
+        logger.log(level, '[%s] %s - %s', route_name, client_ip, message)

@@ -73,18 +73,20 @@ function renderProblemEditor(p) {
     const container = document.getElementById('problemEditor')
     container.innerHTML = ''
     const div = document.createElement('div')
-    
+
     const title = p.title || ''
     const description = p.description || ''
     const time_limit = p.time_limit || 1000
+    const example_visible_count = p.example_visible_count ?? 2
     const examples = Array.isArray(p.examples) ? p.examples : []
-    
+
     div.innerHTML = `
         <hr>
         <input value="${title}" placeholder="标题" style="width: 100%;"><br><br>
         <label>题目描述：</label><br>
         <textarea style="width: 100%; height: 150px;">${description}</textarea><br><br>
         时间限制(ms): <input type="number" value="${time_limit}"><br><br>
+        显示示例数量: <input type="number" value="${example_visible_count}" min="0" max="${examples.length}"><br><br>
         <div class="examples">
             <label>样例：</label>
             ${examples.map(e => `
@@ -103,6 +105,7 @@ function renderProblemEditor(p) {
     container.appendChild(div)
 }
 
+
 function addProblemForm() {
     const container = document.getElementById('problemEditor')
     container.innerHTML = ''
@@ -113,6 +116,7 @@ function addProblemForm() {
         <label>题目描述：</label><br>
         <textarea placeholder="描述" style="width: 100%; height: 150px;"></textarea><br><br>
         时间限制(ms): <input type="number" value="1000"><br><br>
+        显示示例数量: <input type="number" value="2" min="0"><br><br>
         <div class="examples">
             <label>样例：</label>
         </div>
@@ -121,6 +125,7 @@ function addProblemForm() {
     `
     container.appendChild(div)
 }
+
 
 function addExample(btn) {
     const div = btn.parentElement.querySelector('.examples')
@@ -148,9 +153,14 @@ function removeExample(btn) {
 
 function saveProblem(btn, problem_id = null) {
     const parent = btn.parentElement
-    const title = parent.querySelector('input').value
-    const description = parent.querySelector('textarea').value
-    const time_limit = parent.querySelector('input[type=number]').value
+    const inputs = parent.querySelectorAll('input')
+    const textareas = parent.querySelectorAll('textarea')
+
+    const title = inputs[0].value
+    const description = textareas[0].value
+    const time_limit = inputs[1].value
+    const example_visible_count = inputs[2] ? parseInt(inputs[2].value) || 2 : 2
+
     const exampleDivs = Array.from(parent.querySelectorAll('.examples > div'))
 
     const examples = exampleDivs.map(e => {
@@ -161,8 +171,8 @@ function saveProblem(btn, problem_id = null) {
         }
     }).filter(example => example.input !== '' || example.output !== '')
 
-    const data = { title, description, time_limit, examples }
-    
+    const data = { title, description, time_limit, example_visible_count, examples }
+
     if (problem_id) {
         data.problem_id = problem_id
         axios.post('/teacher/api/update_problem', data)
@@ -186,6 +196,7 @@ function saveProblem(btn, problem_id = null) {
             })
     }
 }
+
 
 function deleteProblem(problem_id) {
     if (confirm('确定要删除这个题目吗？')) {

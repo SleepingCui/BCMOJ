@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from datetime import datetime
 from sqlalchemy import create_engine, text
 import random
@@ -12,6 +13,7 @@ raw_db_config = config['db_config']
 DB_URI = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@{raw_db_config['db_host']}:{raw_db_config['db_port']}/{raw_db_config['db_name']}"
 
 db = SQLAlchemy()
+migrate = Migrate()
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -29,6 +31,7 @@ class Problem(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
     time_limit = db.Column(db.Integer, nullable=False, default=1000)
+    example_visible_count = db.Column(db.Integer, nullable=False, default=2)
 
 
 class JudgeResult(db.Model):
@@ -59,6 +62,7 @@ class Example(db.Model):
     output = db.Column(db.Text, nullable=False)
     problem = db.relationship('Problem', backref=db.backref('examples', lazy=True, cascade="all, delete"))
     
+
 def init_db(app): #create db if not exist
     db_name = raw_db_config['db_name']
     base_uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@" \
@@ -72,6 +76,7 @@ def init_db(app): #create db if not exist
     app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
+    migrate.init_app(app, db)
 
     with app.app_context():
         db.create_all()
@@ -90,3 +95,10 @@ def init_db(app): #create db if not exist
             db.session.commit()
 
             app.logger.info(f"[DB] Default admin user created: username=admin password={generated_password} email=admin@example.com")
+
+
+def init_migrate(app): #update
+    app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    migrate.init_app(app, db)

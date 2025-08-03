@@ -6,7 +6,7 @@ import org.bcmoj.utils.VersionUtil;
 import java.util.Properties;
 
 @Slf4j
-public class Bootstrap {
+public class  Bootstrap {
 
     public static void run(String[] args) {
         printLogo();
@@ -14,8 +14,14 @@ public class Bootstrap {
             printHelp();
             return;
         }
-
         Properties cmdLineProps = CommandParser.parse(args);
+        boolean debug = false;
+        for (String arg : args) {
+            if ("--debug".equalsIgnoreCase(arg)) {
+                debug = true;
+                break;
+            }
+        }
         String configFilePath = cmdLineProps.getProperty("config");
         Properties configFileProps = null;
         try {
@@ -25,9 +31,9 @@ public class Bootstrap {
             System.exit(1);
         }
         Properties Props = ConfigLoader.merge(configFileProps, cmdLineProps);
-        ServerInitializer.start(Props, configFilePath);
+        ServerInitializer.start(Props, configFilePath, debug);
     }
-    
+
     public static void printLogo() {
         String version = VersionUtil.getVersion();
         String logo = String.format("""
@@ -53,6 +59,7 @@ public class Bootstrap {
 
             Optional:
               --config=<FILE>    External config.properties path
+              --debug            Enable debug mode
 
             Examples:
               java -jar code.jar --host=0.0.0.0 --port=5000 --kwfile=keywords.txt

@@ -123,6 +123,9 @@ function setupFormHandlers() {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
     const formData = new FormData();
+    const enableO2 = document.getElementById('enableO2')?.checked || false;
+    formData.append('enableO2', enableO2);
+
 
     if (codeText) {
       const blob = new Blob([codeText], { type: 'text/x-c++src' });

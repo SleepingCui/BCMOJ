@@ -20,9 +20,10 @@ public class JudgeServer {
         public int timeLimit;
         public JsonNode checkpoints;
         public boolean securityCheck;
+        public boolean enableO2;
     }
 
-    public static String JServer(String jsonConfig, File cppFilePath, File keywordsFilePath) {
+    public static String serve(String jsonConfig, File cppFilePath, File keywordsFilePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
@@ -50,7 +51,7 @@ public class JudgeServer {
                         String outputKey = checkpointIndex + "_out";
                         String inputContent = checkpoints.get(inputKey).asText();
                         String outputContent = checkpoints.get(outputKey).asText();
-                        return Judger.judge(cppFilePath, inputContent, outputContent, config.timeLimit);
+                        return Judger.judge(cppFilePath, inputContent, outputContent, config.timeLimit, config.enableO2);
                     }
                 };
                 Future<Judger.JudgeResult> future = executor.submit(task);
