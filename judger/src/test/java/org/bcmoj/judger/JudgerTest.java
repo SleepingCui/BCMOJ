@@ -15,7 +15,7 @@ public class JudgerTest {
     private static final String expected_output = "7";
     private static final String input = "3 4";
 
-    //accept
+    //accepted
     @Test
     public void testAcceptedSubmission() throws IOException {
         File cppFile = createTempCppFile(source_code);
@@ -26,32 +26,30 @@ public class JudgerTest {
     //compile error
     @Test
     public void testCompileError() throws IOException {
-        String brokenCode = "#include<iostream>\nint main(){fuckyou}";
-        File cppFile = createTempCppFile(brokenCode);
+        String shitcode = "#include<iostream>\nint main(){fuckyou}";
+        File cppFile = createTempCppFile(shitcode);
         JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000, false);
         assertEquals(Judger.COMPILE_ERROR, result.statusCode);
     }
     //wrong answer
     @Test
     public void testWrongAnswer() throws IOException {
-        String wrongAnswerCode = "#include<iostream>\nint main(){std::cout<<0721<<std::endl;return 0;}";
-        File cppFile = createTempCppFile(wrongAnswerCode);
+        String ssshit = "#include<iostream>\nint main(){std::cout<<0721<<std::endl;return 0;}";
+        File cppFile = createTempCppFile(ssshit);
         JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000, false);
         assertEquals(Judger.WRONG_ANSWER, result.statusCode);
     }
     //real time limit exceeded
     @Test
     public void testTimeLimitExceeded() throws IOException {
-        String timeoutCode = "#include<unistd.h>\nint main(){sleep(3);return 0;}";
-        File cppFile = createTempCppFile(timeoutCode);
+        String ciallo = "#include<unistd.h>\nint main(){sleep(3);return 0;}";
+        File cppFile = createTempCppFile(ciallo);
         JudgeResult result = Judger.judge(cppFile, "", "", 1000, false);
         assertEquals(Judger.REAL_TIME_LIMIT_EXCEEDED, result.statusCode);
     }
     private File createTempCppFile(String source) throws IOException {
         File tempFile = File.createTempFile("test", ".cpp");
-        try (FileWriter writer = new FileWriter(tempFile)) {
-            writer.write(source);
-        }
+        try (FileWriter writer = new FileWriter(tempFile)) {writer.write(source);}
         tempFile.deleteOnExit();
         return tempFile;
     }

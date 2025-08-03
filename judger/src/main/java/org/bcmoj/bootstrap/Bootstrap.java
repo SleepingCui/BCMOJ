@@ -59,6 +59,7 @@ public class  Bootstrap {
 
             Optional:
               --config=<FILE>    External config.properties path
+              --debug            Enable debug mode
 
             Examples:
               java -jar code.jar --host=0.0.0.0 --port=5000 --kwfile=keywords.txt
