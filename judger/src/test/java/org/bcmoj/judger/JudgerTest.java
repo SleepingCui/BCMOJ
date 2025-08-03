@@ -26,7 +26,7 @@ public class JudgerTest {
     //compile error
     @Test
     public void testCompileError() throws IOException {
-        String brokenCode = "#include<iostream>\nint main(){fucku}";
+        String brokenCode = "#include<iostream>\nint main(){fuckyou}";
         File cppFile = createTempCppFile(brokenCode);
         JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000, false);
         assertEquals(Judger.COMPILE_ERROR, result.statusCode);
@@ -34,7 +34,7 @@ public class JudgerTest {
     //wrong answer
     @Test
     public void testWrongAnswer() throws IOException {
-        String wrongAnswerCode = "#include<iostream>\nint main(){std::cout<<42<<std::endl;return 0;}";
+        String wrongAnswerCode = "#include<iostream>\nint main(){std::cout<<0721<<std::endl;return 0;}";
         File cppFile = createTempCppFile(wrongAnswerCode);
         JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000, false);
         assertEquals(Judger.WRONG_ANSWER, result.statusCode);

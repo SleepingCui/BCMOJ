@@ -56,7 +56,15 @@ public class RequestProcessor implements Runnable {
     }
 
     private File handleFileReception(DataInputStream dis) throws IOException {
-        String filename = new String(dis.readNBytes(dis.readInt()), StandardCharsets.UTF_8);
+        int nameLength = dis.readInt();
+        if (nameLength <= 0 || nameLength > 512) {
+            throw new IOException("Invalid filename length: " + nameLength);
+        }
+        byte[] nameBytes = dis.readNBytes(nameLength);
+        String filename = new String(nameBytes, StandardCharsets.UTF_8);
+        if (filename.length() > 128) {
+            throw new IOException("Filename too long: " + filename.length());
+        }
         log.info("Received filename: {}", filename);
         long fileSize = dis.readLong();
         File outputFile = File.createTempFile(UUID.randomUUID().toString(), getFileExtension(filename));
