@@ -10,8 +10,21 @@ public class  Bootstrap {
 
     public static void run(String[] args) {
         printLogo();
-        if (args.length == 0) { printHelp();return; }
+        if (args.length == 0) {
+            printHelp();
+            return;
+        }
         Properties cmdLineProps = CommandParser.parse(args);
+
+        // 解析debug参数
+        boolean debug = false;
+        for (String arg : args) {
+            if ("--debug".equalsIgnoreCase(arg)) {
+                debug = true;
+                break;
+            }
+        }
+
         String configFilePath = cmdLineProps.getProperty("config");
         Properties configFileProps = null;
         try {
@@ -21,9 +34,11 @@ public class  Bootstrap {
             System.exit(1);
         }
         Properties Props = ConfigLoader.merge(configFileProps, cmdLineProps);
-        ServerInitializer.start(Props, configFilePath);
+
+        ServerInitializer.start(Props, configFilePath, debug);  // 传入debug参数
     }
-    
+
+
     public static void printLogo() {
         String version = VersionUtil.getVersion();
         String logo = String.format("""

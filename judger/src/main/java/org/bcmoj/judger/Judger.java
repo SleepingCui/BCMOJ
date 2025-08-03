@@ -3,6 +3,8 @@ package org.bcmoj.judger;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.*;
@@ -17,6 +19,7 @@ public class Judger {
     public static final int ACCEPTED = 1;
 
     private static final ExecutorService executor = Executors.newCachedThreadPool();
+
     public static class JudgeResult {
         public final int statusCode;
         public final double time;
@@ -26,25 +29,27 @@ public class Judger {
             this.time = time;
         }
     }
+
     private static class RunResult {
         public final Process process;
         public final double elapsedTime;
+
         public RunResult(Process process, double elapsedTime) {
             this.process = process;
             this.elapsedTime = elapsedTime;
         }
     }
 
-    public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int time) {
+    public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int time, boolean enableO2) {
         Random random = new Random();
         String programName = "c_" + random.nextInt(1000000);
         if (System.getProperty("os.name").toLowerCase().contains("win")) {
             programName += ".exe";
         }
         File executableFile = new File(programName);
-        log.info("Compiling program: {}", programName);
+        log.info("Compiling program: {} with O2 optimization: {}", programName, enableO2);
 
-        Future<Integer> compileTask = executor.submit(() -> compileProgram(programPath, executableFile));
+        Future<Integer> compileTask = executor.submit(() -> compileProgram(programPath, executableFile, enableO2));
         try {
             int compileCode = compileTask.get(10, TimeUnit.SECONDS);
             if (compileCode != 0) return new JudgeResult(COMPILE_ERROR, 0.0);
@@ -52,6 +57,7 @@ public class Judger {
             log.error("Compilation failed: {}", e.getMessage());
             return new JudgeResult(COMPILE_ERROR, 0.0);
         }
+
         try {
             String processedInput = unescapeString(inputContent);
             RunResult runResult = runProgram(executableFile, processedInput, time);
@@ -63,8 +69,14 @@ public class Judger {
             Future<Boolean> compareTask = executor.submit(() -> compareOutput(runProcess.getInputStream(), expectedOutput));
             boolean outputMatches = compareTask.get(3, TimeUnit.SECONDS);
             return outputMatches ? new JudgeResult(ACCEPTED, elapsedTime) : new JudgeResult(WRONG_ANSWER, elapsedTime);
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().startsWith("TIMEOUT:")) {
+                double actualTime = Double.parseDouble(e.getMessage().substring(8));
+                return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, actualTime);
+            }
+            throw e;
         } catch (TimeoutException e) {
-            return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, 0.0);
+            return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, time);
         } catch (Exception e) {
             log.error("System error: {}", e.getMessage());
             return new JudgeResult(SYSTEM_ERROR, 0.0);
@@ -76,9 +88,18 @@ public class Judger {
             });
         }
     }
-
-    private static int compileProgram(File programPath, File executableFile) throws IOException, InterruptedException {
-        ProcessBuilder builder = new ProcessBuilder("g++", "-o", executableFile.getName(), programPath.getAbsolutePath(), "-std=c++11");
+    private static int compileProgram(File programPath, File executableFile, boolean enableO2) throws IOException, InterruptedException {
+        List<String> command = new ArrayList<>();
+        command.add("g++");
+        command.add("-o");
+        command.add(executableFile.getName());
+        command.add(programPath.getAbsolutePath());
+        command.add("-std=c++11");
+        if (enableO2) {
+            command.add("-O2");
+        }
+        log.debug("Command: {}", command);
+        ProcessBuilder builder = new ProcessBuilder(command);
         builder.redirectErrorStream(true);
         Process process = builder.start();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
@@ -87,18 +108,24 @@ public class Judger {
         return process.waitFor();
     }
 
-    private static RunResult runProgram(File executableFile, String inputContent, int time) throws IOException, InterruptedException, TimeoutException {
+    private static RunResult runProgram(File executableFile, String inputContent, int time) throws IOException, InterruptedException {
         String command = System.getProperty("os.name").toLowerCase().contains("win") ? executableFile.getName() : "./" + executableFile.getName();
 
         ProcessBuilder builder = new ProcessBuilder(command);
         builder.redirectErrorStream(true);
         Process process = builder.start();
         long startTime = System.nanoTime();
+
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()))) {
             writer.write(inputContent);
             writer.flush();
         }
-        if (!process.waitFor(time, TimeUnit.MILLISECONDS)) {
+
+        boolean finished = process.waitFor(time, TimeUnit.MILLISECONDS);
+        long endTime = System.nanoTime();
+        double elapsedTime = (endTime - startTime) / 1_000_000.0;
+
+        if (!finished) {
             process.destroyForcibly();
             try {
                 process.waitFor();
@@ -106,10 +133,10 @@ public class Judger {
             } catch (InterruptedException e) {
                 log.warn("Interrupted during force kill: {}", e.getMessage());
             }
-            throw new TimeoutException("Execution time exceeded");
+            throw new RuntimeException("TIMEOUT:" + elapsedTime);
         }
-        long endTime = System.nanoTime();
-        return new RunResult(process, (endTime - startTime) / 1_000_000.0);
+
+        return new RunResult(process, elapsedTime);
     }
 
     private static boolean compareOutput(InputStream actualOutput, String expectedOutputContent) throws IOException {

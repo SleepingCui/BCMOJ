@@ -66,9 +66,7 @@ public class JsonValidateUtil {
             return inOutOk;
         } catch (Exception e) {
             log.error("Schema validation failed", e);
-            lastErrorJson = JudgeResultUtil.buildResult(
-                    null, false, true, 1
-            );
+            lastErrorJson = JudgeResultUtil.buildResult(null, false, true, 1);
             return false;
         }
     }

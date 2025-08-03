@@ -19,7 +19,7 @@ public class JudgerTest {
     @Test
     public void testAcceptedSubmission() throws IOException {
         File cppFile = createTempCppFile(source_code);
-        JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000);
+        JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000, false);
         assertEquals(Judger.ACCEPTED, result.statusCode);
         assertTrue(result.time >= 0);
     }
@@ -28,7 +28,7 @@ public class JudgerTest {
     public void testCompileError() throws IOException {
         String brokenCode = "#include<iostream>\nint main(){fucku}";
         File cppFile = createTempCppFile(brokenCode);
-        JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000);
+        JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000, false);
         assertEquals(Judger.COMPILE_ERROR, result.statusCode);
     }
     //wrong answer
@@ -36,7 +36,7 @@ public class JudgerTest {
     public void testWrongAnswer() throws IOException {
         String wrongAnswerCode = "#include<iostream>\nint main(){std::cout<<42<<std::endl;return 0;}";
         File cppFile = createTempCppFile(wrongAnswerCode);
-        JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000);
+        JudgeResult result = Judger.judge(cppFile, input, expected_output, 2000, false);
         assertEquals(Judger.WRONG_ANSWER, result.statusCode);
     }
     //real time limit exceeded
@@ -44,7 +44,7 @@ public class JudgerTest {
     public void testTimeLimitExceeded() throws IOException {
         String timeoutCode = "#include<unistd.h>\nint main(){sleep(3);return 0;}";
         File cppFile = createTempCppFile(timeoutCode);
-        JudgeResult result = Judger.judge(cppFile, "", "", 1000);
+        JudgeResult result = Judger.judge(cppFile, "", "", 1000, false);
         assertEquals(Judger.REAL_TIME_LIMIT_EXCEEDED, result.statusCode);
     }
     private File createTempCppFile(String source) throws IOException {

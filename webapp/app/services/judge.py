@@ -6,7 +6,7 @@ import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
-from flask import current_app as app, session
+from flask import current_app as app, session, request
 from werkzeug.utils import secure_filename
 from app.core.db import db, Problem, Example, JudgeResult, CheckpointResult
 from app.core.config import get_config
@@ -51,11 +51,15 @@ def submit_solution(problem_id, cpp_file):
             checkpoints[f"{idx}_in"] = ex.input
             checkpoints[f"{idx}_out"] = ex.output
 
+        enable_o2 = request.values.get("enableO2", "false").lower() == "true"
+
         config_data = {
             "timeLimit": problem.time_limit,
             "checkpoints": checkpoints,
-            "securityCheck": ENABLE_SECURITY_CHECK
+            "securityCheck": ENABLE_SECURITY_CHECK,
+            "enableO2": enable_o2
         }
+
         json_data = json.dumps(config_data)
         app.logger.info(f"Problem Data : {json_data}")
 

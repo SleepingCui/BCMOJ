@@ -3,6 +3,8 @@ package org.bcmoj.bootstrap;
 import lombok.extern.slf4j.Slf4j;
 import org.bcmoj.netserver.SocketServer;
 import org.bcmoj.utils.KeywordFileUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,7 +17,14 @@ public class ServerInitializer {
         return s == null || s.isBlank();
     }
 
-    public static void start(Properties props, String configFilePath) {
+    public static void start(Properties props, String configFilePath, boolean debug) {
+        if (debug) {
+            Configurator.setRootLevel(Level.DEBUG);
+            log.debug("Debug enabled");
+        } else {
+            Configurator.setRootLevel(Level.INFO);
+        }
+
         String host = props.getProperty("host");
         String portStr = props.getProperty("port");
         String kwFile = props.getProperty("kwfile");
