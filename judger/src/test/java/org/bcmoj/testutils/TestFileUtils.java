@@ -1,4 +1,6 @@
-package org.bcmoj.utils;
+package org.bcmoj.testutils;
+
+import org.bcmoj.utils.KeywordFileUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;

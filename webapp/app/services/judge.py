@@ -50,11 +50,23 @@ def submit_solution(problem_id, cpp_file):
             checkpoints[f"{idx}_out"] = ex.output
 
         enable_o2 = request.values.get("enableO2", "false").lower() == "true"
+        compare_mode = request.values.get("compare_mode")
+        if compare_mode is None:
+            compare_mode = problem.compare_mode
+        else:
+            try:
+                compare_mode = int(compare_mode)
+                if compare_mode not in (1, 2, 3, 4):
+                    compare_mode = 1
+            except:
+                compare_mode = 1
+
         config_data = {
             "timeLimit": problem.time_limit,
             "checkpoints": checkpoints,
             "securityCheck": ENABLE_SECURITY_CHECK,
-            "enableO2": enable_o2
+            "enableO2": enable_o2,
+            "compareMode": compare_mode
         }
 
         json_data = json.dumps(config_data)

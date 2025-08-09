@@ -103,7 +103,51 @@ function renderProblemEditor(p) {
         <button onclick="deleteProblem(${p.problem_id})" style="background-color: #dc3545;">删除题目</button>
     `
     container.appendChild(div)
+}function renderProblemEditor(p) {
+    const container = document.getElementById('problemEditor')
+    container.innerHTML = ''
+    const div = document.createElement('div')
+
+    const title = p.title || ''
+    const description = p.description || ''
+    const time_limit = p.time_limit || 1000
+    const example_visible_count = p.example_visible_count ?? 2
+    const compare_mode = p.compare_mode || 1   // 新增
+    const examples = Array.isArray(p.examples) ? p.examples : []
+
+    div.innerHTML = `
+        <hr>
+        <input value="${title}" placeholder="标题" style="width: 100%;"><br><br>
+        <label>题目描述：</label><br>
+        <textarea style="width: 100%; height: 150px;">${description}</textarea><br><br>
+        时间限制(ms): <input type="number" value="${time_limit}"><br><br>
+        判题模式:
+        <select id="compareModeSelect">
+            <option value="1" ${compare_mode == 1 ? 'selected' : ''}>STRICT (严格模式)</option>
+            <option value="2" ${compare_mode == 2 ? 'selected' : ''}>IGNORE_SPACES (忽略空格)</option>
+            <option value="3" ${compare_mode == 3 ? 'selected' : ''}>CASE_INSENSITIVE (忽略大小写)</option>
+            <option value="4" ${compare_mode == 4 ? 'selected' : ''}>FLOAT_TOLERANT (浮点数容差)</option>
+        </select>
+        <br><br>
+        显示示例数量: <input type="number" value="${example_visible_count}" min="0" max="${examples.length}"><br><br>
+        <div class="examples">
+            <label>样例：</label>
+            ${examples.map(e => `
+                <div style="margin-bottom: 10px; border: 1px solid #ddd; padding: 10px; position: relative;">
+                    <button onclick="removeExample(this)" style="position: absolute; top: 5px; right: 5px; background-color: #dc3545; color: white; border: none; border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 12px;">删除</button>
+                    输入:<br>
+                    <textarea style="width: 100%; height: 80px;">${e.input || ''}</textarea><br>
+                    输出:<br>
+                    <textarea style="width: 100%; height: 80px;">${e.output || ''}</textarea>
+                </div>`).join('')}
+        </div>
+        <button onclick="addExample(this)">添加样例</button>
+        <button onclick="saveProblem(this, ${p.problem_id})">保存修改</button>
+        <button onclick="deleteProblem(${p.problem_id})" style="background-color: #dc3545;">删除题目</button>
+    `
+    container.appendChild(div)
 }
+
 
 
 function addProblemForm() {
@@ -116,6 +160,14 @@ function addProblemForm() {
         <label>题目描述：</label><br>
         <textarea placeholder="描述" style="width: 100%; height: 150px;"></textarea><br><br>
         时间限制(ms): <input type="number" value="1000"><br><br>
+        判题模式:
+        <select id="compareModeSelect">
+            <option value="1" selected>STRICT (严格模式)</option>
+            <option value="2">IGNORE_SPACES (忽略空格)</option>
+            <option value="3">CASE_INSENSITIVE (忽略大小写)</option>
+            <option value="4">FLOAT_TOLERANT (浮点数容差)</option>
+        </select>
+        <br><br>
         显示示例数量: <input type="number" value="2" min="0"><br><br>
         <div class="examples">
             <label>样例：</label>
@@ -155,10 +207,12 @@ function saveProblem(btn, problem_id = null) {
     const parent = btn.parentElement
     const inputs = parent.querySelectorAll('input')
     const textareas = parent.querySelectorAll('textarea')
+    const compareModeSelect = parent.querySelector('#compareModeSelect')
 
     const title = inputs[0].value
     const description = textareas[0].value
     const time_limit = inputs[1].value
+    const compare_mode = compareModeSelect ? parseInt(compareModeSelect.value) : 1
     const example_visible_count = inputs[2] ? parseInt(inputs[2].value) || 2 : 2
 
     const exampleDivs = Array.from(parent.querySelectorAll('.examples > div'))
@@ -171,7 +225,7 @@ function saveProblem(btn, problem_id = null) {
         }
     }).filter(example => example.input !== '' || example.output !== '')
 
-    const data = { title, description, time_limit, example_visible_count, examples }
+    const data = { title, description, time_limit, example_visible_count, examples, compare_mode }
 
     if (problem_id) {
         data.problem_id = problem_id
@@ -196,6 +250,7 @@ function saveProblem(btn, problem_id = null) {
             })
     }
 }
+
 
 
 function deleteProblem(problem_id) {

@@ -14,12 +14,7 @@ def get_admin_results(page=1, search=''):
     if search:
         search_pattern = f'%{search}%'
         query = query.filter(
-            or_(
-                JudgeResult.result_id.like(search_pattern),
-                JudgeResult.problemid.like(search_pattern),
-                Problem.title.like(search_pattern)
-            )
-        )
+            or_(JudgeResult.result_id.like(search_pattern), JudgeResult.problemid.like(search_pattern), Problem.title.like(search_pattern)))
     total_results = query.count()
     total_pages = (total_results + results_per_page - 1) // results_per_page
     results = (query.order_by(JudgeResult.time.desc()).limit(results_per_page).offset(offset).all())

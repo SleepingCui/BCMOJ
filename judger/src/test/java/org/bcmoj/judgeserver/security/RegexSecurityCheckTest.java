@@ -1,7 +1,7 @@
 package org.bcmoj.judgeserver.security;
 
 import org.bcmoj.security.RegexSecurityCheck;
-import org.bcmoj.utils.TestFileUtils;
+import org.bcmoj.testutils.TestFileUtils;
 import org.junit.*;
 
 import java.io.File;
