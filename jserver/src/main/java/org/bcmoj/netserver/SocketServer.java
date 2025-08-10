@@ -63,16 +63,12 @@ public class SocketServer {
             long endTimeMillis = System.currentTimeMillis();
             long uptimeMillis = endTimeMillis - startTimeMillis;
             long totalConnections = connectionCount.get();
-            double connectionsPerSecond = uptimeMillis > 0
-                    ? totalConnections / (uptimeMillis / 1000.0)
-                    : 0.0;
+            double connectionsPerSecond = uptimeMillis > 0 ? totalConnections / (uptimeMillis / 1000.0) : 0.0;
 
             log.info("Server stopped gracefully");
-            log.info("===== Performance Statistics =====");
             log.info("Uptime: {} ms ({} seconds)", uptimeMillis, uptimeMillis / 1000);
             log.info("Total connections handled: {}", totalConnections);
             log.info("Average connections per second: {}", connectionsPerSecond);
-            log.info("==================================");
 
         } catch (IOException e) {
             log.error("Error stopping server", e);
