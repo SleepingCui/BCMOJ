@@ -5,7 +5,7 @@ import org.bcmoj.utils.OutputCompareUtil;
 import org.bcmoj.utils.StringUtil;
 
 import java.io.File;
-import java.util.Random;
+import java.util.UUID;
 
 @Slf4j
 public class Judger {
@@ -28,27 +28,27 @@ public class Judger {
     }
 
     public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int time, boolean enableO2, OutputCompareUtil.CompareMode compareMode) {
-        Random random = new Random();
-        String programName = "c_" + random.nextInt(1000000);
-        if (System.getProperty("os.name").toLowerCase().contains("win")) {
-            programName += ".exe";
-        }
-        File executableFile = new File(programName);
-        log.info("Compiling program: {} with O2 optimization: {}", programName, enableO2);
-
+        File executableFile = new File(UUID.randomUUID().toString().replace("-", ""));
+        log.info("Compiling program: {} with O2 optimization: {}", executableFile.getName(), enableO2);
         try {
             int compileCode = Compiler.compileProgram(programPath, executableFile, enableO2, 10_000);
-            if (compileCode != 0) return new JudgeResult(COMPILE_ERROR, 0.0);
+            if (compileCode != 0) {
+                log.warn("Compilation failed with exit code {}", compileCode);
+                return new JudgeResult(COMPILE_ERROR, 0.0);
+            }
             Runner.RunResult runResult = Runner.runProgram(executableFile, StringUtil.unescapeString(inputContent), time);
-            if (runResult.exitCode != 0) return new JudgeResult(RUNTIME_ERROR, runResult.elapsedTime);
-            boolean outputMatches = OutputCompareUtil.compare(runResult.output, StringUtil.unescapeString(expectedOutputContent), compareMode);
-
+            if (runResult.exitCode != 0) {
+                log.warn("Runtime error, exit code {}", runResult.exitCode);
+                return new JudgeResult(RUNTIME_ERROR, runResult.elapsedTime);
+            }
+            boolean outputMatches = OutputCompareUtil.compare(runResult.output, StringUtil.unescapeString(expectedOutputContent), compareMode
+            );
             return outputMatches ? new JudgeResult(ACCEPTED, runResult.elapsedTime) : new JudgeResult(WRONG_ANSWER, runResult.elapsedTime);
-
         } catch (Runner.TimeoutException e) {
+            log.warn("Execution timed out after {} ms", e.getElapsedTime());
             return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, e.getElapsedTime());
         } catch (Exception e) {
-            log.error("System error: {}", e.getMessage());
+            log.error("System error: {}", e.getMessage(), e);
             return new JudgeResult(SYSTEM_ERROR, 0.0);
         } finally {
             if (executableFile.exists() && !executableFile.delete()) {
