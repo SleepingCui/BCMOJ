@@ -18,14 +18,13 @@ public class SocketServer {
     private volatile boolean stopped = false;
 
     private final AtomicLong connectionCount = new AtomicLong(0);
-    private long startTimeMillis;
 
     public void start(int port, String host, String kwFilePath) {
         try {
             log.info("Starting server on {}:{} ...", host, port);
             serverSocket = new ServerSocket();
             serverSocket.bind(new InetSocketAddress(host, port));
-            startTimeMillis = System.currentTimeMillis();
+            long startTimeMillis = System.currentTimeMillis();
             log.info("Socket server started on {}:{} with keywords file: {}", host, port, kwFilePath);
 
             while (!stopped && !serverSocket.isClosed()) {
@@ -59,16 +58,7 @@ public class SocketServer {
                 serverSocket.close();
             }
             executor.shutdown();
-
-            long endTimeMillis = System.currentTimeMillis();
-            long uptimeMillis = endTimeMillis - startTimeMillis;
-            long totalConnections = connectionCount.get();
-            double connectionsPerSecond = uptimeMillis > 0 ? totalConnections / (uptimeMillis / 1000.0) : 0.0;
-
             log.info("Server stopped gracefully");
-            log.info("Uptime: {} ms ({} seconds)", uptimeMillis, uptimeMillis / 1000);
-            log.info("Total connections handled: {}", totalConnections);
-            log.info("Average connections per second: {}", connectionsPerSecond);
 
         } catch (IOException e) {
             log.error("Error stopping server", e);
