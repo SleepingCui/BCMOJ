@@ -32,15 +32,19 @@ public class Runner {
     }
 
     public static RunResult runProgram(File executableFile, String inputContent, int timeLimitMs) throws IOException, InterruptedException, TimeoutException {
-        String command = System.getProperty("os.name").toLowerCase().contains("win")
-                ? executableFile.getName()
-                : "./" + executableFile.getName();
-
+        String command;
+        if (!System.getProperty("os.name").toLowerCase().contains("win")) {
+            boolean success = executableFile.setExecutable(true);
+            if (!success) {
+                log.warn("Failed to set executable permission on file: {}", executableFile.getAbsolutePath());
+            }
+        }
+        command = executableFile.getAbsolutePath();
         ProcessBuilder builder = new ProcessBuilder(command);
         builder.redirectErrorStream(true);
         Process process = builder.start();
-        long startTime = System.nanoTime();
 
+        long startTime = System.nanoTime();
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()))) {
             writer.write(inputContent);
             writer.flush();

@@ -14,17 +14,18 @@ public class Compiler {
 
     public static int compileProgram(File programPath, File executableFile, boolean enableO2, long timeoutMs) throws Exception {
         if (System.getProperty("os.name").toLowerCase().contains("win") && !executableFile.getName().toLowerCase().endsWith(".exe")) {
-            executableFile = new File(executableFile.getPath() + ".exe");
+            executableFile = new File(executableFile.getAbsolutePath() + ".exe");
         }
+
         List<String> command = new ArrayList<>();
         command.add("g++");
         command.add("-o");
-        command.add(executableFile.getName());
+        command.add(executableFile.getAbsolutePath());
         command.add(programPath.getAbsolutePath());
         command.add("-std=c++11");
         if (enableO2) command.add("-O2");
 
-        log.debug("Compile command: {}", command);
+        log.debug("Compile command: {}", String.join(" ", command));
         ProcessBuilder builder = new ProcessBuilder(command);
         builder.redirectErrorStream(true);
         Process process = builder.start();
@@ -35,7 +36,7 @@ public class Compiler {
                     reader.lines().forEach(line -> log.debug("[Compiler] {}", line));
                 }
                 int exitCode = process.waitFor();
-                log.info("Process exited with code: {}", exitCode);
+                log.info("Compilation process exited with code: {}", exitCode);
                 return exitCode;
             });
             return compileTask.get(timeoutMs, TimeUnit.MILLISECONDS);

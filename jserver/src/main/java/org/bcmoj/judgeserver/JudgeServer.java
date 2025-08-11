@@ -32,7 +32,6 @@ public class JudgeServer {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
-
             JsonNode checkpoints = config.checkpoints;
             int checkpointsCount = checkpoints.size() / 2;
             ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
@@ -56,16 +55,12 @@ public class JudgeServer {
             };
 
             for (int i = 1; i <= checkpointsCount; i++) {
-                String inputKey = i + "_in";
-                String outputKey = i + "_out";
-                String inputContent = checkpoints.get(inputKey).asText();
-                String outputContent = checkpoints.get(outputKey).asText();
-
+                String inputContent = checkpoints.get("_in").asText();
+                String outputContent = checkpoints.get("_out").asText();
                 Task task = new Task(cppFilePath, inputContent, outputContent, config.timeLimit, config.enableO2, mode, securityCheckFailed);
                 futures.add(executor.submit(task));
             }
             executor.shutdown();
-
             List<Judger.JudgeResult> results = new ArrayList<>();
             for (Future<Judger.JudgeResult> future : futures) {
                 try {
@@ -75,15 +70,12 @@ public class JudgeServer {
                     results.add(new Judger.JudgeResult(5, 0.0));
                 }
             }
-
             log.info("========== Results ==========");
             for (int i = 0; i < results.size(); i++) {
                 Judger.JudgeResult result = results.get(i);
-                String status = StatusDescription(result.statusCode);
-                log.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, status, result.time);
+                log.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, StatusDescription(result.statusCode), result.time);
             }
             return JudgeResultUtil.buildResult(results, securityCheckFailed, false, checkpointsCount);
-
         } catch (Exception e) {
             log.error("Failed to execute judge tasks: {}", e.getMessage());
             return JudgeResultUtil.buildResult(null, false, true, 0);
