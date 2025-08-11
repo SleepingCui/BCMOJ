@@ -55,11 +55,12 @@ public class JudgeServer {
             };
 
             for (int i = 1; i <= checkpointsCount; i++) {
-                String inputContent = checkpoints.get("_in").asText();
-                String outputContent = checkpoints.get("_out").asText();
+                String inputContent = checkpoints.get(i + "_in").asText();
+                String outputContent = checkpoints.get(i + "_out").asText();
                 Task task = new Task(cppFilePath, inputContent, outputContent, config.timeLimit, config.enableO2, mode, securityCheckFailed);
                 futures.add(executor.submit(task));
             }
+
             executor.shutdown();
             List<Judger.JudgeResult> results = new ArrayList<>();
             for (Future<Judger.JudgeResult> future : futures) {
@@ -78,7 +79,7 @@ public class JudgeServer {
             return JudgeResultUtil.buildResult(results, securityCheckFailed, false, checkpointsCount);
         } catch (Exception e) {
             log.error("Failed to execute judge tasks: {}", e.getMessage());
-            return JudgeResultUtil.buildResult(null, false, true, 0);
+            return JudgeResultUtil.buildResult(null, false, true, 1);
         }
     }
 
