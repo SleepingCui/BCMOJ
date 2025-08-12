@@ -66,7 +66,6 @@ public class SocketServer {
     public void start() throws InterruptedException {
         bossGroup = new NioEventLoopGroup(1);
         workerGroup = new NioEventLoopGroup();
-
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {  // Use NIO transport channel
@@ -78,8 +77,7 @@ public class SocketServer {
                     .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
 
             ChannelFuture future = bootstrap.bind(host, port).sync();
-            log.info("Netty server started on {}:{}", host, port);
-
+            log.info("Server started on {}:{}", host, port);
             future.channel().closeFuture().sync();
         } finally {
             stop();
@@ -99,6 +97,6 @@ public class SocketServer {
         if (workerGroup != null) {
             workerGroup.shutdownGracefully();
         }
-        log.info("Netty server stopped");
+        log.info("Server stopped");
     }
 }

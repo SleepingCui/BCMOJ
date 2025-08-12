@@ -1,10 +1,10 @@
 package org.bcmoj.bootstrap;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bcmoj.netserver.SocketServer;
-import org.bcmoj.utils.KeywordFileUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.bcmoj.netserver.SocketServer;
+import org.bcmoj.utils.KeywordFileUtil;
 
 import java.io.FileInputStream;
 import java.io.IOException;

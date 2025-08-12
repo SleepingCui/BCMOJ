@@ -73,21 +73,16 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
     private static final int MAX_FILENAME_CHARS = 128;
 
     private final JsonValidateUtil validator = new JsonValidateUtil();
-
     private final String kwFilePath;
-
     private State state = State.READ_FILENAME_LENGTH;
 
     private int filenameLength;
-
     private long fileSize;
     private long bytesReadForFile;
     private File tempFile;
     private FileOutputStream fos;
-
     private int jsonLength;
     private String jsonConfig;
-
     private int hashLength;
     private String declaredHash;
 
@@ -112,7 +107,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        String clientAddr = ctx.channel().remoteAddress().toString();
+        String clientAddr = ctx.channel().remoteAddress().toString().replaceFirst("^/", "");
         MDC.put("client", clientAddr);
         log.info("Client connected: {}", clientAddr);
     }
@@ -239,7 +234,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         if (hashLength < 0) {
                             throw new IOException("Invalid hash length: " + hashLength);
                         }
-                        if (hashLength == 0) {   // Skip hash validation if none sent
+                        if (hashLength == 0) {  // Skip hash validation if none sent
                             declaredHash = null;
                             state = State.PROCESSING;
                             processJudge(ctx);
@@ -263,8 +258,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         break;
 
                     case PROCESSING:
-                        // Ignore any extra data until processing is complete
-                        in.skipBytes(in.readableBytes());
+                        in.skipBytes(in.readableBytes()); // Ignore any extra data until processing is complete
                         return;
                 }
             }
@@ -311,7 +305,6 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
         String response = JudgeServer.serve(jsonConfig, tempFile, new File(kwFilePath));
         log.info("JudgeServer response: {}", response);
         sendResponse(ctx, response);
-
         cleanup();
         ctx.close();
     }
