@@ -1,5 +1,0 @@
-org\bcmoj\judger\JudgerTest.class
-org\bcmoj\netserver\JsonValidateUtilTest.class
-org\bcmoj\testutils\TestFileUtils.class
-org\bcmoj\judgeserver\security\RegexSecurityCheckTest.class
-org\bcmoj\utils\OutputCompareUtilTest.class
