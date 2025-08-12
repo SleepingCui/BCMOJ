@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="org.bcmoj.utils.OutputCompareUtilTest" time="0.004" tests="5" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.cpu.isalist" value="amd64"/>
+    <property name="sun.jnu.encoding" value="GBK"/>
+    <property name="java.class.path" value="D:\Code\Projects\BCMOJ\jserver\target\test-classes;D:\Code\Projects\BCMOJ\jserver\target\classes;C:\Users\Mxing\.m2\repository\org\slf4j\slf4j-api\1.7.25\slf4j-api-1.7.25.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-core\2.23.1\log4j-core-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-api\2.23.1\log4j-api-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-slf4j-impl\2.23.1\log4j-slf4j-impl-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\fusesource\jansi\jansi\2.4.0\jansi-2.4.0.jar;C:\Users\Mxing\.m2\repository\junit\junit\4.13.1\junit-4.13.1.jar;C:\Users\Mxing\.m2\repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.17.0\jackson-databind-2.17.0.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.17.0\jackson-annotations-2.17.0.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.17.0\jackson-core-2.17.0.jar;C:\Users\Mxing\.m2\repository\net\bytebuddy\byte-buddy\1.14.9\byte-buddy-1.14.9.jar;C:\Users\Mxing\.m2\repository\org\projectlombok\lombok\1.18.38\lombok-1.18.38.jar;C:\Users\Mxing\.m2\repository\com\github\erosb\everit-json-schema\1.14.6\everit-json-schema-1.14.6.jar;C:\Users\Mxing\.m2\repository\org\json\json\20250107\json-20250107.jar;C:\Users\Mxing\.m2\repository\commons-validator\commons-validator\1.9.0\commons-validator-1.9.0.jar;C:\Users\Mxing\.m2\repository\commons-digester\commons-digester\2.1\commons-digester-2.1.jar;C:\Users\Mxing\.m2\repository\commons-logging\commons-logging\1.3.2\commons-logging-1.3.2.jar;C:\Users\Mxing\.m2\repository\commons-collections\commons-collections\3.2.2\commons-collections-3.2.2.jar;C:\Users\Mxing\.m2\repository\com\damnhandy\handy-uri-templates\2.1.8\handy-uri-templates-2.1.8.jar;C:\Users\Mxing\.m2\repository\joda-time\joda-time\2.10.2\joda-time-2.10.2.jar;C:\Users\Mxing\.m2\repository\com\google\re2j\re2j\1.8\re2j-1.8.jar;C:\Users\Mxing\.m2\repository\org\mockito\mockito-core\5.3.1\mockito-core-5.3.1.jar;C:\Users\Mxing\.m2\repository\net\bytebuddy\byte-buddy-agent\1.14.4\byte-buddy-agent-1.14.4.jar;C:\Users\Mxing\.m2\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;C:\Users\Mxing\.m2\repository\commons-codec\commons-codec\1.15\commons-codec-1.15.jar;"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="user.variant" value=""/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Asia/Shanghai"/>
+    <property name="os.name" value="Windows 11"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="CN"/>
+    <property name="sun.boot.library.path" value="D:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin"/>
+    <property name="sun.java.command" value="C:\Users\Mxing\AppData\Local\Temp\surefire143221360685954250\surefirebooter-20250811193106661_3.jar C:\Users\Mxing\AppData\Local\Temp\surefire143221360685954250 2025-08-11T19-31-06_424-jvmRun1 surefire-20250811193106661_1tmp surefire_0-20250811193106661_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="D:\Code\Projects\BCMOJ\jserver\target\test-classes;D:\Code\Projects\BCMOJ\jserver\target\classes;C:\Users\Mxing\.m2\repository\org\slf4j\slf4j-api\1.7.25\slf4j-api-1.7.25.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-core\2.23.1\log4j-core-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-api\2.23.1\log4j-api-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-slf4j-impl\2.23.1\log4j-slf4j-impl-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\fusesource\jansi\jansi\2.4.0\jansi-2.4.0.jar;C:\Users\Mxing\.m2\repository\junit\junit\4.13.1\junit-4.13.1.jar;C:\Users\Mxing\.m2\repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.17.0\jackson-databind-2.17.0.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.17.0\jackson-annotations-2.17.0.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.17.0\jackson-core-2.17.0.jar;C:\Users\Mxing\.m2\repository\net\bytebuddy\byte-buddy\1.14.9\byte-buddy-1.14.9.jar;C:\Users\Mxing\.m2\repository\org\projectlombok\lombok\1.18.38\lombok-1.18.38.jar;C:\Users\Mxing\.m2\repository\com\github\erosb\everit-json-schema\1.14.6\everit-json-schema-1.14.6.jar;C:\Users\Mxing\.m2\repository\org\json\json\20250107\json-20250107.jar;C:\Users\Mxing\.m2\repository\commons-validator\commons-validator\1.9.0\commons-validator-1.9.0.jar;C:\Users\Mxing\.m2\repository\commons-digester\commons-digester\2.1\commons-digester-2.1.jar;C:\Users\Mxing\.m2\repository\commons-logging\commons-logging\1.3.2\commons-logging-1.3.2.jar;C:\Users\Mxing\.m2\repository\commons-collections\commons-collections\3.2.2\commons-collections-3.2.2.jar;C:\Users\Mxing\.m2\repository\com\damnhandy\handy-uri-templates\2.1.8\handy-uri-templates-2.1.8.jar;C:\Users\Mxing\.m2\repository\joda-time\joda-time\2.10.2\joda-time-2.10.2.jar;C:\Users\Mxing\.m2\repository\com\google\re2j\re2j\1.8\re2j-1.8.jar;C:\Users\Mxing\.m2\repository\org\mockito\mockito-core\5.3.1\mockito-core-5.3.1.jar;C:\Users\Mxing\.m2\repository\net\bytebuddy\byte-buddy-agent\1.14.4\byte-buddy-agent-1.14.4.jar;C:\Users\Mxing\.m2\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;C:\Users\Mxing\.m2\repository\commons-codec\commons-codec\1.15\commons-codec-1.15.jar;"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="C:\Users\Mxing"/>
+    <property name="user.language" value="zh"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2025-01-21"/>
+    <property name="java.home" value="D:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot"/>
+    <property name="file.separator" value="\"/>
+    <property name="basedir" value="D:\Code\Projects\BCMOJ\jserver"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="surefire.real.class.path" value="C:\Users\Mxing\AppData\Local\Temp\surefire143221360685954250\surefirebooter-20250811193106661_3.jar"/>
+    <property name="user.script" value=""/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.6+7-LTS"/>
+    <property name="user.name" value="Mxing"/>
+    <property name="stdout.encoding" value="GBK"/>
+    <property name="path.separator" value=";"/>
+    <property name="os.version" value="10.0"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-21.0.6+7"/>
+    <property name="localRepository" value="C:\Users\Mxing\.m2\repository"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="C:\Users\Mxing\AppData\Local\Temp\"/>
+    <property name="idea.version" value="2025.1"/>
+    <property name="java.version" value="21.0.6"/>
+    <property name="user.dir" value="D:\Code\Projects\BCMOJ\jserver"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="sun.os.patch.level" value=""/>
+    <property name="native.encoding" value="GBK"/>
+    <property name="java.library.path" value="D:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin;C:\Windows\Sun\Java\bin;C:\Windows\system32;C:\Windows;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;D:\Program Files (x86)\VMware\VMware Workstation\bin\;D:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin;D:\Program Files\Eclipse Adoptium\jre-20.0.2.9-hotspot\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;D:\Program Files\Bandizip\Bandizip;D:\Program Files (x86)\NetSarang\Xshell 8\;D:\Program Files (x86)\NetSarang\Xftp 8\;D:\Program Files\RedPanda-Cpp\mingw64\bin;C:\Program Files\dotnet\;D:\Program Files\apache-maven-3.9.9\bin;D:\Program Files\sqlite;D:\Program Files\Vim\vim91;D:\Program Files\Gradle\gradle-8.13\bin;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;D:\Program Files\ffmpeg\ffmpeg-2025-05-15-git-12b853530a-full_build\bin;C:\Program Files\Docker\Docker\resources\bin;D:\Windows Kits\10\Windows Performance Toolkit\;D:\Program Files\CMake\bin;D:\Program Files\nodejs\;D:\ProgramData\miniconda3;C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR;D:\Program Files (x86)\Dev-Cpp\MinGW64\bin;D:\ProgramData\miniconda3\Scripts;d:\Program Files\Git\cmd;C:\Users\Mxing\AppData\Local\Microsoft\WindowsApps;D:\Program Files\Microsoft VS Code\bin;C:\Users\Mxing\AppData\Local\JetBrains\Toolbox\scripts;C:\Users\Mxing\AppData\Local\GitHubDesktop\bin;C:\Users\Mxing\.dotnet\tools;C:\Users\Mxing\AppData\Roaming\npm;d:\Program Files\JetBrains\IntelliJ IDEA 2025.1\bin;;."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="GBK"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.6+7-LTS"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="testFloatTolerant" classname="org.bcmoj.utils.OutputCompareUtilTest" time="0">
+    <system-out><![CDATA[[2025-08-11 19:31:09.825] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: FLOAT_TOLERANT, Expected output: 3.1415927 2.718281, Actual output: 3.1415926 2.71828
+[2025-08-11 19:31:09.826] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparing token 0: expected=3.1415927 actual=3.1415926 diff=9.999999983634211E-8
+[2025-08-11 19:31:09.826] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparing token 1: expected=2.718281 actual=2.71828 diff=1.000000000139778E-6
+[2025-08-11 19:31:09.826] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: FLOAT_TOLERANT, Expected output: 3.14, Actual output: 3.14 2.7
+[2025-08-11 19:31:09.826] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: FLOAT_TOLERANT, Expected output: 3.14 world, Actual output: 3.14 hello
+[2025-08-11 19:31:09.826] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparing token 0: expected=3.14 actual=3.14 diff=0.0
+[2025-08-11 19:31:09.826] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: FLOAT_TOLERANT, Expected output: 1.00001, Actual output: 1.000001
+[2025-08-11 19:31:09.826] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparing token 0: expected=1.00001 actual=1.000001 diff=9.000000000147779E-6
+]]></system-out>
+  </testcase>
+  <testcase name="testCaseInsensitive" classname="org.bcmoj.utils.OutputCompareUtilTest" time="0.001">
+    <system-out><![CDATA[[2025-08-11 19:31:09.826] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: CASE_INSENSITIVE, Expected output: hello world, Actual output: Hello World
+[2025-08-11 19:31:09.826] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: CASE_INSENSITIVE, Expected output: hello world, Actual output: Hello World!
+]]></system-out>
+  </testcase>
+  <testcase name="testIgnoreSpaces" classname="org.bcmoj.utils.OutputCompareUtilTest" time="0">
+    <system-out><![CDATA[[2025-08-11 19:31:09.827] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: IGNORE_SPACES, Expected output: hello   world, Actual output: hello world
+[2025-08-11 19:31:09.827] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: IGNORE_SPACES, Expected output: hello world, Actual output:   hello 
+ world 
+[2025-08-11 19:31:09.827] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: IGNORE_SPACES, Expected output: helloworld, Actual output: hello world
+]]></system-out>
+  </testcase>
+  <testcase name="testStrictMatch" classname="org.bcmoj.utils.OutputCompareUtilTest" time="0.002">
+    <system-out><![CDATA[[2025-08-11 19:31:09.827] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: STRICT, Expected output: hello, Actual output: hello
+[2025-08-11 19:31:09.827] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: STRICT, Expected output: Hello, Actual output: hello
+[2025-08-11 19:31:09.827] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: STRICT, Expected output: hello, Actual output: hello 
+[2025-08-11 19:31:09.827] [main/&amp#27;[1;33mWARN &amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison failed: one of the outputs is null
+[2025-08-11 19:31:09.827] [main/&amp#27;[1;33mWARN &amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison failed: one of the outputs is null
+]]></system-out>
+  </testcase>
+  <testcase name="testDefaultCompare" classname="org.bcmoj.utils.OutputCompareUtilTest" time="0">
+    <system-out><![CDATA[[2025-08-11 19:31:09.827] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: STRICT, Expected output: exact match, Actual output: exact match
+[2025-08-11 19:31:09.829] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: STRICT, Expected output: Exact Match, Actual output: exact match
+]]></system-out>
+  </testcase>
+</testsuite>

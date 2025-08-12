@@ -1,68 +1,104 @@
 package org.bcmoj.netserver;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicLong;
-
+/**
+ * Asynchronous non-blocking network server based on Netty,
+ * designed to accept client connections and handle judge requests.
+ * <p>
+ * This server uses Netty's NIO model to achieve high-performance network communication,
+ * supporting concurrent client connections.
+ * Business logic is handled by {@link RequestProcessor}, which receives files and JSON configurations from clients,
+ * validates them, and calls the judge service to return results.
+ * </p>
+ *
+ * <p><b>Startup process:</b></p>
+ * <ul>
+ *   <li>Create two thread groups: bossGroup for accepting connections, workerGroup for processing IO events.</li>
+ *   <li>Use {@link ServerBootstrap} to bind to the specified host and port.</li>
+ *   <li>For each client connection, create a {@link io.netty.channel.Channel} and initialize its pipeline handlers.</li>
+ *   <li>Block and wait for server shutdown while handling all client connections and requests.</li>
+ * </ul>
+ *
+ * <p><b>Shutdown process:</b></p>
+ * <ul>
+ *   <li>Gracefully shut down bossGroup and workerGroup to release thread resources.</li>
+ * </ul>
+ *
+ * @author SleepingCui
+ * @version 1.0
+ */
 @Slf4j
 public class SocketServer {
-    private final ExecutorService executor = Executors.newCachedThreadPool();
-    private ServerSocket serverSocket;
-    private volatile boolean stopped = false;
+    private final String host;
+    private final int port;
+    private final String kwFilePath;
 
-    private final AtomicLong connectionCount = new AtomicLong(0);
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
-    public void start(int port, String host, String kwFilePath) {
+    /**
+     * Constructs the server with specified host, port, and keyword file path.
+     *
+     * @param host       the host address to bind, e.g. "0.0.0.0"
+     * @param port       the port number to listen on, e.g. 12345
+     * @param kwFilePath the path to the keyword file used by the judge service
+     */
+    public SocketServer(String host, int port, String kwFilePath) {
+        this.host = host;
+        this.port = port;
+        this.kwFilePath = kwFilePath;
+    }
+
+    /**
+     * Starts the Netty server, binding to the specified host and port,
+     * and listens for client connection requests.
+     * <p>
+     * This method blocks the calling thread until the server is shut down.
+     * </p>
+     *
+     * @throws InterruptedException if the thread is interrupted during startup or operation
+     */
+    public void start() throws InterruptedException {
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
+
         try {
-            log.info("Starting server on {}:{} ...", host, port);
-            serverSocket = new ServerSocket();
-            serverSocket.bind(new InetSocketAddress(host, port));
-            long startTimeMillis = System.currentTimeMillis();
-            log.info("Socket server started on {}:{} with keywords file: {}", host, port, kwFilePath);
+            ServerBootstrap bootstrap = new ServerBootstrap();
+            bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {  // Use NIO transport channel
+                        @Override
+                        protected void initChannel(Channel ch) {
+                            ch.pipeline().addLast(new RequestProcessor(kwFilePath));
+                        }
+                    })
+                    .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            while (!stopped && !serverSocket.isClosed()) {
-                try {
-                    Socket clientSocket = serverSocket.accept();
-                    connectionCount.incrementAndGet();
-                    log.info("New client connected: {}", clientSocket.getRemoteSocketAddress());
-                    executor.submit(new RequestProcessor(clientSocket, kwFilePath));
-                } catch (SocketException e) {
-                    if (stopped) {
-                        log.info("Server stopped, exiting accept loop");
-                        break;
-                    }
-                    if (!serverSocket.isClosed()) {
-                        log.error("Error accepting client connection", e);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            log.error("Server startup error", e);
+            ChannelFuture future = bootstrap.bind(host, port).sync();
+            log.info("Netty server started on {}:{}", host, port);
+
+            future.channel().closeFuture().sync();
         } finally {
             stop();
         }
     }
 
+    /**
+     * Gracefully shuts down the server and releases thread pool resources.
+     * <p>
+     * This method shuts down both bossGroup and workerGroup to clean up server resources.
+     * </p>
+     */
     public void stop() {
-        if (stopped) return;
-        stopped = true;
-        try {
-            if (serverSocket != null && !serverSocket.isClosed()) {
-                serverSocket.close();
-            }
-            executor.shutdown();
-            log.info("Server stopped gracefully");
-
-        } catch (IOException e) {
-            log.error("Error stopping server", e);
+        if (bossGroup != null) {
+            bossGroup.shutdownGracefully();
         }
+        if (workerGroup != null) {
+            workerGroup.shutdownGracefully();
+        }
+        log.info("Netty server stopped");
     }
 }
-

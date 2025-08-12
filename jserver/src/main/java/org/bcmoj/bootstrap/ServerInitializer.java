@@ -63,8 +63,8 @@ public class ServerInitializer {
 
         try {
             int port = Integer.parseInt(portStr);
-            SocketServer server = new SocketServer();
-            server.start(port, host, kwFile);
+            SocketServer server = new SocketServer(host,port, kwFile);
+            server.start();
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
         } catch (NumberFormatException e) {
             log.error("Invalid port number: {}", portStr);

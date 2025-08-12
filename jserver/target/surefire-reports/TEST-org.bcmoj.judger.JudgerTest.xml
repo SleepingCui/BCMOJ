@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="org.bcmoj.judger.JudgerTest" time="2.766" tests="4" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.cpu.isalist" value="amd64"/>
+    <property name="sun.jnu.encoding" value="GBK"/>
+    <property name="java.class.path" value="D:\Code\Projects\BCMOJ\jserver\target\test-classes;D:\Code\Projects\BCMOJ\jserver\target\classes;C:\Users\Mxing\.m2\repository\org\slf4j\slf4j-api\1.7.25\slf4j-api-1.7.25.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-core\2.23.1\log4j-core-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-api\2.23.1\log4j-api-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-slf4j-impl\2.23.1\log4j-slf4j-impl-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\fusesource\jansi\jansi\2.4.0\jansi-2.4.0.jar;C:\Users\Mxing\.m2\repository\junit\junit\4.13.1\junit-4.13.1.jar;C:\Users\Mxing\.m2\repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.17.0\jackson-databind-2.17.0.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.17.0\jackson-annotations-2.17.0.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.17.0\jackson-core-2.17.0.jar;C:\Users\Mxing\.m2\repository\net\bytebuddy\byte-buddy\1.14.9\byte-buddy-1.14.9.jar;C:\Users\Mxing\.m2\repository\org\projectlombok\lombok\1.18.38\lombok-1.18.38.jar;C:\Users\Mxing\.m2\repository\com\github\erosb\everit-json-schema\1.14.6\everit-json-schema-1.14.6.jar;C:\Users\Mxing\.m2\repository\org\json\json\20250107\json-20250107.jar;C:\Users\Mxing\.m2\repository\commons-validator\commons-validator\1.9.0\commons-validator-1.9.0.jar;C:\Users\Mxing\.m2\repository\commons-digester\commons-digester\2.1\commons-digester-2.1.jar;C:\Users\Mxing\.m2\repository\commons-logging\commons-logging\1.3.2\commons-logging-1.3.2.jar;C:\Users\Mxing\.m2\repository\commons-collections\commons-collections\3.2.2\commons-collections-3.2.2.jar;C:\Users\Mxing\.m2\repository\com\damnhandy\handy-uri-templates\2.1.8\handy-uri-templates-2.1.8.jar;C:\Users\Mxing\.m2\repository\joda-time\joda-time\2.10.2\joda-time-2.10.2.jar;C:\Users\Mxing\.m2\repository\com\google\re2j\re2j\1.8\re2j-1.8.jar;C:\Users\Mxing\.m2\repository\org\mockito\mockito-core\5.3.1\mockito-core-5.3.1.jar;C:\Users\Mxing\.m2\repository\net\bytebuddy\byte-buddy-agent\1.14.4\byte-buddy-agent-1.14.4.jar;C:\Users\Mxing\.m2\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;C:\Users\Mxing\.m2\repository\commons-codec\commons-codec\1.15\commons-codec-1.15.jar;"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="user.variant" value=""/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Asia/Shanghai"/>
+    <property name="os.name" value="Windows 11"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="CN"/>
+    <property name="sun.boot.library.path" value="D:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin"/>
+    <property name="sun.java.command" value="C:\Users\Mxing\AppData\Local\Temp\surefire143221360685954250\surefirebooter-20250811193106661_3.jar C:\Users\Mxing\AppData\Local\Temp\surefire143221360685954250 2025-08-11T19-31-06_424-jvmRun1 surefire-20250811193106661_1tmp surefire_0-20250811193106661_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="D:\Code\Projects\BCMOJ\jserver\target\test-classes;D:\Code\Projects\BCMOJ\jserver\target\classes;C:\Users\Mxing\.m2\repository\org\slf4j\slf4j-api\1.7.25\slf4j-api-1.7.25.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-core\2.23.1\log4j-core-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-api\2.23.1\log4j-api-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\apache\logging\log4j\log4j-slf4j-impl\2.23.1\log4j-slf4j-impl-2.23.1.jar;C:\Users\Mxing\.m2\repository\org\fusesource\jansi\jansi\2.4.0\jansi-2.4.0.jar;C:\Users\Mxing\.m2\repository\junit\junit\4.13.1\junit-4.13.1.jar;C:\Users\Mxing\.m2\repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.17.0\jackson-databind-2.17.0.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.17.0\jackson-annotations-2.17.0.jar;C:\Users\Mxing\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.17.0\jackson-core-2.17.0.jar;C:\Users\Mxing\.m2\repository\net\bytebuddy\byte-buddy\1.14.9\byte-buddy-1.14.9.jar;C:\Users\Mxing\.m2\repository\org\projectlombok\lombok\1.18.38\lombok-1.18.38.jar;C:\Users\Mxing\.m2\repository\com\github\erosb\everit-json-schema\1.14.6\everit-json-schema-1.14.6.jar;C:\Users\Mxing\.m2\repository\org\json\json\20250107\json-20250107.jar;C:\Users\Mxing\.m2\repository\commons-validator\commons-validator\1.9.0\commons-validator-1.9.0.jar;C:\Users\Mxing\.m2\repository\commons-digester\commons-digester\2.1\commons-digester-2.1.jar;C:\Users\Mxing\.m2\repository\commons-logging\commons-logging\1.3.2\commons-logging-1.3.2.jar;C:\Users\Mxing\.m2\repository\commons-collections\commons-collections\3.2.2\commons-collections-3.2.2.jar;C:\Users\Mxing\.m2\repository\com\damnhandy\handy-uri-templates\2.1.8\handy-uri-templates-2.1.8.jar;C:\Users\Mxing\.m2\repository\joda-time\joda-time\2.10.2\joda-time-2.10.2.jar;C:\Users\Mxing\.m2\repository\com\google\re2j\re2j\1.8\re2j-1.8.jar;C:\Users\Mxing\.m2\repository\org\mockito\mockito-core\5.3.1\mockito-core-5.3.1.jar;C:\Users\Mxing\.m2\repository\net\bytebuddy\byte-buddy-agent\1.14.4\byte-buddy-agent-1.14.4.jar;C:\Users\Mxing\.m2\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;C:\Users\Mxing\.m2\repository\commons-codec\commons-codec\1.15\commons-codec-1.15.jar;"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="C:\Users\Mxing"/>
+    <property name="user.language" value="zh"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2025-01-21"/>
+    <property name="java.home" value="D:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot"/>
+    <property name="file.separator" value="\"/>
+    <property name="basedir" value="D:\Code\Projects\BCMOJ\jserver"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="surefire.real.class.path" value="C:\Users\Mxing\AppData\Local\Temp\surefire143221360685954250\surefirebooter-20250811193106661_3.jar"/>
+    <property name="user.script" value=""/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.6+7-LTS"/>
+    <property name="user.name" value="Mxing"/>
+    <property name="stdout.encoding" value="GBK"/>
+    <property name="path.separator" value=";"/>
+    <property name="os.version" value="10.0"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-21.0.6+7"/>
+    <property name="localRepository" value="C:\Users\Mxing\.m2\repository"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="C:\Users\Mxing\AppData\Local\Temp\"/>
+    <property name="idea.version" value="2025.1"/>
+    <property name="java.version" value="21.0.6"/>
+    <property name="user.dir" value="D:\Code\Projects\BCMOJ\jserver"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="sun.os.patch.level" value=""/>
+    <property name="native.encoding" value="GBK"/>
+    <property name="java.library.path" value="D:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin;C:\Windows\Sun\Java\bin;C:\Windows\system32;C:\Windows;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;D:\Program Files (x86)\VMware\VMware Workstation\bin\;D:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin;D:\Program Files\Eclipse Adoptium\jre-20.0.2.9-hotspot\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;D:\Program Files\Bandizip\Bandizip;D:\Program Files (x86)\NetSarang\Xshell 8\;D:\Program Files (x86)\NetSarang\Xftp 8\;D:\Program Files\RedPanda-Cpp\mingw64\bin;C:\Program Files\dotnet\;D:\Program Files\apache-maven-3.9.9\bin;D:\Program Files\sqlite;D:\Program Files\Vim\vim91;D:\Program Files\Gradle\gradle-8.13\bin;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;D:\Program Files\ffmpeg\ffmpeg-2025-05-15-git-12b853530a-full_build\bin;C:\Program Files\Docker\Docker\resources\bin;D:\Windows Kits\10\Windows Performance Toolkit\;D:\Program Files\CMake\bin;D:\Program Files\nodejs\;D:\ProgramData\miniconda3;C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR;D:\Program Files (x86)\Dev-Cpp\MinGW64\bin;D:\ProgramData\miniconda3\Scripts;d:\Program Files\Git\cmd;C:\Users\Mxing\AppData\Local\Microsoft\WindowsApps;D:\Program Files\Microsoft VS Code\bin;C:\Users\Mxing\AppData\Local\JetBrains\Toolbox\scripts;C:\Users\Mxing\AppData\Local\GitHubDesktop\bin;C:\Users\Mxing\.dotnet\tools;C:\Users\Mxing\AppData\Roaming\npm;d:\Program Files\JetBrains\IntelliJ IDEA 2025.1\bin;;."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="GBK"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.6+7-LTS"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="testWrongAnswer" classname="org.bcmoj.judger.JudgerTest" time="0.945">
+    <system-out><![CDATA[[2025-08-11 19:31:07.348] [main/&amp#27;[1;32mINFO &amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Compiling program: b2c236cb75e741c4979b1d45bd87852f.exe with O2 optimization: false
+[2025-08-11 19:31:07.352] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] Compile command: g++ -o C:\Users\Mxing\AppData\Local\Temp\judge_3512794792425699218\b2c236cb75e741c4979b1d45bd87852f.exe C:\Users\Mxing\AppData\Local\Temp\test1098358689504005668.cpp -std=c++11
+[2025-08-11 19:31:07.691] [pool-3-thread-1/&amp#27;[1;32mINFO &amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] Compilation process exited with code: 0
+[2025-08-11 19:31:07.905] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: STRICT, Expected output: 7, Actual output: 465
+[2025-08-11 19:31:07.905] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Judge process finished. Status code: -3, Elapsed time: 13.1059 ms
+[2025-08-11 19:31:07.906] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Deleted: C:\Users\Mxing\AppData\Local\Temp\judge_3512794792425699218\b2c236cb75e741c4979b1d45bd87852f.exe
+[2025-08-11 19:31:07.906] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Deleted: C:\Users\Mxing\AppData\Local\Temp\judge_3512794792425699218
+]]></system-out>
+  </testcase>
+  <testcase name="testAcceptedSubmission" classname="org.bcmoj.judger.JudgerTest" time="0.513">
+    <system-out><![CDATA[[2025-08-11 19:31:07.909] [main/&amp#27;[1;32mINFO &amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Compiling program: 8e6b7425bd7a4c3a9258b9281da6a03d.exe with O2 optimization: false
+[2025-08-11 19:31:07.909] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] Compile command: g++ -o C:\Users\Mxing\AppData\Local\Temp\judge_3508845356404074648\8e6b7425bd7a4c3a9258b9281da6a03d.exe C:\Users\Mxing\AppData\Local\Temp\test7556363043033607114.cpp -std=c++11
+[2025-08-11 19:31:08.242] [pool-4-thread-1/&amp#27;[1;32mINFO &amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] Compilation process exited with code: 0
+[2025-08-11 19:31:08.419] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.u.OutputCompareUtil&amp#27;[m] Comparison mode: STRICT, Expected output: 7, Actual output: 7
+[2025-08-11 19:31:08.419] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Judge process finished. Status code: 1, Elapsed time: 14.097 ms
+[2025-08-11 19:31:08.421] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Deleted: C:\Users\Mxing\AppData\Local\Temp\judge_3508845356404074648\8e6b7425bd7a4c3a9258b9281da6a03d.exe
+[2025-08-11 19:31:08.421] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Deleted: C:\Users\Mxing\AppData\Local\Temp\judge_3508845356404074648
+]]></system-out>
+  </testcase>
+  <testcase name="testTimeLimitExceeded" classname="org.bcmoj.judger.JudgerTest" time="1.169">
+    <system-out><![CDATA[[2025-08-11 19:31:08.422] [main/&amp#27;[1;32mINFO &amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Compiling program: 51710def104e469db6bef9b13c6e5722.exe with O2 optimization: false
+[2025-08-11 19:31:08.423] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] Compile command: g++ -o C:\Users\Mxing\AppData\Local\Temp\judge_4163612784029148962\51710def104e469db6bef9b13c6e5722.exe C:\Users\Mxing\AppData\Local\Temp\test18413050204025937207.cpp -std=c++11
+[2025-08-11 19:31:08.533] [pool-5-thread-1/&amp#27;[1;32mINFO &amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] Compilation process exited with code: 0
+[2025-08-11 19:31:09.589] [main/&amp#27;[1;33mWARN &amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Execution timed out after 1005.8279 ms
+[2025-08-11 19:31:09.589] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Judge process finished. Status code: 2, Elapsed time: 1005.8279 ms
+[2025-08-11 19:31:09.589] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Deleted: C:\Users\Mxing\AppData\Local\Temp\judge_4163612784029148962\51710def104e469db6bef9b13c6e5722.exe
+[2025-08-11 19:31:09.590] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Deleted: C:\Users\Mxing\AppData\Local\Temp\judge_4163612784029148962
+]]></system-out>
+  </testcase>
+  <testcase name="testCompileError" classname="org.bcmoj.judger.JudgerTest" time="0.109">
+    <system-out><![CDATA[[2025-08-11 19:31:09.591] [main/&amp#27;[1;32mINFO &amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Compiling program: 601af9af1eee432b81f6155bf2ba13d2.exe with O2 optimization: false
+[2025-08-11 19:31:09.591] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] Compile command: g++ -o C:\Users\Mxing\AppData\Local\Temp\judge_16632365461126653766\601af9af1eee432b81f6155bf2ba13d2.exe C:\Users\Mxing\AppData\Local\Temp\test12259511632523622308.cpp -std=c++11
+[2025-08-11 19:31:09.690] [pool-6-thread-1/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] [Compiler] C:\Users\Mxing\AppData\Local\Temp\test12259511632523622308.cpp: In function 'int main()':
+[2025-08-11 19:31:09.690] [pool-6-thread-1/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] [Compiler] C:\Users\Mxing\AppData\Local\Temp\test12259511632523622308.cpp:2:12: error: 'fuckyou' was not declared in this scope
+[2025-08-11 19:31:09.690] [pool-6-thread-1/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] [Compiler]  int main(){fuckyou}
+[2025-08-11 19:31:09.690] [pool-6-thread-1/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] [Compiler]             ^
+[2025-08-11 19:31:09.698] [pool-6-thread-1/&amp#27;[1;32mINFO &amp#27;[m] [&amp#27;[36mo.b.j.Compiler&amp#27;[m] Compilation process exited with code: 1
+[2025-08-11 19:31:09.699] [main/&amp#27;[1;33mWARN &amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Compilation failed with exit code 1
+[2025-08-11 19:31:09.699] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Judge process finished. Status code: -4, Elapsed time: 0.0 ms
+[2025-08-11 19:31:09.699] [main/&amp#27;[1;36mDEBUG&amp#27;[m] [&amp#27;[36mo.b.j.Judger&amp#27;[m] Deleted: C:\Users\Mxing\AppData\Local\Temp\judge_16632365461126653766
+]]></system-out>
+  </testcase>
+</testsuite>
