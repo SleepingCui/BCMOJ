@@ -9,6 +9,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
+/**
+ * Compiler utility for C++ programs.
+ *
+ * <p>This class compiles a given source file to an executable,
+ * optionally enabling O2 optimization and enforcing a timeout.</p>
+ *
+ * <p>Logging includes the full compile command and compilation output.</p>
+ *
+ * <p>Handles cross-platform executable file naming for Windows.</p>
+ *
+ * @author SleepingCui
+ */
 @Slf4j
 public class Compiler {
 

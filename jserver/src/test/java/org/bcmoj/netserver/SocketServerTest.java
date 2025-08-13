@@ -43,14 +43,13 @@ public class SocketServerTest {
     @Test
     public void testClientConnection() throws Exception {
         try (Socket socket = new Socket(HOST, PORT); DataOutputStream dos = new DataOutputStream(socket.getOutputStream()); DataInputStream dis = new DataInputStream(socket.getInputStream())) {
-
+            String jsonConfig = "{\"timeLimit\":1000,\"securityCheck\":true,\"enableO2\":false,\"compareMode\":1,\"checkpoints\":{\"1_in\":\"input data for test 1\",\"1_out\":\"expected output for test 1\",\"2_in\":\"input data for test 2\",\"2_out\":\"expected output for test 2\"}}\n";
             String filename = "0721.cpp";
+            String dHash = "fuck you";
             byte[] filenameBytes = filename.getBytes(StandardCharsets.UTF_8);
             byte[] fileContent = "int main(){return 0;}".getBytes(StandardCharsets.UTF_8);
-            String jsonConfig = "{\"timeLimit\":1000,\"securityCheck\":true,\"enableO2\":false,\"compareMode\":1,\"checkpoints\":{\"1_in\":\"input data for test 1\",\"1_out\":\"expected output for test 1\",\"2_in\":\"input data for test 2\",\"2_out\":\"expected output for test 2\"}}\n";
             byte[] jsonBytes = jsonConfig.getBytes(StandardCharsets.UTF_8);
-            String dummyHash = "";
-            byte[] hashBytes = dummyHash.getBytes(StandardCharsets.UTF_8);
+            byte[] hashBytes = dHash.getBytes(StandardCharsets.UTF_8);
 
             dos.writeInt(filenameBytes.length);
             dos.write(filenameBytes);

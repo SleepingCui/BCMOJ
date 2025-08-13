@@ -24,11 +24,11 @@ public class RequestProcessorTest {
     @Test
     public void testFullRequestProcessing() {  //shit code
         String filename = "0721.cpp";
-        byte[] filenameBytes = filename.getBytes(StandardCharsets.UTF_8);
-        byte[] fileContent = "int main(){return 0;}".getBytes(StandardCharsets.UTF_8);
         String jsonConfig = "{\"timeLimit\":1000,\"securityCheck\":true,\"enableO2\":false,\"compareMode\":1,\"checkpoints\":{\"1_in\":\"input data for test 1\",\"1_out\":\"expected output for test 1\",\"2_in\":\"input data for test 2\",\"2_out\":\"expected output for test 2\"}}\n";
+        String dummyHash = "fuck you";
+        byte[] fileContent = "int main(){return 0;}".getBytes(StandardCharsets.UTF_8);
+        byte[] filenameBytes = filename.getBytes(StandardCharsets.UTF_8);
         byte[] jsonBytes = jsonConfig.getBytes(StandardCharsets.UTF_8);
-        String dummyHash = "";
         byte[] hashBytes = dummyHash.getBytes(StandardCharsets.UTF_8);
         ByteBuf buf = Unpooled.buffer();
 
@@ -41,7 +41,6 @@ public class RequestProcessorTest {
         buf.writeInt(hashBytes.length);
         buf.writeBytes(hashBytes);
         channel.writeInbound(buf);
-
         Object outboundMsg = channel.readOutbound();
         assertNotNull(outboundMsg);
         assertTrue(outboundMsg instanceof ByteBuf);

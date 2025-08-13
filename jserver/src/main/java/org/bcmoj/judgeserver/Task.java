@@ -7,6 +7,24 @@ import org.bcmoj.utils.OutputCompareUtil;
 import java.io.File;
 import java.util.concurrent.Callable;
 
+/**
+ * Task represents a single judge execution for a specific checkpoint (input/output pair).
+ *
+ * <p>Implements {@link Callable} to allow concurrent execution in thread pools.
+ * Handles security check failure by immediately returning the appropriate status code.</p>
+ *
+ * <p>Invokes {@link Judger#judge(File, String, String, int, boolean, OutputCompareUtil.CompareMode)}
+ * to perform compilation, execution, and output comparison.</p>
+ *
+ * Status codes used:
+ * <ul>
+ *     <li>-5: Security Check Failed</li>
+ *     <li>5: System Error</li>
+ *     <li>Other codes: see {@link Judger}</li>
+ * </ul>
+ *
+ * Author: SleepingCui
+ */
 @Slf4j
 public class Task implements Callable<Judger.JudgeResult> {
 
@@ -28,6 +46,14 @@ public class Task implements Callable<Judger.JudgeResult> {
         this.securityCheckFailed = securityCheckFailed;
     }
 
+    /**
+     * Executes the judging task.
+     *
+     * <p>If security check has failed, immediately returns status code -5.
+     * Otherwise, invokes {@link Judger#judge} to compile, run, and compare output.</p>
+     *
+     * @return {@link Judger.JudgeResult} containing status code and execution time
+     */
     @Override
     public Judger.JudgeResult call() {
         if (securityCheckFailed) {

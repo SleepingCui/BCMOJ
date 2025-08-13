@@ -22,10 +22,10 @@ public class JsonValidateUtilTest {
               "timeLimit": 1000,
               "securityCheck": true,
               "checkpoints": {
-                "1_in": "input1.txt",
-                "1_out": "output1.txt",
-                "2_in": "input2.txt",
-                "2_out": "output2.txt"
+                "1_in": "i",
+                "1_out": "o",
+                "2_in": "i1",
+                "2_out": "ggghghghghghgh"
               }
             }
             """;
@@ -42,7 +42,7 @@ public class JsonValidateUtilTest {
               "timeLimit": 1000,
               "securityCheck": true,
               "checkpoints": {
-                "1_in": "input1.txt"
+                "1_in": "i"
               }
             }
             """;
@@ -59,7 +59,7 @@ public class JsonValidateUtilTest {
               "timeLimit": 1000,
               "securityCheck": true,
               "checkpoints": {
-                "1_out": "output1.txt"
+                "1_out": "o"
               }
             }
             """;
@@ -90,8 +90,8 @@ public class JsonValidateUtilTest {
             {
               "timeLimit": 0,
               "checkpoints": {
-                "1_in": "input1.txt",
-                "1_out": "output1.txt"
+                "1_in": "i",
+                "1_out": "o"
               }
             }
             """;

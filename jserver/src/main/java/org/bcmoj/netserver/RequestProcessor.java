@@ -79,11 +79,11 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
     private int filenameLength;
     private long fileSize;
     private long bytesReadForFile;
-    private File tempFile;
-    private FileOutputStream fos;
     private int jsonLength;
-    private String jsonConfig;
     private int hashLength;
+    private File tempFile;
+    private String jsonConfig;
+    private FileOutputStream fos;
     private String declaredHash;
 
     private final StringBuilder jsonBuilder = new StringBuilder();

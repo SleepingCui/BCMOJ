@@ -17,6 +17,37 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+/**
+ * JudgeServer handles execution of submitted C++ programs against multiple test cases (checkpoints),
+ * optionally performing security checks and output comparison.
+ *
+ * <p>This class parses a JSON configuration containing time limits, checkpoints, security check flag,
+ * optimization flag, and output comparison mode. It executes each test case concurrently and
+ * aggregates the results.</p>
+ *
+ * <p>Security check uses {@link SecurityChecker} implementation {@link RegexSecurityCheck}.</p>
+ *
+ * <p>Status codes returned by {@link Judger}:</p>
+ * <ul>
+ *     <li>-5: Security Check Failed</li>
+ *     <li>-4: Compile Error</li>
+ *     <li>-3: Wrong Answer</li>
+ *     <li>2: Real Time Limit Exceeded</li>
+ *     <li>4: Runtime Error</li>
+ *     <li>5: System Error</li>
+ *     <li>1: Accepted</li>
+ * </ul>
+ *
+ * <p>Output comparison modes:</p>
+ * <ul>
+ *     <li>1: STRICT (default)</li>
+ *     <li>2: IGNORE_SPACES</li>
+ *     <li>3: CASE_INSENSITIVE</li>
+ *     <li>4: FLOAT_TOLERANT</li>
+ * </ul>
+ *
+ * @author SleepingCui
+ */
 @Slf4j
 public class JudgeServer {
 
@@ -28,6 +59,18 @@ public class JudgeServer {
         public int compareMode = 1;
     }
 
+    /**
+     * Serves judging requests for a C++ program.
+     *
+     * <p>It parses the JSON configuration, optionally runs security check, executes the program
+     * on each checkpoint concurrently, and aggregates results into a JSON string.</p>
+     *
+     * @param jsonConfig       JSON string containing checkpoints, time limits, and flags
+     * @param cppFilePath      path to the submitted C++ source file
+     * @param keywordsFilePath path to the keyword file used for security check
+     * @return JSON string representing aggregated judge results, including checkpoint results,
+     *         security check status, and system error flag
+     */
     public static String serve(String jsonConfig, File cppFilePath, File keywordsFilePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {

@@ -62,6 +62,7 @@ public class ServerInitializer {
         }
 
         try {
+            log.info("Starting server...");
             int port = Integer.parseInt(portStr);
             SocketServer server = new SocketServer(host,port, kwFile);
             server.start();

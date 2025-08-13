@@ -6,6 +6,18 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.*;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Runner utility for executing compiled programs.
+ *
+ * <p>This class runs an executable with specified input,
+ * enforces a time limit, captures stdout, and returns results.</p>
+ *
+ * <p>Provides custom TimeoutException in case of exceeding the time limit.</p>
+ *
+ * <p>Logging includes execution start, end, and any permission issues.</p>
+ *
+ * @author SleepingCui
+ */
 @Slf4j
 public class Runner {
 

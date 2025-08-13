@@ -3,7 +3,6 @@ package org.bcmoj.bootstrap;
 import java.util.Properties;
 
 public class CommandParser {
-
     public static Properties parse(String[] args) {
         Properties props = new Properties();
         for (String arg : args) {

@@ -9,6 +9,35 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
+/**
+ * Core judging engine for C++ programs.
+ *
+ * <p>This class handles the entire judging process including:
+ * <ul>
+ *   <li>Compiling the submitted program</li>
+ *   <li>Running the executable with provided input</li>
+ *   <li>Comparing the output with the expected output</li>
+ *   <li>Returning a status code based on the result</li>
+ * </ul>
+ *
+ * <p>Temporary directories and files are automatically cleaned up
+ * after judging is complete.</p>
+ *
+ * <p>Logging is provided for compilation, execution, and cleanup stages.</p>
+ *
+ * <p>Status codes:</p>
+ * <ul>
+ *   <li>COMPILE_ERROR = -4</li>
+ *   <li>WRONG_ANSWER = -3</li>
+ *   <li>REAL_TIME_LIMIT_EXCEEDED = 2</li>
+ *   <li>RUNTIME_ERROR = 4</li>
+ *   <li>SYSTEM_ERROR = 5</li>
+ *   <li>ACCEPTED = 1</li>
+ * </ul>
+ *
+ * @author SleepingCui
+ */
+
 @Slf4j
 public class Judger {
     public static final int COMPILE_ERROR = -4;
@@ -29,6 +58,26 @@ public class Judger {
         }
     }
 
+    /**
+     * Judges a submitted C++ program against a test case.
+     *
+     * @param programPath           path to the source code file
+     * @param inputContent          test input string
+     * @param expectedOutputContent expected output string
+     * @param time                  time limit in milliseconds
+     * @param enableO2              whether to enable O2 optimization
+     * @param compareMode           output comparison mode
+     * @return JudgeResult containing status code and execution time
+     *
+     * <p>Output comparison modes (OutputCompareUtil.CompareMode):</p>
+     * <ul>
+     * <li>STRICT: strict character-by-character comparison</li>
+     * <li>IGNORE_SPACES: ignores spaces and tabs</li>
+     * <li>CASE_INSENSITIVE: ignores letter case</li>
+     * <li>FLOAT_TOLERANT: allows small floating-point deviations</li>
+     * </ul>
+     */
+
     public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int time, boolean enableO2, OutputCompareUtil.CompareMode compareMode) {
         File executableFile = null;
         try {
@@ -42,7 +91,6 @@ public class Judger {
             log.info("Compiling program: {} with O2 optimization: {}", executableFile.getName(), enableO2);
             int compileCode = Compiler.compileProgram(programPath, executableFile, enableO2, 10_000);
             if (compileCode != 0) {
-                log.warn("Compilation failed with exit code {}", compileCode);
                 return new JudgeResult(COMPILE_ERROR, 0.0);
             }
 

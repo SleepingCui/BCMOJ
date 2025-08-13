@@ -37,7 +37,6 @@ public class SocketServer {
     private final String host;
     private final int port;
     private final String kwFilePath;
-
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
@@ -68,18 +67,18 @@ public class SocketServer {
         workerGroup = new NioEventLoopGroup();
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
-            bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {  // Use NIO transport channel
+            bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
                             ch.pipeline().addLast(new RequestProcessor(kwFilePath));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
-
             ChannelFuture future = bootstrap.bind(host, port).sync();
             log.info("Server started on {}:{}", host, port);
             future.channel().closeFuture().sync();
         } finally {
+            log.debug("Server shutting down...");
             stop();
         }
     }
