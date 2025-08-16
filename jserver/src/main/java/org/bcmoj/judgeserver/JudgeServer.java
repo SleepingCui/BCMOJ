@@ -38,6 +38,7 @@ import java.util.concurrent.Future;
  *     <li>1: Accepted</li>
  * </ul>
  *
+ * <p>Output comparison uses {@link org.bcmoj.utils.OutputCompareUtil}.</p>
  * <p>Output comparison modes:</p>
  * <ul>
  *     <li>1: STRICT (default)</li>

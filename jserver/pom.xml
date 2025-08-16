@@ -141,6 +141,18 @@
                     <mainClass>org.bcmoj.Main</mainClass>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <doctitle>${project.name} ${project.version} API</doctitle>
+                    <windowtitle>${project.name} API</windowtitle>
+                    <author>true</author>
+                    <version>true</version>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
