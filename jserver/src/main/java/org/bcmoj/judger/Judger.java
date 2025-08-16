@@ -37,7 +37,6 @@ import java.util.UUID;
  *
  * @author SleepingCui
  */
-
 @Slf4j
 public class Judger {
     public static final int COMPILE_ERROR = -4;
@@ -68,16 +67,7 @@ public class Judger {
      * @param enableO2              whether to enable O2 optimization
      * @param compareMode           output comparison mode
      * @return JudgeResult containing status code and execution time
-     *
-     * <p>Output comparison modes (OutputCompareUtil.CompareMode):</p>
-     * <ul>
-     * <li>STRICT: strict character-by-character comparison</li>
-     * <li>IGNORE_SPACES: ignores spaces and tabs</li>
-     * <li>CASE_INSENSITIVE: ignores letter case</li>
-     * <li>FLOAT_TOLERANT: allows small floating-point deviations</li>
-     * </ul>
      */
-
     public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int time, boolean enableO2, OutputCompareUtil.CompareMode compareMode) {
         File executableFile = null;
         try {
@@ -87,20 +77,21 @@ public class Judger {
                 exeName += ".exe";
             }
             executableFile = new File(tempDir.toFile(), exeName);
-
             log.info("Compiling program: {} with O2 optimization: {}", executableFile.getName(), enableO2);
             int compileCode = Compiler.compileProgram(programPath, executableFile, enableO2, 10_000);
             if (compileCode != 0) {
                 return new JudgeResult(COMPILE_ERROR, 0.0);
             }
-
             Runner.RunResult runResult = Runner.runProgram(executableFile, StringUtil.unescapeString(inputContent), time);
             if (runResult.exitCode != 0) {
                 log.warn("Runtime error, exit code {}", runResult.exitCode);
                 return new JudgeResult(RUNTIME_ERROR, runResult.elapsedTime);
             }
-            boolean outputMatches = OutputCompareUtil.compare(runResult.output, StringUtil.unescapeString(expectedOutputContent), compareMode);
-            return outputMatches ? new JudgeResult(ACCEPTED, runResult.elapsedTime) : new JudgeResult(WRONG_ANSWER, runResult.elapsedTime);
+            boolean outputMatches = OutputCompareUtil.compare(runResult.output,
+                    StringUtil.unescapeString(expectedOutputContent), compareMode);
+            return outputMatches ? new JudgeResult(ACCEPTED, runResult.elapsedTime) :
+                    new JudgeResult(WRONG_ANSWER, runResult.elapsedTime);
+
         } catch (Runner.TimeoutException e) {
             log.warn("Execution timed out after {} ms", e.getElapsedTime());
             return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, e.getElapsedTime());
@@ -139,5 +130,4 @@ public class Judger {
             log.debug("Deleted: {}", file.getAbsolutePath());
         }
     }
-
 }

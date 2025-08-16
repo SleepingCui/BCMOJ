@@ -23,10 +23,13 @@
     "checkpoints": {
       "type": "object",
       "patternProperties": {
-        ".*_in$": { "type": "string" },
-        ".*_out$": { "type": "string" }
+        "^[1-9][0-9]*_in$": { "type": "string" },
+        "^[1-9][0-9]*_out$": { "type": "string" }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "propertyNames": {
+        "pattern": "^[1-9][0-9]*_(in|out)$"
+      }
     }
   }
 }
