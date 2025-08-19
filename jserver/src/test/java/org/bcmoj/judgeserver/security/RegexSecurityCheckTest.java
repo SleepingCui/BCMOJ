@@ -12,7 +12,6 @@ import static org.junit.Assert.*;
 public class RegexSecurityCheckTest {
 
     private RegexSecurityCheck checker;
-
     @Before
     public void setUp() {
         checker = new RegexSecurityCheck();
