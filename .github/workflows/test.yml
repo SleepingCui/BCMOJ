@@ -1,16 +1,16 @@
-name: judger-test
+name: jserver-test
 
 on:
   push:
     branches:
       - master
     paths:
-      - 'judger/**'
+      - 'jserver/**'
   pull_request:
     branches:
       - master
     paths:
-      - 'judger/**'
+      - 'jserver/**'
 
 jobs:
   test:
@@ -29,6 +29,6 @@ jobs:
           java-version: '21'
 
       - name: Run tests with Maven
-        working-directory: ./judger
+        working-directory: ./jserver
         run: |
           mvn clean test
