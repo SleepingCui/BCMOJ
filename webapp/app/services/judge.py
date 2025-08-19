@@ -7,7 +7,6 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from flask import current_app as app, session, request
-from werkzeug.utils import secure_filename
 from app.core.db import db, Problem, Example, JudgeResult, CheckpointResult
 from app.core.config import get_config
 
@@ -50,16 +49,21 @@ def submit_solution(problem_id, cpp_file):
             checkpoints[f"{idx}_out"] = ex.output
 
         enable_o2 = request.values.get("enableO2", "false").lower() == "true"
-        compare_mode = request.values.get("compare_mode")
-        if compare_mode is None:
+
+        raw_compare_mode = request.values.get("compare_mode")
+        app.logger.info(f"raw value: {raw_compare_mode!r}")
+        if raw_compare_mode is None:
             compare_mode = problem.compare_mode
+            if compare_mode not in (1, 2, 3, 4):
+                compare_mode = 1
         else:
             try:
-                compare_mode = int(compare_mode)
+                compare_mode = int(raw_compare_mode)
                 if compare_mode not in (1, 2, 3, 4):
                     compare_mode = 1
-            except:
+            except Exception as e:
                 compare_mode = 1
+        app.logger.info(f"compare_mode: {compare_mode}")
 
         config_data = {
             "timeLimit": problem.time_limit,
@@ -133,13 +137,7 @@ def submit_solution(problem_id, cpp_file):
 
         judge_result.filepath = str(cpp_target_path)
         for result in results:
-            db.session.add(CheckpointResult(
-                result_id=judge_result.result_id,
-                checkpoint_id=int(result['checkpoint']),
-                result=result['result'],
-                time=result['time']
-            ))
-
+            db.session.add(CheckpointResult(result_id=judge_result.result_id,checkpoint_id=int(result['checkpoint']),result=result['result'],time=result['time']))
         db.session.commit()
         app.logger.info("Transaction committed successfully.")
         return {'status': 'ok', 'results': results}, 200

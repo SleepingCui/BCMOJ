@@ -66,40 +66,6 @@ class Example(db.Model):
     output = db.Column(db.Text, nullable=False)
     problem = db.relationship('Problem', backref=db.backref('examples', lazy=True, cascade="all, delete"))
     
-all_models = [User, Problem, JudgeResult, CheckpointResult, Example]
-def fill_missing_defaults(app):
-    with app.app_context():
-        session = db.session
-        for model in all_models:
-            table = model.__table__
-            table_name = table.name
-
-            for col in table.columns:
-                if col.default is not None:
-                    default_val = col.default.arg
-                    if callable(default_val):
-                        try:
-                            default_val = default_val()
-                        except Exception:
-                            continue
-                    if isinstance(default_val, (int, str, float)):
-                        if isinstance(default_val, str):
-                            condition = f"{col.name} IS NULL OR {col.name} = ''"
-                            default_sql_val = f"'{default_val}'"
-                        else:
-                            condition = f"{col.name} IS NULL"
-                            default_sql_val = str(default_val)
-                        sql = f"UPDATE {table_name} SET {col.name} = {default_sql_val} WHERE {condition};"
-                        try:
-                            session.execute(text(sql))
-                            app.logger.info(f"[DB] Filled default value for {table_name}.{col.name}={default_sql_val}")
-                        except Exception as e:
-                            app.logger.warning(f"[DB] Failed to fill default for {table_name}.{col.name}: {e}")
-
-        session.commit()
-
-
-
 def init_db(app): #create db if not exist
     db_name = raw_db_config['db_name']
     base_uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@" \
@@ -132,7 +98,6 @@ def init_db(app): #create db if not exist
             db.session.commit()
 
             app.logger.info(f"[DB] Default admin user created: username=admin password={generated_password} email=admin@example.com")
-        fill_missing_defaults(app)
 
 
 def init_migrate(app): #update

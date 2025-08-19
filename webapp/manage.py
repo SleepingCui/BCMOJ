@@ -109,7 +109,6 @@ def run(host, port, wsgi, debug):
 
 
 def check_database_exists():
-    """检查数据库是否存在"""
     try:
         from app.core.config import get_config
         from sqlalchemy import create_engine, text
