@@ -70,7 +70,6 @@ public class OutputCompareUtil {
         for (int i = 0; i < expectedTokens.length; i++) {
             String e = expectedTokens[i];
             String a = actualTokens[i];
-
             if (isNumeric(e) && isNumeric(a)) {
                 double eVal = Double.parseDouble(e);
                 double aVal = Double.parseDouble(a);
