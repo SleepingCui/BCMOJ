@@ -198,7 +198,6 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         in.readBytes(fileBytes);
                         fos.write(fileBytes);
                         bytesReadForFile += toRead;
-
                         if (bytesReadForFile == fileSize) {
                             fos.close();
                             log.info("File received successfully, saved {} bytes", fileSize);
@@ -234,7 +233,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         if (hashLength < 0) {
                             throw new IOException("Invalid hash length: " + hashLength);
                         }
-                        if (hashLength == 0) {  // Skip hash validation if none sent
+                        if (hashLength == 0) {
                             declaredHash = null;
                             state = State.PROCESSING;
                             processJudge(ctx);
@@ -258,7 +257,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         break;
 
                     case PROCESSING:
-                        in.skipBytes(in.readableBytes()); // Ignore any extra data until processing is complete
+                        in.skipBytes(in.readableBytes());
                         return;
                 }
             }
