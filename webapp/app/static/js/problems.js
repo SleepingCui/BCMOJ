@@ -53,7 +53,7 @@ function initCheckUpdate() {
                     alert("错误：" + data.error);
                 } else if (data.latest) {
                     alert("发现新版本：" + data.latest);
-                    window.location.href = "https://github.com/SleepingCui/BCMOJ/releases/latest";
+                    window.open("https://github.com/SleepingCui/BCMOJ/releases/latest", "_blank");
                 } else {
                     alert("当前是最新版！");
                 }

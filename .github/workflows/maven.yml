@@ -5,12 +5,12 @@ on:
     branches:
       - master
     paths:
-      - 'judger/**'
+      - 'jserver/**'
   pull_request:
     branches:
       - master
     paths:
-      - 'judger/**'
+      - 'jserver/**'
 
 jobs:
   build:
