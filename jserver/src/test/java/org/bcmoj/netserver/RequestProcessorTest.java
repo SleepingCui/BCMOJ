@@ -15,7 +15,7 @@ public class RequestProcessorTest {
     private EmbeddedChannel channel;
     @Before
     public void setup() {
-        channel = new EmbeddedChannel(new RequestProcessor("src/test/resources/keywords.txt"));
+        channel = new EmbeddedChannel(new RequestProcessor("src/test/resources/keywords.txt","g++"));
     }
     @After
     public void teardown() {

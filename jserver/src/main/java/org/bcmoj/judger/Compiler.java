@@ -24,13 +24,13 @@ import java.util.concurrent.*;
 @Slf4j
 public class Compiler {
 
-    public static int compileProgram(File programPath, File executableFile, boolean enableO2, long timeoutMs) throws Exception {
+    public static int compileProgram(File programPath, File executableFile, boolean enableO2, long timeoutMs, String compilerPath) throws Exception {
         if (System.getProperty("os.name").toLowerCase().contains("win") && !executableFile.getName().toLowerCase().endsWith(".exe")) {
             executableFile = new File(executableFile.getAbsolutePath() + ".exe");
         }
-
+        String compiler = (compilerPath != null && !compilerPath.isEmpty()) ? compilerPath : "g++";
         List<String> command = new ArrayList<>();
-        command.add("g++");
+        command.add(compiler);
         command.add("-o");
         command.add(executableFile.getAbsolutePath());
         command.add(programPath.getAbsolutePath());
@@ -60,4 +60,5 @@ public class Compiler {
             executor.shutdownNow();
         }
     }
+
 }

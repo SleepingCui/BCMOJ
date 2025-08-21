@@ -13,7 +13,6 @@ import java.util.concurrent.Callable;
  * <p>Implements {@link Callable} to allow concurrent execution in thread pools.
  * Handles security check failure by immediately returning the appropriate status code.</p>
  *
- * <p>Invokes {@link Judger#judge(File, String, String, int, boolean, OutputCompareUtil.CompareMode)}
  * to perform compilation, execution, and output comparison.</p>
  *
  * Status codes used:
@@ -29,6 +28,7 @@ import java.util.concurrent.Callable;
 public class Task implements Callable<Judger.JudgeResult> {
 
     private final File cppFilePath;
+    private final String compilerPath;
     private final String inputContent;
     private final String outputContent;
     private final int timeLimit;
@@ -36,7 +36,7 @@ public class Task implements Callable<Judger.JudgeResult> {
     private final OutputCompareUtil.CompareMode compareMode;
     private final boolean securityCheckFailed;
 
-    public Task(File cppFilePath, String inputContent, String outputContent, int timeLimit, boolean enableO2, OutputCompareUtil.CompareMode compareMode, boolean securityCheckFailed) {
+    public Task(File cppFilePath, String compilerPath, String inputContent, String outputContent, int timeLimit, boolean enableO2, OutputCompareUtil.CompareMode compareMode, boolean securityCheckFailed) {
         this.cppFilePath = cppFilePath;
         this.inputContent = inputContent;
         this.outputContent = outputContent;
@@ -44,6 +44,7 @@ public class Task implements Callable<Judger.JudgeResult> {
         this.enableO2 = enableO2;
         this.compareMode = compareMode;
         this.securityCheckFailed = securityCheckFailed;
+        this.compilerPath = compilerPath;
     }
 
     /**
@@ -60,7 +61,7 @@ public class Task implements Callable<Judger.JudgeResult> {
             return new Judger.JudgeResult(-5, 0.0);
         }
         try {
-            return Judger.judge(cppFilePath, inputContent, outputContent, timeLimit, enableO2, compareMode);
+            return Judger.judge(cppFilePath, compilerPath, inputContent, outputContent, timeLimit, enableO2, compareMode);
         } catch (Exception e) {
             log.error("JudgeTask exception: {}", e.getMessage());
             return new Judger.JudgeResult(5, 0.0);
