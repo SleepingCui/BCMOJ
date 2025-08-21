@@ -2,7 +2,7 @@ from .db import db, DB_URI, init_db
 from .db import User, Problem, JudgeResult, CheckpointResult, Example
 from .logger import setup_logging, log_route_context
 
-version = "1.0.9-beta"
+version = "1.0.10-beta"
 
 __all__ = [
     'db',
