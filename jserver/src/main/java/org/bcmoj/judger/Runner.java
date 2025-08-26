@@ -1,6 +1,5 @@
 package org.bcmoj.judger;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
@@ -30,16 +29,6 @@ public class Runner {
             this.output = output;
             this.elapsedTime = elapsedTime;
             this.exitCode = exitCode;
-        }
-    }
-
-    @Getter
-    public static class TimeoutException extends Exception {
-        private final double elapsedTime;
-
-        public TimeoutException(double elapsedTime) {
-            super("TIMEOUT:" + elapsedTime);
-            this.elapsedTime = elapsedTime;
         }
     }
 

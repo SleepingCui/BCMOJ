@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>评测详情</title>
-    <link rel="stylesheet" href="/static/css/result_detail.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>评测详情</title>
+<link rel="stylesheet" href="/static/css/result_detail.css">
 </head>
 <body>
+<div class="container">
     <h2>评测 ID: {{ judge_result.result_id }} | 时间: {{ judge_result.time }}</h2>
-
     <h3>测试点结果</h3>
     <table>
         <thead>
@@ -46,12 +47,11 @@
     </table>
 
     <h3>源代码</h3>
-    <div class="codehilite">
-        {{ highlighted_code|safe }}
-    </div>
-    <div class="footer">
-        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
-    </div>
-    
+    <pre><code class="cpp">{{ highlighted_code | safe}}</code></pre>
+</div>
+
+<div class="footer">
+    <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
+</div>
 </body>
 </html>

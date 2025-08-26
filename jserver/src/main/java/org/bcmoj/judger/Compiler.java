@@ -52,10 +52,6 @@ public class Compiler {
                 return exitCode;
             });
             return compileTask.get(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            log.warn("Compilation timed out after {} ms, killing process...", timeoutMs);
-            process.destroyForcibly();
-            throw e;
         } finally {
             executor.shutdownNow();
         }

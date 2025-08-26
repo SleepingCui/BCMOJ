@@ -34,7 +34,6 @@ public class ServerInitializer {
      */
     public static void start(Properties props, String configFilePath, boolean debug) {
         configureLogging(debug);
-
         ServerConfig config;
         try {
             config = loadRequiredProperties(props, configFilePath);
@@ -44,7 +43,6 @@ public class ServerInitializer {
             System.exit(1);
             return;
         }
-
         initKeywordFile(config.kwFile);
         startServer(config.host, config.port, config.kwFile, config.compilerPath);
     }
@@ -127,7 +125,7 @@ public class ServerInitializer {
      */
     private static void startServer(String host, int port, String kwFile, String compilerPath) {
         try {
-            log.info("Starting server with compiler: {}", compilerPath);
+            log.info("Starting server...");
             SocketServer server = new SocketServer(host, port, kwFile, compilerPath);
             server.start();
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));

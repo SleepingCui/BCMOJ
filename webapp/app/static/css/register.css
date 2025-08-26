@@ -1,87 +1,129 @@
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #6f42c1;
+            --success-color: #1cc88a;
+            --light-bg: #f8f9fc;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
+            background-color: var(--light-bg);
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
+
         .page-wrapper {
             flex: 1;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
         }
+
         .register-container {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 450px;
+            animation: fadeIn 0.6s ease-out;
         }
-        h1 {
+
+        .register-container h1 {
             text-align: center;
-            margin-bottom: 1.5rem;
-            color: #333;
-        }
-        .form-group {
+            color: var(--primary-color);
             margin-bottom: 1rem;
+            font-weight: 700;
         }
-        label {
-            display: block;
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #495057;
             margin-bottom: 0.5rem;
-            color: #555;
         }
-        input {
+
+        .form-control {
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d3e2;
+            transition: all 0.3s;
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
         }
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #007bff;
-            color: white;
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
+            border-radius: 10px;
+            padding: 0.75rem;
+            color: white;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(78, 115, 223, 0.35);
         }
-        button:hover {
-            background-color: #0056b3;
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(78, 115, 223, 0.5);
         }
+
         .links {
-            margin-top: 1rem;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
         }
+
         .links a {
-            color: #007bff;
+            color: var(--primary-color);
             text-decoration: none;
+            font-weight: 500;
+            margin-left: 0.25rem;
         }
+
         .links a:hover {
+            color: var(--secondary-color);
             text-decoration: underline;
         }
-        .flash-message {
-            padding: 0.5rem;
-            margin-bottom: 1rem;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .flash-message.error {
-            background-color: #ffebee;
-            color: #c62828;
-        }
-        .flash-message.success {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-        }
+
         .footer {
+            background-color: white;
+            border-radius: 10px 10px 0 0;
+            padding: 1.5rem;
+            margin-top: auto;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
             text-align: center;
-            color: #888;
-            font-size: 14px;
-            padding: 20px;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 576px) {
+            .register-container {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+            }
         }

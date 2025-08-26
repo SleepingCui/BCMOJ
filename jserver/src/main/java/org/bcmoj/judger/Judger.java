@@ -93,7 +93,7 @@ public class Judger {
             boolean outputMatches = OutputCompareUtil.compare(runResult.output, StringUtil.unescapeString(expectedOutputContent), compareMode);
             return outputMatches ? new JudgeResult(ACCEPTED, runResult.elapsedTime) : new JudgeResult(WRONG_ANSWER, runResult.elapsedTime);
 
-        } catch (Runner.TimeoutException e) {
+        } catch (TimeoutException e) {
             log.warn("Execution timed out after {} ms", e.getElapsedTime());
             return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, e.getElapsedTime());
         } catch (Exception e) {

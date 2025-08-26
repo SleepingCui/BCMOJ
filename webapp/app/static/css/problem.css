@@ -1,108 +1,183 @@
 body {
-        font-family: "Microsoft YaHei", sans-serif;
-        background-color: #f4f6f9;
-        color: #333;
-        margin: 0;
-        padding: 0;
-        position: relative;
-    }
+  font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: #f8f9fc;
+  margin: 0;
+  padding: 0;
+}
+.topbar {
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 0.8rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #4e73df;
+}
+.topbar .btn {
+  background: linear-gradient(135deg, #4e73df 0%, #6f42c1 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(78,115,223,0.3);
+}
+.topbar .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(78,115,223,0.5);
+}
 
-    header {
-        background-color: #007bff;
-        color: white;
-        padding: 15px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+.page-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+.problem-container {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 900px;
+  animation: fadeIn 0.6s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity:0; transform: translateY(20px);}
+  to { opacity:1; transform: translateY(0);}
+}
 
-    h1 {
-        margin: 0;
-        font-size: 36px;
-    }
+.description, .examples, .upload-area {
+  margin-bottom: 1.5rem;
+}
+.description .markdown-content {
+  background: #f1f3f6;
+  border-radius: 10px;
+  padding: 1rem;
+}
+.example-pair {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.example-half {
+  flex: 1;
+  background: #f1f3f6;
+  border-radius: 10px;
+  padding: 1rem;
+}
+textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+input[type=file] {
+  margin-bottom: 0.5rem;
+}
+button.btn-submit {
+  background: linear-gradient(135deg, #4e73df 0%, #6f42c1 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1.2rem;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+button.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(78,115,223,0.5);
+}
+.result-pass { color: #1cc88a; }
+.result-fail { color: #e74a3b; }
+.result-default { color: #858796; }
+.result-area {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f1f3f6;
+  border-radius: 10px;
+}
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+.toast {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  opacity: 1;
+  transform: translateX(50px);
+  animation: slideIn 0.4s forwards;
+}
+.toast-success { border-left: 5px solid #1cc88a; }
+.toast-error { border-left: 5px solid #e74a3b; }
+.toast-info { border-left: 5px solid #4e73df; }
+.toast-body { font-size: 0.9rem; }
+@keyframes slideIn {
+  to { opacity:1; transform: translateX(0);}
+}
+@keyframes slideOut {
+  to { opacity:0; transform: translateX(50px);}
+}
+.footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #858796;
+}
+.footer a { color: #4e73df; text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
 
-    .container {
-        max-width: 900px;
-        margin: 30px auto;
-        padding: 20px;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .description p {
-        margin: 8px 0;
-    }
-
-    .examples {
-        margin-top: 30px;
-    }
-
-    .example-pair {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    .example-half {
-        flex: 1;
-    }
-
-    .example-half pre {
-        background: #eee;
-        padding: 10px;
-        border-radius: 5px;
-        font-family: Consolas, monospace;
-        overflow-x: auto;
-    }
-
-    .upload-area, .result-area {
-        margin-top: 30px;
-    }
-
-    textarea {
-        width: 100%;
-        margin-top: 10px;
-        font-family: Consolas, monospace;
-        padding: 10px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-        resize: vertical;
-    }
-
-    button {
-        margin-top: 10px;
-        padding: 8px 16px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    button:hover {
-        background-color: #0056b3;
-    }
-
-    .result-pass {
-        color: green;
-        font-weight: bold;
-    }
-
-    .result-fail {
-        color: red;
-        font-weight: bold;
-    }
-
-    .loading {
-        color: #007bff;
-        font-weight: bold;
-    }
-
-    .footer {
-        text-align: center;
-        margin-top: 30px;
-        color: #888;
-        font-size: 14px;
-    }
+.header-container {
+    background: linear-gradient(135deg, #4e73df 0%, #6f42c1 100%);
+    color: white;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.header-container h1 {
+    margin: 0;
+    font-weight: 600;
+}
+.user-info-card {
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.user-action-btn, .topbar-btn {
+    border-radius: 50px;
+    padding: 0.5rem 1.2rem;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: all 0.3s;
+}
+.user-action-btn:hover, .topbar-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+.animate-fade-in {
+    animation: fadeIn 0.5s ease forwards;
+}
