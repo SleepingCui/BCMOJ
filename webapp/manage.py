@@ -27,12 +27,14 @@ def cli(ctx):
     Usage:
       python manage.py run --host=HOST --port=PORT [--wsgi]
       python manage.py db upgrade
+      python manage.py db clear
     
     \b
     Examples:
       python manage.py run --host=0.0.0.0 --port=80 --wsgi
       python manage.py run --host=127.0.0.1 --port=5000
       python manage.py db upgrade
+      python manage.py db clear
     """
     if ctx.invoked_subcommand is None:
         from app.core import version
@@ -47,13 +49,7 @@ def cli(ctx):
 @click.option("--wsgi", is_flag=True, help="Use WSGI server (gunicorn or waitress)")
 @click.option("--debug", is_flag=True, help="Enable debug mode (cannot be used with --wsgi)")
 def run(host, port, wsgi, debug):
-    """Run the BCMOJ web server.
-    
-    \b
-    Examples:
-      python manage.py run --host=0.0.0.0 --port=80 --wsgi
-      python manage.py run --host=127.0.0.1 --port=5000 --debug
-    """
+    """Run the BCMOJ web server."""
     click.echo(logo)
     
     if wsgi and debug:
@@ -91,11 +87,11 @@ def run(host, port, wsgi, debug):
                                  
                 serve(app, host=host, port=port)
             except ImportError:
-                    click.echo("[initialize] Neither gunicorn nor waitress is installed.")
-                    click.echo("Please install one of them:")
-                    click.echo("    pip install gunicorn  (for Linux/Unix)")
-                    click.echo("    pip install waitress  (for Windows)")
-                    sys.exit(1)
+                click.echo("[initialize] Neither gunicorn nor waitress is installed.")
+                click.echo("Please install one of them:")
+                click.echo("    pip install gunicorn  (for Linux/Unix)")
+                click.echo("    pip install waitress  (for Windows)")
+                sys.exit(1)
 
     else:
         if debug:
@@ -105,7 +101,9 @@ def run(host, port, wsgi, debug):
             click.echo(f"[initialize] Starting development server on http://{host}:{port}")
             click.echo("[initialize] Debug mode: OFF")
             
-        run_simple(hostname=host,port=port, application=app, use_reloader=debug, use_debugger=debug, request_handler=CustomRequestHandler)
+        run_simple(hostname=host, port=port, application=app,
+                   use_reloader=debug, use_debugger=debug,
+                   request_handler=CustomRequestHandler)
 
 
 def check_database_exists():
@@ -121,7 +119,9 @@ def check_database_exists():
         engine = create_engine(base_uri, echo=False)
         
         with engine.connect() as conn:
-            result = conn.execute(text(f"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{raw_db_config['db_name']}'"))
+            result = conn.execute(text(
+                f"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{raw_db_config['db_name']}'"
+            ))
             db_exists = result.fetchone() is not None
             
             if not db_exists:
@@ -200,6 +200,51 @@ def upgrade():
         except Exception as e:
             click.echo(f"[DB-Upgrade] Error during database upgrade: {e}")
             sys.exit(1)
+
+
+@db.command()
+@click.option("-y", "--yes", is_flag=True, help="Skip confirmation prompt")
+def clear(yes):
+    """
+    Clear alembic_version table from the database.
+    
+    Use this ONLY if you accidentally deleted the migrations folder and
+    see errors like:
+        ERROR [flask_migrate] Error: Can't locate revision identified by 'xxxx'
+    """
+    from app.core.config import get_config
+    from sqlalchemy import create_engine, text
+
+    try:
+        config = get_config()
+        raw_db_config = config['db_config']
+        db_name = raw_db_config['db_name']
+        full_uri = (
+            f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@"
+            f"{raw_db_config['db_host']}:{raw_db_config['db_port']}/{db_name}"
+        )
+
+        if not yes:
+            if not click.confirm(
+                f"[DB-Clear] WARNING: This will permanently delete the alembic_version table "
+                f"from database '{db_name}'. Use this ONLY if migrations folder was lost. Continue?",
+                default=False
+            ):
+                click.echo("[DB-Clear] Operation cancelled.")
+                return
+
+        engine = create_engine(full_uri, echo=False)
+        with engine.connect() as conn:
+            conn.execute(text("DROP TABLE IF EXISTS alembic_version;"))
+            conn.commit()
+
+        click.echo("[DB-Clear] alembic_version table has been removed successfully.")
+        click.echo("[DB-Clear] Now you can re-run:")
+        click.echo("    python manage.py db upgrade")
+
+    except Exception as e:
+        click.echo(f"[DB-Clear] Error clearing alembic_version table: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

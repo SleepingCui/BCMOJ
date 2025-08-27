@@ -89,16 +89,13 @@ public class ServerInitializer {
             throw new IllegalArgumentException(String.format(
                     "Missing required parameters: host=%s, port=%s, kwfile=%s", host, portStr, kwFile));
         }
-
         int port;
         try {
             port = Integer.parseInt(portStr);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid port number: " + portStr);
         }
-
         if (isBlank(compilerPath)) compilerPath = "g++";
-
         return new ServerConfig(host, port, kwFile, compilerPath);
     }
 
