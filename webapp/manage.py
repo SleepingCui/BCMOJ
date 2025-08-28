@@ -163,7 +163,7 @@ def upgrade():
         click.echo("[DB-Upgrade] ERROR: Database not found or empty!")
         click.echo("")
         click.echo("Please run the web server first to initialize the database:")
-        click.echo("  python manage.py run --port=5000")
+        click.echo("  python manage.py run")
         click.echo("")
         click.echo("After the web server starts successfully, stop it (Ctrl+C) and then run:")
         click.echo("  python manage.py db upgrade")

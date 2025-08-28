@@ -73,7 +73,7 @@ def login():
             login_user_session(user, session)
             return redirect(get_redirect_for_user(user, request, url_for))
         else:
-            flash('Invalid username/email or password', 'error')
+            flash('用户名或密码错误', 'error')
 
     return render_template('login.html')
 
@@ -150,7 +150,7 @@ def submit(problem_id):
 @login_required
 def results(userid, resultid, page):
     if not check_user_authorization(userid):
-        return "Unauthorized access", 403
+        return abort(403)
     if resultid is None:
         results, total_pages = get_results_list(userid, page)
         return render_template('result_list.html', results=results, userid=userid, page=page, total_pages=total_pages)

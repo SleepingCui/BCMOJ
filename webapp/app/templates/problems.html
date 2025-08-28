@@ -200,7 +200,7 @@ function initUserInfo(username, userId, usergroup) {
 
         userInfo.innerHTML = `
             <i class="bi bi-person-circle"></i>
-            <span>${username}</span>
+            <span>${username} [${userId}]</span>
             <span class="badge bg-${badgeColor} ms-1">${usergroup}</span>
         `;
         loginBtn.classList.add('d-none');

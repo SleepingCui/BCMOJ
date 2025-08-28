@@ -1,12 +1,12 @@
 from app.core.db import db, JudgeResult, Problem, User
-from flask import render_template, session, request, current_app as app
+from flask import render_template, abort, session, request, current_app as app
 from sqlalchemy import or_
 
 
 def get_admin_results(page=1, search=''):
     current_user_group = session.get('usergroup')
     if current_user_group not in ['admin', 'teacher']:
-        return "Unauthorized access", 403
+        return abort(403)
 
     results_per_page = 20
     offset = (page - 1) * results_per_page
