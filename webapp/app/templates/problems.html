@@ -10,6 +10,7 @@
 </head>
 <body>
     <div class="toast-container"></div>
+
     <div class="header-container">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -27,6 +28,7 @@
                     </div>
                     <button class="btn btn-light user-action-btn animate-fade-in" id="loginBtn">登录</button>
                     <button class="btn btn-outline-light user-action-btn animate-fade-in d-none" id="logoutBtn">登出</button>
+                    <button class="btn btn-outline-light user-action-btn animate-fade-in d-none" id="editAccountBtn">修改账户信息</button>
                 </div>
             </div>
         </div>
@@ -59,6 +61,7 @@
                 </div>
             {% endif %}
         </div>
+
         <div class="pagination-container mt-4 animate-fade-in">
             <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div class="d-flex align-items-center">
@@ -123,14 +126,15 @@
     </div>
 
     <div class="footer">
-            &copy; 2025 BCMOJ. Released under the
-            <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.
-            | <a href="/about">关于我们</a>
-            | v{{ version }}
-            {% if usergroup == 'admin' %}
-            | <a href="javascript:void(0);" id="checkUpdateBtn">检查更新</a>
-            {% endif %}
+        &copy; 2025 BCMOJ. Released under the
+        <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.
+        | <a href="/about">关于我们</a>
+        | v{{ version }}
+        {% if usergroup == 'admin' %}
+        | <a href="javascript:void(0);" id="checkUpdateBtn">检查更新</a>
+        {% endif %}
     </div>
+
     {% if user_id not in ['None', ''] %}
     <div class="action-buttons">
         {% if usergroup in ['admin', 'teacher'] %}
@@ -147,130 +151,134 @@
         {% endif %}
     </div>
     {% endif %}
-    <script src="/static/js/popper.min.js"></script>
-    <script src="/static/js/bootstrap.min.js"></script>
-    <script>        
-        const username = "{{ username|default('') }}";
-        const userId = "{{ user_id|default('') }}";
-        const usergroup = "{{ usergroup|default('') }}";
-        const totalPages = "{{ total_pages }}";
-        const query = "{{ query|default('') }}";
-        function showToast(message, type = 'info') {
-            const toastContainer = document.querySelector('.toast-container');
-            const toastId = 'toast-' + Date.now();
-            const toastEl = document.createElement('div');
-            toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
-            toastEl.id = toastId;
-            toastEl.setAttribute('role', 'alert');
-            toastEl.setAttribute('aria-live', 'assertive');
-            toastEl.setAttribute('aria-atomic', 'true');
-            toastEl.innerHTML = `
-                <div class="d-flex">
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-            `;
-            
-            toastContainer.appendChild(toastEl);
-            
-            const toast = new bootstrap.Toast(toastEl, {
-                delay: 3000
-            });
-            toast.show();
-            toastEl.addEventListener('hidden.bs.toast', function () {
-                toastEl.remove();
-            });
-        }
-        function initUserInfo(username, userId, usergroup) {
-            const userInfo = document.getElementById('userInfo');
-            const loginBtn = document.getElementById('loginBtn');
-            const logoutBtn = document.getElementById('logoutBtn');
 
-            if (username && userId && userId !== 'None') {
-                let badgeColor = 'secondary';
-                if (usergroup === 'admin') badgeColor = 'danger';
-                else if (usergroup === 'teacher') badgeColor = 'info';
-                else if (usergroup === 'student') badgeColor = 'success';
+<script src="/static/js/popper.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script>
+const username = "{{ username|default('') }}";
+const userId = "{{ user_id|default('') }}";
+const usergroup = "{{ usergroup|default('') }}";
+const totalPages = "{{ total_pages }}";
+const query = "{{ query|default('') }}";
 
-                userInfo.innerHTML = `
-                    <i class="bi bi-person-circle"></i>
-                    <span>${username}</span>
-                    <span class="badge bg-${badgeColor} ms-1">${usergroup}</span>
-                `;
-                loginBtn.classList.add('d-none');
-                logoutBtn.classList.remove('d-none');
-            } else {
-                userInfo.innerHTML = `<i class="bi bi-person-circle"></i><span>未登录</span>`;
-                loginBtn.classList.remove('d-none');
-                logoutBtn.classList.add('d-none');
-            }
-        }
-        function initSearchInput() {
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.addEventListener('focus', function() {
-                    this.parentElement.classList.add('shadow');
-                });
-                
-                searchInput.addEventListener('blur', function() {
-                    this.parentElement.classList.remove('shadow');
-                });
-            }
-        }
-        function jumpToPage() {
-            const pageInput = document.getElementById('jumpPage');
-            const pageNum = parseInt(pageInput.value);
-            
-            if (isNaN(pageNum) || pageNum < 1 || pageNum > parseInt(totalPages)) {
-                showToast('请输入有效的页码', 'danger');
-                return;
-            }
-            window.location.href = `{{ url_for('problems') }}?q=${encodeURIComponent(query)}&page=${pageNum}`;
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            initUserInfo(username, userId, usergroup);
-            initSearchInput();
-            document.getElementById('loginBtn').addEventListener('click', function() {
-                showToast('正在跳转...', 'info');
-                window.location.href = '/login';
-            });
-            document.getElementById('logoutBtn').addEventListener('click', function() {
-                showToast('您已成功登出', 'success');
-                window.location.href = '/logout';
-            });
-            
-{% if usergroup == 'admin' %}
-function initCheckUpdate() {
-    document.getElementById('checkUpdateBtn').addEventListener('click', function() {
-        showToast('正在检查更新...', 'info');
-        fetch('/check_update')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('网络响应不正常');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    showToast(data.error, 'danger');
-                } else {
-                    showToast(data.message, 'success');
-                    if (data.latest && data.latest !== "{{ version }}") {
-                        window.open('https://github.com/SleepingCui/BCMOJ/releases/latest', '_blank');
-                    }
-                }
-            })
-            .catch(error => {
-                showToast('检查更新失败: ' + error.message, 'danger');
-                console.error('检查更新错误:', error);
-            });
+function showToast(message, type = 'info') {
+    const toastContainer = document.querySelector('.toast-container');
+    const toastId = 'toast-' + Date.now();
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+    toastEl.id = toastId;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+    toastEl.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    toastContainer.appendChild(toastEl);
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
+    toastEl.addEventListener('hidden.bs.toast', function () {
+        toastEl.remove();
     });
 }
-initCheckUpdate();
-{% endif %}
+
+function initUserInfo(username, userId, usergroup) {
+    const userInfo = document.getElementById('userInfo');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const editBtn = document.getElementById('editAccountBtn');
+
+    if (username && userId && userId !== 'None') {
+        let badgeColor = 'secondary';
+        if (usergroup === 'admin') badgeColor = 'danger';
+        else if (usergroup === 'teacher') badgeColor = 'info';
+        else if (usergroup === 'student') badgeColor = 'success';
+
+        userInfo.innerHTML = `
+            <i class="bi bi-person-circle"></i>
+            <span>${username}</span>
+            <span class="badge bg-${badgeColor} ms-1">${usergroup}</span>
+        `;
+        loginBtn.classList.add('d-none');
+        logoutBtn.classList.remove('d-none');
+        editBtn.classList.remove('d-none');
+    } else {
+        userInfo.innerHTML = `<i class="bi bi-person-circle"></i><span>未登录</span>`;
+        loginBtn.classList.remove('d-none');
+        logoutBtn.classList.add('d-none');
+        editBtn.classList.add('d-none');
+    }
+}
+
+function initSearchInput() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('focus', function() {
+            this.parentElement.classList.add('shadow');
         });
+        searchInput.addEventListener('blur', function() {
+            this.parentElement.classList.remove('shadow');
+        });
+    }
+}
+
+function jumpToPage() {
+    const pageInput = document.getElementById('jumpPage');
+    const pageNum = parseInt(pageInput.value);
+    
+    if (isNaN(pageNum) || pageNum < 1 || pageNum > parseInt(totalPages)) {
+        showToast('请输入有效的页码', 'danger');
+        return;
+    }
+    window.location.href = `{{ url_for('problems') }}?q=${encodeURIComponent(query)}&page=${pageNum}`;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initUserInfo(username, userId, usergroup);
+    initSearchInput();
+
+    document.getElementById('loginBtn').addEventListener('click', function() {
+        showToast('正在跳转...', 'info');
+        window.location.href = '/login';
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        showToast('您已成功登出', 'success');
+        window.location.href = '/logout';
+    });
+
+    document.getElementById('editAccountBtn').addEventListener('click', function() {
+        window.location.href = '/edit_account';
+    });
+
+{% if usergroup == 'admin' %}
+    function initCheckUpdate() {
+        document.getElementById('checkUpdateBtn').addEventListener('click', function() {
+            showToast('正在检查更新...', 'info');
+            fetch('/check_update')
+                .then(response => { if (!response.ok) throw new Error('网络响应不正常'); return response.json(); })
+                .then(data => {
+                    if (data.error) showToast(data.error, 'danger');
+                    else {
+                        showToast(data.message, 'success');
+                        if (data.latest && data.latest !== "{{ version }}") {
+                            window.open('https://github.com/SleepingCui/BCMOJ/releases/latest', '_blank');
+                        }
+                    }
+                })
+                .catch(error => {
+                    showToast('检查更新失败: ' + error.message, 'danger');
+                    console.error('检查更新错误:', error);
+                });
+        });
+    }
+    initCheckUpdate();
+{% endif %}
+});
 </script>
 </body>
 </html>

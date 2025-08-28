@@ -144,7 +144,7 @@ def check_database_exists():
 
 @cli.group()
 def db():
-    """Database migration commands."""
+    """Database commands."""
     pass
 
 
@@ -245,6 +245,82 @@ def clear(yes):
     except Exception as e:
         click.echo(f"[DB-Clear] Error clearing alembic_version table: {e}")
         sys.exit(1)
+    
+@db.command()
+@click.argument("target", required=False)
+@click.option("-y", "--yes", is_flag=True, help="Skip confirmation prompt")
+def delete(target, yes):
+    """
+    Delete tables or entire database.
+
+    \b
+    Usage:
+      python manage.py db delete           # show help + list tables
+      python manage.py db delete <table>   # delete a specific table
+      python manage.py db delete all       # delete the entire database
+    """
+    from app.core.config import get_config
+    from sqlalchemy import create_engine, text
+
+    try:
+        config = get_config()
+        raw_db_config = config['db_config']
+        db_name = raw_db_config['db_name']
+        full_uri = (
+            f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@"
+            f"{raw_db_config['db_host']}:{raw_db_config['db_port']}/{db_name}"
+        )
+        engine = create_engine(full_uri, echo=False)
+        if not target:
+            with engine.connect() as conn:
+                result = conn.execute(text("SHOW TABLES;"))
+                tables = [row[0] for row in result.fetchall()]
+                click.echo("[DB-Delete] Available tables:")
+                for t in tables:
+                    click.echo(f"  - {t}")
+            click.echo("\nUsage:")
+            click.echo("  python manage.py db delete <table>")
+            click.echo("  python manage.py db delete all")
+            return
+        if target.lower() == "all":
+            if not yes:
+                if not click.confirm(
+                    f"[DB-Delete] WARNING: This will permanently DROP DATABASE '{db_name}'. Continue?",
+                    default=False
+                ):
+                    click.echo("[DB-Delete] Operation cancelled.")
+                    return
+            base_uri = (
+                f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@"
+                f"{raw_db_config['db_host']}:{raw_db_config['db_port']}"
+            )
+            base_engine = create_engine(base_uri, echo=False)
+            with base_engine.connect() as conn:
+                conn.execute(text(f"DROP DATABASE IF EXISTS {db_name};"))
+                conn.commit()
+            click.echo(f"[DB-Delete] Database '{db_name}' has been dropped successfully.")
+            return
+        with engine.connect() as conn:
+            result = conn.execute(text("SHOW TABLES;"))
+            tables = [row[0] for row in result.fetchall()]
+            if target not in tables:
+                click.echo(f"[DB-Delete] Table '{target}' does not exist in database '{db_name}'.") 
+                return
+            if not yes:
+                if not click.confirm(
+                    f"[DB-Delete] WARNING: This will permanently delete table '{target}' from database '{db_name}'. Continue?",
+                    default=False
+                ):
+                    click.echo("[DB-Delete] Operation cancelled.")
+                    return
+            conn.execute(text(f"DROP TABLE IF EXISTS `{target}`;"))
+            conn.commit()
+        click.echo(f"[DB-Delete] Table '{target}' has been dropped successfully.")
+
+    except Exception as e:
+        click.echo(f"[DB-Delete] Error: {e}")
+        sys.exit(1)
+
 
 
 if __name__ == "__main__":

@@ -9,11 +9,11 @@ def register_user(form):
     confirm_password = form.get('confirm_password')
 
     if password != confirm_password:
-        return False, 'Passwords do not match'
+        return False, '密码不匹配'
 
     existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
     if existing_user:
-        return False, 'Username or email already exists'
+        return False, '用户名或邮箱已被注册'
 
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
     new_user = User(username=username, email=email, passwd=hashed_password, avatar=None, usergroup='user')
@@ -21,4 +21,4 @@ def register_user(form):
     db.session.add(new_user)
     db.session.commit()
 
-    return True, 'Registration successful! Please login.'
+    return True, '注册成功，请登录'

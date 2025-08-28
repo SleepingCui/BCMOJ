@@ -77,6 +77,18 @@ def login():
 
     return render_template('login.html')
 
+@app.route("/edit_account", methods=["GET", "POST"])
+@login_required
+def edit_account():
+    if request.method == "POST":
+        success, message = change_user_info(request.form)
+        if success:
+            flash(message, 'success' if success else 'error')
+            return redirect(url_for('login'))
+        else:
+            return redirect(url_for('register'))
+    return render_template("edit_account.html")
+
 @app.route('/forgotpasswd', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':

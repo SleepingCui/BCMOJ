@@ -1,5 +1,5 @@
 from .judge import submit_solution
-from .auth import verify_user_login, login_user_session, get_redirect_for_user
+from .auth import verify_user_login, login_user_session, get_redirect_for_user, change_user_info
 from .password import start_password_reset, verify_and_reset_password
 from .decorators import login_required, admin_required, teacher_required
 from .register import register_user
@@ -43,5 +43,6 @@ __all__ = [
     'get_admin_results',
     'fetch_contributors',
     'get_uwsgi_stats_data',
-    'check_update_service'
+    'check_update_service',
+    'change_user_info'
 ]
