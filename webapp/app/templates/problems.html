@@ -1,156 +1,135 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>题目列表</title>
-    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/css/bootstrap-icons.css">
-    <link rel="stylesheet" href="/static/css/problems.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>题目列表</title>
+<link rel="stylesheet" href="/static/css/bootstrap.min.css">
+<link rel="stylesheet" href="/static/css/bootstrap-icons.css">
+<link rel="stylesheet" href="/static/css/problems.css">
 </head>
 <body>
-    <div class="toast-container"></div>
+<div class="toast-container"></div>
 
-    <div class="header-container">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <h1 class="h3 mb-0 animate-fade-in"><i class="bi bi-list-task me-2"></i>题目列表</h1>
-                
-                <form class="search-box d-flex animate-fade-in" method="get">
-                    <input type="text" name="q" class="form-control border-0 shadow-none" placeholder="搜索题目..." value="{{ query|default('') }}" id="searchInput">
-                    <button type="submit" class="btn"><i class="bi bi-search"></i></button>
-                </form>
-                
-                <div class="d-flex align-items-center">
-                    <div class="user-info-card animate-fade-in" id="userInfo">
-                        <i class="bi bi-person-circle"></i>
-                        <span>未登录</span>
-                    </div>
-                    <button class="btn btn-light user-action-btn animate-fade-in" id="loginBtn">登录</button>
-                    <button class="btn btn-outline-light user-action-btn animate-fade-in d-none" id="logoutBtn">登出</button>
-                    <button class="btn btn-outline-light user-action-btn animate-fade-in d-none" id="editAccountBtn">修改账户信息</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
+<div class="header-container">
     <div class="container">
-        <div class="problem-list">
-            {% if problems %}
-                {% for p in problems %}
-                    <div class="problem-card card problem-item" style="--item-index: {{ loop.index }};">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <a class="problem-title h5" href="{{ url_for('problem', problem_id=p['problem_id']) }}">
-                                    {{ p['title'] }}
-                                </a>
-                                <p class="text-muted mb-0 mt-1">
-                                    <small>题目ID: <span class="problem-id">{{ p['problem_id'] }}</span></small>
-                                </p>
-                            </div>
-                            <div>
-                                <i class="bi bi-chevron-right text-muted"></i>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div class="text-center py-5 animate-fade-in">
-                    <i class="bi bi-inbox display-4 text-muted"></i>
-                    <p class="mt-3 text-muted">没有找到题目!</p>
-                </div>
-            {% endif %}
-        </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h1 class="h3 mb-0 animate-fade-in"><i class="bi bi-list-task me-2"></i>题目列表</h1>
 
-        <div class="pagination-container mt-4 animate-fade-in">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="d-flex align-items-center">
-                    <span class="text-muted">共 {{ total_pages }} 页</span>
+            <form class="search-box d-flex animate-fade-in" method="get">
+                <input type="text" name="q" class="form-control border-0 shadow-none" placeholder="搜索题目..." value="{{ query|default('') }}" id="searchInput">
+                <button type="submit" class="btn"><i class="bi bi-search"></i></button>
+            </form>
+
+            <div class="d-flex align-items-center">
+                <div class="user-info-card animate-fade-in" id="userInfo">
+                    <i class="bi bi-person-circle"></i>
+                    <span>未登录</span>
                 </div>
-                
-                <ul class="pagination pagination-new mb-0">
-                    {% if page > 1 %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('problems', q=query, page=page-1) }}">
-                            <i class="bi bi-chevron-left"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    {% set start_page = [1, page-2] | max %}
-                    {% set end_page = [total_pages, page+2] | min %}
-                    
-                    {% if start_page > 1 %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('problems', q=query, page=1) }}">1</a>
-                    </li>
-                    {% if start_page > 2 %}
-                    <li class="page-item disabled">
-                        <span class="page-link">...</span>
-                    </li>
-                    {% endif %}
-                    {% endif %}
-                    
-                    {% for p in range(start_page, end_page + 1) %}
-                    <li class="page-item {% if p == page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('problems', q=query, page=p) }}">{{ p }}</a>
-                    </li>
-                    {% endfor %}
-                    
-                    {% if end_page < total_pages %}
-                    {% if end_page < total_pages - 1 %}
-                    <li class="page-item disabled">
-                        <span class="page-link">...</span>
-                    </li>
-                    {% endif %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('problems', q=query, page=total_pages) }}">{{ total_pages }}</a>
-                    </li>
-                    {% endif %}
-                    
-                    {% if page < total_pages %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('problems', q=query, page=page+1) }}">
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-                
-                <div class="jump-container">
-                    <input type="number" id="jumpPage" class="form-control" min="1" max="{{ total_pages }}" placeholder="页码">
-                    <button class="btn btn-primary" onclick="jumpToPage()">跳转</button>
-                </div>
+                <button class="btn btn-light user-action-btn animate-fade-in" id="loginBtn">登录</button>
+                <button class="btn btn-outline-light user-action-btn animate-fade-in d-none" id="logoutBtn">登出</button>
+                <button class="btn btn-outline-light user-action-btn animate-fade-in d-none" id="editAccountBtn">修改账户信息</button>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="footer">
-        &copy; 2025 BCMOJ. Released under the
-        <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.
-        | <a href="/about">关于我们</a>
-        | v{{ version }}
-        {% if usergroup == 'admin' %}
-        | <a href="javascript:void(0);" id="checkUpdateBtn">检查更新</a>
-        {% endif %}
-    </div>
-
-    {% if user_id not in ['None', ''] %}
-    <div class="action-buttons">
-        {% if usergroup in ['admin', 'teacher'] %}
-            <a href="/admin_results" class="btn btn-primary action-btn"><i class="bi bi-list-check"></i> 所有评测记录</a>
+<div class="container">
+    <div class="problem-list">
+        {% if problems %}
+            {% for p in problems %}
+            <a href="{{ url_for('problem', problem_id=p['problem_id']) }}" class="problem-card card problem-item" style="--item-index: {{ loop.index }};">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="problem-title h5">{{ p['title'] or '（无标题）' }}</span>
+                        <p class="text-muted mb-0 mt-1">
+                            <small>题目ID: <span class="problem-id">{{ p['problem_id'] }}</span></small>
+                        </p>
+                    </div>
+                    <div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
         {% else %}
-            <a href="{{ url_for('results', userid=user_id) }}" class="btn btn-primary action-btn"><i class="bi bi-list-check"></i> 评测记录</a>
-        {% endif %}
-
-        {% if usergroup == 'admin' %}
-            <a href="{{ url_for('admin_page') }}" class="btn btn-success action-btn"><i class="bi bi-gear"></i> 管理员控制台</a>
-            <a href="{{ url_for('teacher_page') }}" class="btn btn-info action-btn"><i class="bi bi-journal-check"></i> 题目管理</a>
-        {% elif usergroup == 'teacher' %}
-            <a href="{{ url_for('teacher_page') }}" class="btn btn-info action-btn"><i class="bi bi-journal-check"></i> 题目管理</a>
+            <div class="text-center py-5 animate-fade-in">
+                <i class="bi bi-inbox display-4 text-muted"></i>
+                <p class="mt-3 text-muted">没有找到题目!</p>
+            </div>
         {% endif %}
     </div>
+
+    <div class="pagination-container mt-4 animate-fade-in">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="d-flex align-items-center">
+                <span class="text-muted">共 {{ total_pages }} 页</span>
+            </div>
+            
+            <ul class="pagination pagination-new mb-0">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('problems', q=query, page=page-1) }}"><i class="bi bi-chevron-left"></i></a>
+                </li>
+                {% endif %}
+                {% set start_page = [1, page-2] | max %}
+                {% set end_page = [total_pages, page+2] | min %}
+                {% if start_page > 1 %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('problems', q=query, page=1) }}">1</a></li>
+                {% if start_page > 2 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+                {% endif %}
+                {% for p in range(start_page, end_page + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="{{ url_for('problems', q=query, page=p) }}">{{ p }}</a></li>
+                {% endfor %}
+                {% if end_page < total_pages %}
+                {% if end_page < total_pages - 1 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('problems', q=query, page=total_pages) }}">{{ total_pages }}</a></li>
+                {% endif %}
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('problems', q=query, page=page+1) }}"><i class="bi bi-chevron-right"></i></a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="jump-container">
+                <input type="number" id="jumpPage" class="form-control" min="1" max="{{ total_pages }}" placeholder="页码">
+                <button class="btn btn-primary" onclick="jumpToPage()">跳转</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    &copy; 2025 BCMOJ. Released under the
+    <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.
+    | <a href="/about">关于我们</a>
+    | v{{ version }}
+    {% if usergroup == 'admin' %}
+    | <a href="javascript:void(0);" id="checkUpdateBtn">检查更新</a>
     {% endif %}
+</div>
+
+{% if user_id not in ['None', ''] %}
+<div class="action-buttons">
+    {% if usergroup in ['admin', 'teacher'] %}
+        <a href="/admin_results" class="btn btn-primary action-btn"><i class="bi bi-list-check"></i> 所有评测记录</a>
+    {% else %}
+        <a href="{{ url_for('results', userid=user_id) }}" class="btn btn-primary action-btn"><i class="bi bi-list-check"></i> 评测记录</a>
+    {% endif %}
+
+    {% if usergroup == 'admin' %}
+        <a href="{{ url_for('admin_page') }}" class="btn btn-success action-btn"><i class="bi bi-gear"></i> 管理员控制台</a>
+        <a href="{{ url_for('teacher_page') }}" class="btn btn-info action-btn"><i class="bi bi-journal-check"></i> 题目管理</a>
+    {% elif usergroup == 'teacher' %}
+        <a href="{{ url_for('teacher_page') }}" class="btn btn-info action-btn"><i class="bi bi-journal-check"></i> 题目管理</a>
+    {% endif %}
+</div>
+{% endif %}
 
 <script src="/static/js/popper.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
@@ -229,7 +208,7 @@ function initSearchInput() {
 function jumpToPage() {
     const pageInput = document.getElementById('jumpPage');
     const pageNum = parseInt(pageInput.value);
-    
+
     if (isNaN(pageNum) || pageNum < 1 || pageNum > parseInt(totalPages)) {
         showToast('请输入有效的页码', 'danger');
         return;
