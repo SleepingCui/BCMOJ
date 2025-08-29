@@ -2,16 +2,18 @@ package org.bcmoj.bootstrap;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bcmoj.utils.VersionUtil;
+import org.bcmoj.utils.PropertiesExportUtil;
 
 import java.util.Properties;
 
 /**
- * Entry point for BCMOJ Judge Server.
+ * Entry point and main bootstrap class for the BCMOJ Judge Server.
  * <p>
- * Handles command-line argument parsing, configuration loading, and server initialization.
+ * This class handles command-line argument parsing, configuration loading,
+ * debug mode, optional compiler path, and server initialization. It also
+ * supports exporting command-line properties to a .properties file via
+ * the {@code --extract} option.
  * </p>
- *
- * @author SleepingCui
  */
 @Slf4j
 public class Bootstrap {
@@ -19,29 +21,31 @@ public class Bootstrap {
     /**
      * Main runner method for the server.
      * <p>
-     * This method parses command-line arguments, loads configuration from file if provided,
-     * merges command-line and config file properties, determines debug mode, and
-     * starts the server using {@link ServerInitializer}.
-     * </p>
+     * Parses command-line arguments, loads configuration from file if provided,
+     * merges properties, determines debug mode and optional compiler path,
+     * and starts the server or exports the properties if {@code --extract} is used.
      *
      * @param args Command-line arguments passed to the server
      */
     public static void run(String[] args) {
         printLogo();
+
         if (args.length == 0) {
             printHelp();
             return;
         }
-
         Properties cmdLineProps = CommandParser.parse(args);
         boolean debug = false;
+        boolean extract = false;
+
         for (String arg : args) {
             if ("--debug".equalsIgnoreCase(arg)) {
                 debug = true;
-                break;
+            }
+            if ("--extract".equalsIgnoreCase(arg)) {
+                extract = true;
             }
         }
-
         String configFilePath = cmdLineProps.getProperty("config");
         Properties configFileProps = null;
         try {
@@ -50,35 +54,38 @@ public class Bootstrap {
             log.error("Error loading config file '{}': {}", configFilePath, e.getMessage());
             System.exit(1);
         }
+        Properties props = ConfigLoader.merge(configFileProps, cmdLineProps);
 
-        Properties Props = ConfigLoader.merge(configFileProps, cmdLineProps);
-        ServerInitializer.start(Props, configFilePath, debug);
+        // Determine compiler path: command-line > properties > default g++
+        String compilerPath = cmdLineProps.getProperty("comp");
+        if (compilerPath == null || compilerPath.isBlank()) {
+            compilerPath = props.getProperty("CompilerPath");
+        }
+        if (compilerPath == null || compilerPath.isBlank()) {
+            compilerPath = "g++";
+        }
+        props.setProperty("CompilerPath", compilerPath);
+        if (extract) {
+            PropertiesExportUtil.export(cmdLineProps);
+            return;
+        }
+        ServerInitializer.start(props, configFilePath, debug);
     }
 
-    /**
-     * Prints the BCMOJ server logo and version information to the console.
-     */
     public static void printLogo() {
         String version = VersionUtil.getVersion();
-        String logo = String.format(""" 
-          ____   ____ __  __  ___      _       _ ____                     \s
+        String logo = String.format("""
+          ____   ____ __  __  ___      _       _ ____                   \s
          | __ ) / ___|  \\/  |/ _ \\    | |     | / ___|  ___ _ ____   _____ _ __
          |  _ \\| |   | |\\/| | | | |_  | |  _  | \\___ \\ / _ \\ '__\\ \\ / / _ \\ '__|
          | |_) | |___| |  | | |_| | |_| | | |_| |___) |  __/ |   \\ V /  __/ |
-         |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_|\s
+         |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_|
 
         BCMOJ Judge Server v%s  Developed by SleepingCui & MxingFoew1034
        \s""", version);
         System.out.println(logo);
     }
 
-    /**
-     * Prints the command-line usage help message to the console.
-     * <p>
-     * Includes required and optional parameters and example commands.
-     * Command-line arguments take priority over configuration file values.
-     * </p>
-     */
     public static void printHelp() {
         System.out.println("""
             BCMOJ Judge Server - Usage:
@@ -90,12 +97,15 @@ public class Bootstrap {
 
             Optional:
               --config=<FILE>    External config.properties path
+              --comp=<FILE>      Compiler path (overrides CompilerPath in config)
               --debug            Enable debug mode
+              --extract          Export merged properties to a .properties file
 
             Examples:
               java -jar code.jar --host=0.0.0.0 --port=5000 --kwfile=keywords.txt
               java -jar code.jar --config=config.properties
-              java -jar code.jar --config=config.properties --host=192.168.1.1
+              java -jar code.jar --config=config.properties --host=192.168.1.1 --comp=/usr/bin/g++
+              java -jar code.jar --host=0.0.0.0 --port=12345 --kwfile=keywords.txt --debug --comp=gcc --extract
 
             Note: Command line parameters have higher priority than config file values.
             """);

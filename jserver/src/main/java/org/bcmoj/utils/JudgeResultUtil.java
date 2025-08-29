@@ -35,7 +35,10 @@ public class JudgeResultUtil {
         for (int i = 0; i < checkpointsCount; i++) {
             int statusCode;
             double time;
-            if (isSecurityCheckFailed || isSystemError) {
+            if (isSecurityCheckFailed) {
+                statusCode = -5;
+                time = 0.0;
+            } else if (isSystemError) {
                 statusCode = 5;
                 time = 0.0;
             } else {
@@ -46,7 +49,6 @@ public class JudgeResultUtil {
             root.put((i + 1) + "_res", statusCode);
             root.put((i + 1) + "_time", time);
         }
-
         try {
             return mapper.writeValueAsString(root);
         } catch (Exception e) {

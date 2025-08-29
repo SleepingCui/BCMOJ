@@ -33,31 +33,31 @@ def generate_verification_code(length=6):
 def start_password_reset(email):
     user = User.query.filter_by(email=email).first()
     if not user:
-        return False, 'Email not found'
+        return False, '未知的邮箱'
 
     verification_code = generate_verification_code()
     session['verification_code'] = verification_code
     session['verification_email'] = email
 
     if send_verification_email(email, verification_code):
-        return True, 'Verification code sent'
+        return True, '发送验证码成功，请检查您的邮箱'
     else:
-        return False, 'Failed to send verification code'
+        return False, '无法发送邮件，请稍后再试'
 
 def verify_and_reset_password(user_code, new_password, confirm_password):
     if new_password != confirm_password:
-        return False, 'Passwords do not match'
+        return False, '密码不匹配'
 
     if 'verification_code' not in session or 'verification_email' not in session:
         return False, 'Session expired. Please start again.'
 
     if user_code != session.get('verification_code'):
-        return False, 'Invalid verification code'
+        return False, '未知的验证码'
 
     email = session.get('verification_email')
     user = User.query.filter_by(email=email).first()
     if not user:
-        return False, 'User not found'
+        return False, '未找到用户'
 
     hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
     user.passwd = hashed_password
@@ -66,4 +66,4 @@ def verify_and_reset_password(user_code, new_password, confirm_password):
     session.pop('verification_code', None)
     session.pop('verification_email', None)
 
-    return True, 'Password updated successfully'
+    return True, '密码更新成功'

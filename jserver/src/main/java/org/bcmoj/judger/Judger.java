@@ -61,6 +61,7 @@ public class Judger {
      * Judges a submitted C++ program against a test case.
      *
      * @param programPath           path to the source code file
+     * @param compilerPath          path to the compiler
      * @param inputContent          test input string
      * @param expectedOutputContent expected output string
      * @param time                  time limit in milliseconds
@@ -68,7 +69,7 @@ public class Judger {
      * @param compareMode           output comparison mode
      * @return JudgeResult containing status code and execution time
      */
-    public static JudgeResult judge(File programPath, String inputContent, String expectedOutputContent, int time, boolean enableO2, OutputCompareUtil.CompareMode compareMode) {
+    public static JudgeResult judge(File programPath, String compilerPath, String inputContent, String expectedOutputContent, int time, boolean enableO2, OutputCompareUtil.CompareMode compareMode) {
         File executableFile = null;
         try {
             Path tempDir = Files.createTempDirectory("judge_");
@@ -77,22 +78,22 @@ public class Judger {
                 exeName += ".exe";
             }
             executableFile = new File(tempDir.toFile(), exeName);
-            log.info("Compiling program: {} with O2 optimization: {}", executableFile.getName(), enableO2);
-            int compileCode = Compiler.compileProgram(programPath, executableFile, enableO2, 10_000);
+            log.info("Compiling program: {} with O2 optimization: {} using compiler: {}", executableFile.getName(), enableO2, (compilerPath != null ? compilerPath : "g++"));
+            int compileCode = Compiler.compileProgram(programPath, executableFile, enableO2, 10_000, compilerPath);
             if (compileCode != 0) {
                 return new JudgeResult(COMPILE_ERROR, 0.0);
             }
+
             Runner.RunResult runResult = Runner.runProgram(executableFile, StringUtil.unescapeString(inputContent), time);
             if (runResult.exitCode != 0) {
                 log.warn("Runtime error, exit code {}", runResult.exitCode);
                 return new JudgeResult(RUNTIME_ERROR, runResult.elapsedTime);
             }
-            boolean outputMatches = OutputCompareUtil.compare(runResult.output,
-                    StringUtil.unescapeString(expectedOutputContent), compareMode);
-            return outputMatches ? new JudgeResult(ACCEPTED, runResult.elapsedTime) :
-                    new JudgeResult(WRONG_ANSWER, runResult.elapsedTime);
 
-        } catch (Runner.TimeoutException e) {
+            boolean outputMatches = OutputCompareUtil.compare(runResult.output, StringUtil.unescapeString(expectedOutputContent), compareMode);
+            return outputMatches ? new JudgeResult(ACCEPTED, runResult.elapsedTime) : new JudgeResult(WRONG_ANSWER, runResult.elapsedTime);
+
+        } catch (TimeoutException e) {
             log.warn("Execution timed out after {} ms", e.getElapsedTime());
             return new JudgeResult(REAL_TIME_LIMIT_EXCEEDED, e.getElapsedTime());
         } catch (Exception e) {

@@ -73,9 +73,21 @@ def login():
             login_user_session(user, session)
             return redirect(get_redirect_for_user(user, request, url_for))
         else:
-            flash('Invalid username/email or password', 'error')
+            flash('用户名或密码错误', 'error')
 
     return render_template('login.html')
+
+@app.route("/edit_account", methods=["GET", "POST"])
+@login_required
+def edit_account():
+    if request.method == "POST":
+        success, message = change_user_info(request.form)
+        if success:
+            flash(message, 'success' if success else 'error')
+            return redirect(url_for('login'))
+        else:
+            return redirect(url_for('register'))
+    return render_template("edit_account.html")
 
 @app.route('/forgotpasswd', methods=['GET', 'POST'])
 def forgot_password():
@@ -138,7 +150,7 @@ def submit(problem_id):
 @login_required
 def results(userid, resultid, page):
     if not check_user_authorization(userid):
-        return "Unauthorized access", 403
+        return abort(403)
     if resultid is None:
         results, total_pages = get_results_list(userid, page)
         return render_template('result_list.html', results=results, userid=userid, page=page, total_pages=total_pages)

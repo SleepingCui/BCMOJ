@@ -25,7 +25,7 @@ public class VersionUtil {
             }
         }
         catch (IOException e) {
-        log.debug("Failed to read version.properties. Make sure you are using the latest version. \nDetails: {}", e.toString());
+        log.warn("Failed to read version.properties. Make sure you are using the latest version. \nDetails: {}", e.toString());
         }
         return "UNKNOWN";
     }

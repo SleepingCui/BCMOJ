@@ -1,126 +1,117 @@
-body {
-    font-family: "Segoe UI", sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
-    padding: 20px;
-}
+    body {
+        font-family: 'Nunito', sans-serif;
+        background-color: #f8f9fc;
+        margin: 0;
+        padding: 20px 10px;
+    }
 
-h2, h3 {
-    color: #007bff;
-}
+    .container {
+        max-width: 1000px;
+        margin: 0 auto 30px auto;
+        background: #fff;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        position: relative;
+    }
 
-table {
-    border-collapse: collapse;
-    width: 100%;
-    margin-top: 20px;
-    background-color: white;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
+    h2 {
+        color: #4e73df;
+        margin-top: 0;
+    }
 
-th, td {
-    border: 1px solid #dee2e6;
-    padding: 10px;
-    text-align: center;
-}
+    h3 {
+        color: #6f42c1;
+        margin-bottom: 15px;
+    }
 
-th {
-    background-color: #007bff;
-    color: white;
-}
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
 
-.status-Accepted { color: green; font-weight: bold; }
-.status-Wrong { color: #dc3545; font-weight: bold; }
-.status-Time { color: #ffc107; font-weight: bold; }
-.status-Runtime { color: #fd7e14; font-weight: bold; }
-.status-Compile { color: #6f42c1; font-weight: bold; }
-.status-Security { color: #17a2b8; font-weight: bold; }
-.status-System { color: gray; font-weight: bold; }
+    th, td {
+        text-align: left;
+        padding: 12px 10px;
+        border-bottom: 1px solid #e0e0e0;
+        color: #495057;
+    }
 
-.codehilite {
-    background-color: #f0f0f0;
-    border-left: 5px solid #007bff;
-    padding: 0;
-    overflow-x: auto;
-    margin-top: 20px;
-    text-align: left;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
+    th {
+        background-color: #f8f9fc;
+        color: #4e73df;
+    }
 
-.codehilite pre {
-    margin: 0;
-    padding: 16px;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #333;
-    background-color: transparent;
-    overflow-x: auto;
-    text-align: left;
-    white-space: pre;
-    word-wrap: normal;
-}
+    tr:hover {
+        background-color: #f1f3f6;
+    }
 
-.codehilite .linenos {
-    background-color: #e9ecef;
-    color: #6c757d;
-    padding: 16px 8px 16px 12px;
-    text-align: right;
-    user-select: none;
-    border-right: 1px solid #dee2e6;
-    min-width: 40px;
-}
+    .status-Accepted { color: #1cc88a; font-weight: bold; }
+    .status-Wrong { color: #e74a3b; font-weight: bold; }
+    .status-Time { color: #f6c23e; font-weight: bold; }
+    .status-Runtime { color: #fd7e14; font-weight: bold; }
+    .status-Compile { color: #6c757d; font-weight: bold; }
+    .status-Security { color: #d63384; font-weight: bold; }
+    .status-System { color: #4e73df; font-weight: bold; }
+    pre code {
+        display: block;
+        padding: 15px;
+        background: #f8f9fc;
+        border-radius: 10px;
+        overflow-x: auto;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+        font-family: 'Courier New', monospace;
+    }
+    .back-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(90deg, #4e73df, #6f42c1);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
 
-.codehilite table {
-    width: 100%;
-    border: none;
-    margin: 0;
-    box-shadow: none;
-    background: transparent;
-}
+    .back-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
 
-.codehilite table td {
-    border: none;
-    padding: 0;
-    vertical-align: top;
-}
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        padding: 20px 10px;
+        color: #888;
+        font-size: 14px;
+    }
 
+    .footer a {
+        color: #4e73df;
+        text-decoration: none;
+    }
+    .footer a:hover {
+        color: #6f42c1;
+        text-decoration: underline;
+    }
 
-.codehilite .k { color: #007bff; font-weight: bold; }
-.codehilite .kt { color: #007bff; font-weight: bold; } 
-.codehilite .s { color: #28a745; } 
-.codehilite .s2 { color: #28a745; } 
-.codehilite .c1 { color: #6c757d; font-style: italic; } 
-.codehilite .cm { color: #6c757d; font-style: italic; } 
-.codehilite .cp { color: #e83e8c; } 
-.codehilite .cpf { color: #28a745; } 
-.codehilite .n { color: #333; }
-.codehilite .nf { color: #6f42c1; } 
-.codehilite .nb { color: #007bff; } 
-.codehilite .mi { color: #fd7e14; } 
-.codehilite .mf { color: #fd7e14; } 
-.codehilite .o { color: #dc3545; } 
-.codehilite .p { color: #333; } 
-
-.codehilite code {
-    font-family: inherit !important;
-    background: transparent !important;
-    padding: 0 !important;
-    border: none !important;
-}
-
-.footer {
-    text-align: center;
-    margin-top: 30px;
-    color: #888;
-    font-size: 14px;
-}
-
-.footer a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.footer a:hover {
-    text-decoration: underline;
-}
+    @media(max-width:768px){
+        .container {
+            padding: 20px;
+        }
+        th, td {
+            padding: 10px 6px;
+        }
+        .back-btn {
+            top: 15px;
+            right: 15px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+    }

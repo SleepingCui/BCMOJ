@@ -17,4 +17,4 @@ keywords.txt
 /jserver/logs/
 *.log
 /migrations/
-/c.properties
+*.properties

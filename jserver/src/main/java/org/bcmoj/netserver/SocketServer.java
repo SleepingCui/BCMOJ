@@ -37,20 +37,23 @@ public class SocketServer {
     private final String host;
     private final int port;
     private final String kwFilePath;
+    private final String compilerPath;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
     /**
      * Constructs the server with specified host, port, and keyword file path.
      *
-     * @param host       the host address to bind, e.g. "0.0.0.0"
-     * @param port       the port number to listen on, e.g. 12345
-     * @param kwFilePath the path to the keyword file used by the judge service
+     * @param host                   the host address to bind, e.g. "0.0.0.0"
+     * @param port                  the port number to listen on, e.g. 12345
+     * @param kwFilePath            the path to the keyword file used by the judge service
+     * @param compilerPath          path to the compiler used by the judge service
      */
-    public SocketServer(String host, int port, String kwFilePath) {
+    public SocketServer(String host, int port, String kwFilePath, String compilerPath) {
         this.host = host;
         this.port = port;
         this.kwFilePath = kwFilePath;
+        this.compilerPath = compilerPath;
     }
 
     /**
@@ -70,7 +73,7 @@ public class SocketServer {
             bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
-                            ch.pipeline().addLast(new RequestProcessor(kwFilePath));
+                            ch.pipeline().addLast(new RequestProcessor(kwFilePath,compilerPath));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);

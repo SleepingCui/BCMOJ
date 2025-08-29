@@ -1,11 +1,8 @@
 import requests
 from flask import jsonify, current_app as app
-from app.core.config import get_config
-
-GITHUB_REPO = "SleepingCui/BCMOJ"
 
 def fetch_contributors():
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contributors"
+    url = f"https://api.github.com/repos/SleepingCui/BCMOJ/contributors"
     try:
         response = requests.get(url)
         if response.status_code == 200:
