@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SocketServer {
     private final String host;
     private final int port;
+    private final String cppStandard;
     private final String kwFilePath;
     private final String compilerPath;
     private EventLoopGroup bossGroup;
@@ -44,16 +45,19 @@ public class SocketServer {
     /**
      * Constructs the server with specified host, port, and keyword file path.
      *
-     * @param host                   the host address to bind, e.g. "0.0.0.0"
+     * @param host                  the host address to bind, e.g. "0.0.0.0"
      * @param port                  the port number to listen on, e.g. 12345
      * @param kwFilePath            the path to the keyword file used by the judge service
      * @param compilerPath          path to the compiler used by the judge service
+     * @param cppStandard           C++ standard version, e.g. "c++11"
+     * 
      */
-    public SocketServer(String host, int port, String kwFilePath, String compilerPath) {
+    public SocketServer(String host, int port, String kwFilePath, String compilerPath, String cppStandard) {
         this.host = host;
         this.port = port;
         this.kwFilePath = kwFilePath;
         this.compilerPath = compilerPath;
+        this.cppStandard = cppStandard;
     }
 
     /**
@@ -73,7 +77,7 @@ public class SocketServer {
             bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
-                            ch.pipeline().addLast(new RequestProcessor(kwFilePath,compilerPath));
+                            ch.pipeline().addLast(new RequestProcessor(kwFilePath,compilerPath,cppStandard));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);

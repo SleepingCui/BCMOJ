@@ -65,6 +65,14 @@ public class Bootstrap {
             compilerPath = "g++";
         }
         props.setProperty("CompilerPath", compilerPath);
+
+        // Determine std version: command-line > properties > default c++11
+        String std = cmdLineProps.getProperty("std");
+        if (std == null || std.isBlank()) {
+            std = "c++11";
+        }
+        props.setProperty("std", std);
+
         if (extract) {
             PropertiesExportUtil.export(cmdLineProps);
             return;
@@ -100,11 +108,12 @@ public class Bootstrap {
               --comp=<FILE>      Compiler path (overrides CompilerPath in config)
               --debug            Enable debug mode
               --extract          Export merged properties to a .properties file
+              --std=<STD>        C++ standard (e.g., c++11, c++14; default: c++11)
 
             Examples:
               java -jar code.jar --host=0.0.0.0 --port=5000 --kwfile=keywords.txt
               java -jar code.jar --config=config.properties
-              java -jar code.jar --config=config.properties --host=192.168.1.1 --comp=/usr/bin/g++
+              java -jar code.jar --config=config.properties --host=192.168.1.1 --comp=/usr/bin/g++ --std=c++14
               java -jar code.jar --host=0.0.0.0 --port=12345 --kwfile=keywords.txt --debug --comp=gcc --extract
 
             Note: Command line parameters have higher priority than config file values.

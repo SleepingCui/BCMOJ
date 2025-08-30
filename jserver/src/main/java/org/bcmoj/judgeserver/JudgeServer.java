@@ -69,11 +69,12 @@ public class JudgeServer {
      * @param jsonConfig       JSON string containing checkpoints, time limits, and flags
      * @param cppFilePath      path to the submitted C++ source file
      * @param keywordsFilePath path to the keyword file used for security check
-     * @param compilerPath          path to the compiler
+     * @param compilerPath     path to the compiler
+     * @param cppStandard      C++ standard version
      * @return JSON string representing aggregated judge results, including checkpoint results,
      *         security check status
      */
-        public static String serve(String jsonConfig, String compilerPath, File cppFilePath, File keywordsFilePath) {
+        public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
@@ -102,7 +103,7 @@ public class JudgeServer {
             for (int i = 1; i <= checkpointsCount; i++) {
                 String inputContent = checkpoints.get(i + "_in").asText();
                 String outputContent = checkpoints.get(i + "_out").asText();
-                Task task = new Task(cppFilePath, compilerPath, inputContent, outputContent, config.timeLimit, config.enableO2, mode, securityCheckFailed);
+                Task task = new Task(cppFilePath, compilerPath, cppStandard, inputContent, outputContent, config.timeLimit, config.enableO2, mode, securityCheckFailed);
                 futures.add(executor.submit(task));
             }
 

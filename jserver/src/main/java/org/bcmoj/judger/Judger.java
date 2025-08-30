@@ -62,6 +62,7 @@ public class Judger {
      *
      * @param programPath           path to the source code file
      * @param compilerPath          path to the compiler
+     * @param cppStandard           C++ standard version
      * @param inputContent          test input string
      * @param expectedOutputContent expected output string
      * @param time                  time limit in milliseconds
@@ -69,7 +70,7 @@ public class Judger {
      * @param compareMode           output comparison mode
      * @return JudgeResult containing status code and execution time
      */
-    public static JudgeResult judge(File programPath, String compilerPath, String inputContent, String expectedOutputContent, int time, boolean enableO2, OutputCompareUtil.CompareMode compareMode) {
+    public static JudgeResult judge(File programPath, String compilerPath, String cppStandard, String inputContent, String expectedOutputContent, int time, boolean enableO2, OutputCompareUtil.CompareMode compareMode) {
         File executableFile = null;
         try {
             Path tempDir = Files.createTempDirectory("judge_");
@@ -78,8 +79,8 @@ public class Judger {
                 exeName += ".exe";
             }
             executableFile = new File(tempDir.toFile(), exeName);
-            log.info("Compiling program: {} with O2 optimization: {} using compiler: {}", executableFile.getName(), enableO2, (compilerPath != null ? compilerPath : "g++"));
-            int compileCode = Compiler.compileProgram(programPath, executableFile, enableO2, 10_000, compilerPath);
+            log.info("Compiling program: {} with cpp standard: {} and O2 optimization: {} using compiler: {}", executableFile.getName(), cppStandard, enableO2, (compilerPath != null ? compilerPath : "g++"));
+            int compileCode = Compiler.compileProgram(programPath, executableFile, enableO2, 10_000, compilerPath, cppStandard);
             if (compileCode != 0) {
                 return new JudgeResult(COMPILE_ERROR, 0.0);
             }

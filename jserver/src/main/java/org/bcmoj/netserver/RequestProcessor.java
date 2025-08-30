@@ -75,6 +75,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
     private final JsonValidateUtil validator = new JsonValidateUtil();
     private final String kwFilePath;
     private final String compilerPath;
+    private final String cppStandard;
     private State state = State.READ_FILENAME_LENGTH;
 
     private int filenameLength;
@@ -94,11 +95,14 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
      * Constructs a RequestProcessor with the given keyword file path
      * for judge server processing.
      *
-     * @param kwFilePath path to the keyword file used by JudgeServer
+     * @param kwFilePath   path to the keyword file used by JudgeServer
+     * @param compilerPath path to the compiler used by JudgeServer
+     * @param cppStandard  C++ standard version used by JudgeServer
      */
-    public RequestProcessor(String kwFilePath,String compilerPath) {
+    public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard) {
         this.kwFilePath = kwFilePath;
         this.compilerPath = compilerPath;
+        this.cppStandard = cppStandard;
     }
 
     /**
@@ -303,7 +307,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
             return;
         }
 
-        String response = JudgeServer.serve(jsonConfig, compilerPath, tempFile, new File(kwFilePath));
+        String response = JudgeServer.serve(jsonConfig, compilerPath, cppStandard, tempFile, new File(kwFilePath));
         log.info("JudgeServer response: {}", response);
         sendResponse(ctx, response);
         cleanup();

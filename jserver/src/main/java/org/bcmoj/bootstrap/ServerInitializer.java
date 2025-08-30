@@ -44,7 +44,7 @@ public class ServerInitializer {
             return;
         }
         initKeywordFile(config.kwFile);
-        startServer(config.host, config.port, config.kwFile, config.compilerPath);
+        startServer(config.host, config.port, config.kwFile, config.compilerPath, config.cppStandard);
     }
     private static void configureLogging(boolean debug) {
         if (debug) {
@@ -69,9 +69,10 @@ public class ServerInitializer {
         String portStr = props.getProperty("port");
         String kwFile = props.getProperty("kwfile");
         String compilerPath = props.getProperty("CompilerPath");
+        String cppStandard = props.getProperty("CppStandard");
 
         // Load missing properties from config file
-        if (configFilePath != null && (isBlank(host) || isBlank(portStr) || isBlank(kwFile) || isBlank(compilerPath))) {
+        if (configFilePath != null && (isBlank(host) || isBlank(portStr) || isBlank(kwFile) || isBlank(compilerPath) || isBlank(cppStandard))) {
             Properties fileProps = new Properties();
             try (FileInputStream fis = new FileInputStream(configFilePath)) {
                 fileProps.load(fis);
@@ -79,6 +80,7 @@ public class ServerInitializer {
                 if (isBlank(portStr)) portStr = fileProps.getProperty("ServerPort");
                 if (isBlank(kwFile)) kwFile = fileProps.getProperty("KeywordsFile");
                 if (isBlank(compilerPath)) compilerPath = fileProps.getProperty("CompilerPath");
+                if (isBlank(cppStandard)) cppStandard = fileProps.getProperty("CppStandard");
                 log.info("Loaded missing parameters from config file: {}", configFilePath);
             } catch (IOException e) {
                 throw new IllegalArgumentException("Failed to load config file '" + configFilePath + "': " + e.getMessage());
@@ -95,8 +97,11 @@ public class ServerInitializer {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid port number: " + portStr);
         }
+        // defaults
         if (isBlank(compilerPath)) compilerPath = "g++";
-        return new ServerConfig(host, port, kwFile, compilerPath);
+        if (isBlank(cppStandard)) cppStandard = "c++11";
+
+        return new ServerConfig(host, port, kwFile, compilerPath, cppStandard);
     }
 
     private static void initKeywordFile(String kwFile) {
@@ -119,11 +124,12 @@ public class ServerInitializer {
      * @param port         server port
      * @param kwFile       path to keyword file
      * @param compilerPath path to C++ compiler (default "g++" if not provided)
+     * @param cppStandard  C++ standard version
      */
-    private static void startServer(String host, int port, String kwFile, String compilerPath) {
+    private static void startServer(String host, int port, String kwFile, String compilerPath, String cppStandard) {
         try {
             log.info("Starting server...");
-            SocketServer server = new SocketServer(host, port, kwFile, compilerPath);
+            SocketServer server = new SocketServer(host, port, kwFile, compilerPath, cppStandard);
             server.start();
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
         } catch (Exception e) {
@@ -144,12 +150,14 @@ public class ServerInitializer {
         final int port;
         final String kwFile;
         final String compilerPath;
+        final String cppStandard;
 
-        ServerConfig(String host, int port, String kwFile, String compilerPath) {
+        ServerConfig(String host, int port, String kwFile, String compilerPath, String cppStandard) {
             this.host = host;
             this.port = port;
             this.kwFile = kwFile;
             this.compilerPath = compilerPath;
+            this.cppStandard = cppStandard;
         }
     }
 }

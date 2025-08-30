@@ -29,6 +29,7 @@ public class Task implements Callable<Judger.JudgeResult> {
 
     private final File cppFilePath;
     private final String compilerPath;
+    private final String cppStandard;
     private final String inputContent;
     private final String outputContent;
     private final int timeLimit;
@@ -36,8 +37,9 @@ public class Task implements Callable<Judger.JudgeResult> {
     private final OutputCompareUtil.CompareMode compareMode;
     private final boolean securityCheckFailed;
 
-    public Task(File cppFilePath, String compilerPath, String inputContent, String outputContent, int timeLimit, boolean enableO2, OutputCompareUtil.CompareMode compareMode, boolean securityCheckFailed) {
+    public Task(File cppFilePath, String compilerPath, String cppStandard, String inputContent, String outputContent, int timeLimit, boolean enableO2, OutputCompareUtil.CompareMode compareMode, boolean securityCheckFailed) {
         this.cppFilePath = cppFilePath;
+        this.cppStandard = cppStandard;
         this.inputContent = inputContent;
         this.outputContent = outputContent;
         this.timeLimit = timeLimit;
@@ -61,7 +63,7 @@ public class Task implements Callable<Judger.JudgeResult> {
             return new Judger.JudgeResult(-5, 0.0);
         }
         try {
-            return Judger.judge(cppFilePath, compilerPath, inputContent, outputContent, timeLimit, enableO2, compareMode);
+            return Judger.judge(cppFilePath, compilerPath, cppStandard, inputContent, outputContent, timeLimit, enableO2, compareMode);
         } catch (Exception e) {
             log.error("JudgeTask exception: {}", e.getMessage());
             return new Judger.JudgeResult(5, 0.0);
