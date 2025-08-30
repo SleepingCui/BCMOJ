@@ -55,9 +55,9 @@ public class ServerInitializer {
             log.debug("Host: {}", host);
             log.debug("Port: {}", portStr);
             log.debug("Keyword file: {}", kwFile);
-            log.debug("Compiler path: {}", compilerPath);
-            log.debug("C++ standard: {}", cppStandard);
-            log.debug("Config file: {}", configFilePath);
+            log.debug("Compiler path: {}", compilerPath.equals("g++") ? compilerPath + " (default value)" : compilerPath);
+            log.debug("C++ standard: {}", cppStandard.equals("c++11") ? cppStandard + " (default value)" : cppStandard);
+            log.debug("Config file: {}", configFilePath != null ? configFilePath : "none");
             log.debug("--------------------------------");
         }
 
