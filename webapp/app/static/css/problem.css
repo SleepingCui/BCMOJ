@@ -181,3 +181,15 @@ button.btn-submit:hover {
 .animate-fade-in {
     animation: fadeIn 0.5s ease forwards;
 }
+
+@font-face {
+    font-family: "STIX2Math";   /* 字体名字和 MathJax 配置里保持一致 */
+    src: url("/static/fonts/STIX2Math.otf") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* MathJax 渲染的公式使用这个字体 */
+mjx-container, .mjx-chtml {
+    font-family: "STIX2Math", serif !important;
+}

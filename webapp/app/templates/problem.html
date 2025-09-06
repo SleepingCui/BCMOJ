@@ -6,6 +6,22 @@
 <title>{{ problem.title }} - 提交代码</title>
 <link rel="stylesheet" href="/static/css/github.min.css">
 <link rel="stylesheet" href="/static/css/problem.css">
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  },
+  options: {
+    renderActions: {
+      addFont: [() => {
+        document.body.style.setProperty('--mjx-math-font', 'STIX2Math');
+      }, 1]
+    }
+  }
+};
+
+</script>
+<script src="/static/js/tex-mml-chtml.js"></script>
 </style>
 </head>
 <body>
@@ -69,7 +85,6 @@
 </div>
 
 <script src="/static/js/marked.min.js"></script>
-<script src="/static/js/tex-mml-chtml.js"></script>
 <script src="/static/js/problem.js"></script>
 
 </body>
