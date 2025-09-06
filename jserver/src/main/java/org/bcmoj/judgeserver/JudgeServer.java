@@ -68,6 +68,9 @@ public class JudgeServer {
      */
     public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath) {
         ObjectMapper mapper = new ObjectMapper();
+        File tempDir = null;
+        File exeFile = null;
+        ExecutorService executor = null;
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
             JsonNode checkpoints = config.checkpoints;
@@ -80,21 +83,25 @@ public class JudgeServer {
                 securityCheckFailed = (securityCheckResult == -5);
                 if (securityCheckFailed) {
                     log.warn("Security check failed for file: {}", cppFilePath.getName());
+                    return JudgeResultUtil.buildResult(null, true, false, checkpointsCount);
                 }
             } else {
-                securityCheckFailed = false;
                 log.info("Code Security Check is not enabled");
             }
 
-            File tempDir = Files.createTempDirectory("judge_").toFile();
+            tempDir = Files.createTempDirectory("judge_").toFile();
             String exeName = java.util.UUID.randomUUID().toString().replace("-", "");
             if (System.getProperty("os.name").toLowerCase().contains("win")) exeName += ".exe";
-            File exeFile = new File(tempDir, exeName);
+            exeFile = new File(tempDir, exeName);
 
             log.info("Compiling file: {}...", cppFilePath.getAbsolutePath());
             int compileCode = Compiler.compileProgram(cppFilePath, exeFile, config.enableO2, 10_000, compilerPath, cppStandard);
             if (compileCode != 0) {
-                return JudgeResultUtil.buildResult(null, securityCheckFailed, false, checkpointsCount);
+                List<Judger.JudgeResult> compileFailResults = new ArrayList<>();
+                for (int i = 0; i < checkpointsCount; i++) {
+                    compileFailResults.add(new Judger.JudgeResult(-4, 0.0));
+                }
+                return JudgeResultUtil.buildResult(compileFailResults, false, false, checkpointsCount);
             }
 
             OutputCompareUtil.CompareMode mode = switch (config.compareMode) {
@@ -103,20 +110,16 @@ public class JudgeServer {
                 case 4 -> OutputCompareUtil.CompareMode.FLOAT_TOLERANT;
                 default -> OutputCompareUtil.CompareMode.STRICT;
             };
-            ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
-            List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
 
-            final File exeFileFinal = exeFile;
+            executor = Executors.newFixedThreadPool(checkpointsCount);
+            List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
             for (int i = 1; i <= checkpointsCount; i++) {
                 final String input = checkpoints.get(i + "_in").asText();
                 final String output = checkpoints.get(i + "_out").asText();
-
-                Future<Judger.JudgeResult> future = executor.submit(() -> {
-                    if (securityCheckFailed) {
-                        return new Judger.JudgeResult(-5, 0.0);
-                    }
-                    return Judger.judge(exeFileFinal, input, output, config.timeLimit, mode);
-                });
+                File finalExeFile = exeFile;
+                Future<Judger.JudgeResult> future = executor.submit(() ->
+                        Judger.judge(finalExeFile, input, output, config.timeLimit, mode)
+                );
                 futures.add(future);
             }
             executor.shutdown();
@@ -130,7 +133,6 @@ public class JudgeServer {
                     results.add(new Judger.JudgeResult(5, 0.0));
                 }
             }
-
             log.info("========== Results ==========");
             for (int i = 0; i < results.size(); i++) {
                 Judger.JudgeResult result = results.get(i);
@@ -139,11 +141,16 @@ public class JudgeServer {
             FileUtil.deleteRecursively(exeFile);
             FileUtil.deleteRecursively(tempDir);
 
-            return JudgeResultUtil.buildResult(results, securityCheckFailed, false, checkpointsCount);
+            return JudgeResultUtil.buildResult(results, false, false, checkpointsCount);
 
         } catch (Exception e) {
             log.error("Failed to execute judge tasks: {}", e.getMessage(), e);
             return JudgeResultUtil.buildResult(null, false, true, 1);
+        }
+        finally {
+            if (executor != null && !executor.isShutdown()) { executor.shutdownNow();}
+            if (exeFile != null) { FileUtil.deleteRecursively(exeFile); }
+            if (tempDir != null) { FileUtil.deleteRecursively(tempDir); }
         }
     }
 

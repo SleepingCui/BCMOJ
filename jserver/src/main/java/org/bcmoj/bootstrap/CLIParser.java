@@ -44,5 +44,6 @@ public class CLIParser {
     public static void printHelp() {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("java -jar BCMOJ.jar", options, true);
+        System.out.println("\nNote: Command line parameters have higher priority than config file values.");
     }
 }
