@@ -28,9 +28,9 @@ public class PropertiesExportUtil {
         String cppStandard = cmdLineProps.getProperty("std", cmdLineProps.getProperty("CppStandard", "c++11"));
 
         Properties propsToExport = new Properties();
-        propsToExport.setProperty("ServerIP", host);
-        propsToExport.setProperty("ServerPort", port);
-        propsToExport.setProperty("KeywordsFile", kwFile);
+        propsToExport.setProperty("host", host);
+        propsToExport.setProperty("port", port);
+        propsToExport.setProperty("kwfile", kwFile);
         propsToExport.setProperty("CompilerPath", compilerPath);
         propsToExport.setProperty("CppStandard", cppStandard);
 

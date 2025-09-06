@@ -6,39 +6,32 @@ import org.bcmoj.utils.StringUtil;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.UUID;
 
 /**
- * Core judging engine for C++ programs.
+ * Judger provides methods to evaluate a compiled C++ executable against test cases.
  *
- * <p>This class handles the entire judging process including:
+ * <p>This class defines standard status codes and the {@link JudgeResult} class for
+ * reporting the outcome of each test case.</p>
+ *
+ * <p>It supports multi-threaded judging by allowing each thread to run a copy of the
+ * original executable to avoid conflicts.</p>
+ *
+ * Status codes:
  * <ul>
- *   <li>Compiling the submitted program</li>
- *   <li>Running the executable with provided input</li>
- *   <li>Comparing the output with the expected output</li>
- *   <li>Returning a status code based on the result</li>
+ *     <li>-4: Compile Error</li>
+ *     <li>-3: Wrong Answer</li>
+ *     <li>2: Real Time Limit Exceeded</li>
+ *     <li>4: Runtime Error</li>
+ *     <li>5: System Error</li>
+ *     <li>1: Accepted</li>
  * </ul>
  *
- * <p>Temporary directories and files are automatically cleaned up
- * after judging is complete.</p>
- *
- * <p>Logging is provided for compilation, execution, and cleanup stages.</p>
- *
- * <p>Status codes:</p>
- * <ul>
- *   <li>COMPILE_ERROR = -4</li>
- *   <li>WRONG_ANSWER = -3</li>
- *   <li>REAL_TIME_LIMIT_EXCEEDED = 2</li>
- *   <li>RUNTIME_ERROR = 4</li>
- *   <li>SYSTEM_ERROR = 5</li>
- *   <li>ACCEPTED = 1</li>
- * </ul>
- *
+ * Comparison modes are defined in {@link OutputCompareUtil.CompareMode}.
  * @author SleepingCui
  */
 @Slf4j
 public class Judger {
+
     public static final int COMPILE_ERROR = -4;
     public static final int WRONG_ANSWER = -3;
     public static final int REAL_TIME_LIMIT_EXCEEDED = 2;
@@ -57,35 +50,24 @@ public class Judger {
         }
     }
 
-    /**
-     * Judges a submitted C++ program against a test case.
-     *
-     * @param programPath           path to the source code file
-     * @param compilerPath          path to the compiler
-     * @param cppStandard           C++ standard version
-     * @param inputContent          test input string
-     * @param expectedOutputContent expected output string
-     * @param time                  time limit in milliseconds
-     * @param enableO2              whether to enable O2 optimization
-     * @param compareMode           output comparison mode
-     * @return JudgeResult containing status code and execution time
-     */
-    public static JudgeResult judge(File programPath, String compilerPath, String cppStandard, String inputContent, String expectedOutputContent, int time, boolean enableO2, OutputCompareUtil.CompareMode compareMode) {
-        File executableFile = null;
-        try {
-            Path tempDir = Files.createTempDirectory("judge_");
-            String exeName = UUID.randomUUID().toString().replace("-", "");
-            if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                exeName += ".exe";
-            }
-            executableFile = new File(tempDir.toFile(), exeName);
-            log.info("Compiling program: {} with cpp standard: {} and O2 optimization: {} using compiler: {}", executableFile.getName(), cppStandard, enableO2, (compilerPath != null ? compilerPath : "g++"));
-            int compileCode = Compiler.compileProgram(programPath, executableFile, enableO2, 10_000, compilerPath, cppStandard);
-            if (compileCode != 0) {
-                return new JudgeResult(COMPILE_ERROR, 0.0);
-            }
 
-            Runner.RunResult runResult = Runner.runProgram(executableFile, StringUtil.unescapeString(inputContent), time);
+    /**
+     * Judges a compiled C++ executable against a single test case.
+     *
+     * @param originalExe The compiled executable file
+     * @param inputContent The input string for the test case
+     * @param expectedOutputContent The expected output string
+     * @param time Time limit in milliseconds
+     * @param compareMode Output comparison mode
+     * @return {@link JudgeResult} containing status code and execution time
+     */
+    public static JudgeResult judge(File originalExe, String inputContent, String expectedOutputContent, int time, OutputCompareUtil.CompareMode compareMode) {
+        File tempExe = null;
+        try {
+            tempExe = Files.createTempFile("exe_copy_", System.getProperty("os.name").toLowerCase().contains("win") ? ".exe" : "").toFile();
+            Files.copy(originalExe.toPath(), tempExe.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Runner.RunResult runResult = Runner.runProgram(tempExe, StringUtil.unescapeString(inputContent), time);
+
             if (runResult.exitCode != 0) {
                 log.warn("Runtime error, exit code {}", runResult.exitCode);
                 return new JudgeResult(RUNTIME_ERROR, runResult.elapsedTime);
@@ -101,35 +83,11 @@ public class Judger {
             log.error("System error: {}", e.getMessage(), e);
             return new JudgeResult(SYSTEM_ERROR, 0.0);
         } finally {
-            try {
-                if (executableFile != null) {
-                    File parent = executableFile.getParentFile();
-                    if (parent != null && parent.getName().startsWith("judge_")) {
-                        deleteRecursively(parent);
-                    } else {
-                        deleteRecursively(executableFile);
-                    }
-                }
-            } catch (Exception ex) {
-                log.warn("Failed to clean up temp files: {}", ex.getMessage(), ex);
-            }
-        }
-    }
-
-    private static void deleteRecursively(File file) {
-        if (file == null || !file.exists()) return;
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteRecursively(child);
+            if (tempExe != null && tempExe.exists()) {
+                if (!tempExe.delete()) {
+                    log.warn("Failed to delete temp exe copy: {}", tempExe.getAbsolutePath());
                 }
             }
-        }
-        if (!file.delete()) {
-            log.warn("Failed to delete: {}", file.getAbsolutePath());
-        } else {
-            log.debug("Deleted: {}", file.getAbsolutePath());
         }
     }
 }

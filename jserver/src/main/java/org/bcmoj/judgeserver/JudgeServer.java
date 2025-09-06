@@ -3,31 +3,25 @@ package org.bcmoj.judgeserver;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.bcmoj.judger.Compiler;
 import org.bcmoj.judger.Judger;
 import org.bcmoj.security.RegexSecurityCheck;
 import org.bcmoj.security.SecurityChecker;
 import org.bcmoj.utils.JudgeResultUtil;
 import org.bcmoj.utils.OutputCompareUtil;
+import org.bcmoj.utils.FileUtil;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 /**
- * JudgeServer handles execution of submitted C++ programs against multiple test cases (checkpoints),
- * optionally performing security checks and output comparison.
+ * JudgeServer is responsible for handling the judging process of submitted C++ programs
+ * against multiple test case checkpoints.
  *
- * <p>This class parses a JSON configuration containing time limits, checkpoints, security check flag,
- * optimization flag, and output comparison mode. It executes each test case concurrently and
- * aggregates the results.</p>
- *
- * <p>Security check uses {@link SecurityChecker} implementation {@link RegexSecurityCheck}.</p>
- *
- * <p>Status codes returned by {@link Judger}:</p>
+ * <p>Status codes returned by {@link Judger} and used in results:</p>
  * <ul>
  *     <li>-5: Security Check Failed</li>
  *     <li>-4: Compile Error</li>
@@ -38,7 +32,6 @@ import java.util.concurrent.Future;
  *     <li>1: Accepted</li>
  * </ul>
  *
- * <p>Output comparison uses {@link org.bcmoj.utils.OutputCompareUtil}.</p>
  * <p>Output comparison modes:</p>
  * <ul>
  *     <li>1: STRICT (default)</li>
@@ -46,6 +39,9 @@ import java.util.concurrent.Future;
  *     <li>3: CASE_INSENSITIVE</li>
  *     <li>4: FLOAT_TOLERANT</li>
  * </ul>
+ *
+ * <p>This implementation compiles the source code only once and runs multiple threads for
+ * each checkpoint, which reduces compilation overhead and resource usage.</p>
  *
  * @author SleepingCui
  */
@@ -63,34 +59,42 @@ public class JudgeServer {
     /**
      * Serves judging requests for a C++ program.
      *
-     * <p>It parses the JSON configuration, optionally runs security check, executes the program
-     * on each checkpoint concurrently, and aggregates results into a JSON string.</p>
-     *
      * @param jsonConfig       JSON string containing checkpoints, time limits, and flags
      * @param cppFilePath      path to the submitted C++ source file
      * @param keywordsFilePath path to the keyword file used for security check
      * @param compilerPath     path to the compiler
      * @param cppStandard      C++ standard version
-     * @return JSON string representing aggregated judge results, including checkpoint results,
-     *         security check status
+     * @return JSON string representing aggregated judge results
      */
-        public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath) {
+    public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Config config = mapper.readValue(jsonConfig, Config.class);
             JsonNode checkpoints = config.checkpoints;
             int checkpointsCount = checkpoints.size() / 2;
-            ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
-            List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
 
             boolean securityCheckFailed;
             if (config.securityCheck) {
                 SecurityChecker checker = new RegexSecurityCheck();
                 int securityCheckResult = checker.check(cppFilePath, keywordsFilePath);
                 securityCheckFailed = (securityCheckResult == -5);
+                if (securityCheckFailed) {
+                    log.warn("Security check failed for file: {}", cppFilePath.getName());
+                }
             } else {
                 securityCheckFailed = false;
                 log.info("Code Security Check is not enabled");
+            }
+
+            File tempDir = Files.createTempDirectory("judge_").toFile();
+            String exeName = java.util.UUID.randomUUID().toString().replace("-", "");
+            if (System.getProperty("os.name").toLowerCase().contains("win")) exeName += ".exe";
+            File exeFile = new File(tempDir, exeName);
+
+            log.info("Compiling file: {}...", cppFilePath.getAbsolutePath());
+            int compileCode = Compiler.compileProgram(cppFilePath, exeFile, config.enableO2, 10_000, compilerPath, cppStandard);
+            if (compileCode != 0) {
+                return JudgeResultUtil.buildResult(null, securityCheckFailed, false, checkpointsCount);
             }
 
             OutputCompareUtil.CompareMode mode = switch (config.compareMode) {
@@ -99,32 +103,46 @@ public class JudgeServer {
                 case 4 -> OutputCompareUtil.CompareMode.FLOAT_TOLERANT;
                 default -> OutputCompareUtil.CompareMode.STRICT;
             };
+            ExecutorService executor = Executors.newFixedThreadPool(checkpointsCount);
+            List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
 
+            final File exeFileFinal = exeFile;
             for (int i = 1; i <= checkpointsCount; i++) {
-                String inputContent = checkpoints.get(i + "_in").asText();
-                String outputContent = checkpoints.get(i + "_out").asText();
-                Task task = new Task(cppFilePath, compilerPath, cppStandard, inputContent, outputContent, config.timeLimit, config.enableO2, mode, securityCheckFailed);
-                futures.add(executor.submit(task));
-            }
+                final String input = checkpoints.get(i + "_in").asText();
+                final String output = checkpoints.get(i + "_out").asText();
 
+                Future<Judger.JudgeResult> future = executor.submit(() -> {
+                    if (securityCheckFailed) {
+                        return new Judger.JudgeResult(-5, 0.0);
+                    }
+                    return Judger.judge(exeFileFinal, input, output, config.timeLimit, mode);
+                });
+                futures.add(future);
+            }
             executor.shutdown();
+
             List<Judger.JudgeResult> results = new ArrayList<>();
             for (Future<Judger.JudgeResult> future : futures) {
                 try {
                     results.add(future.get());
                 } catch (InterruptedException | ExecutionException e) {
-                    log.error(e.getMessage());
+                    log.error("Checkpoint execution error: {}", e.getMessage(), e);
                     results.add(new Judger.JudgeResult(5, 0.0));
                 }
             }
+
             log.info("========== Results ==========");
             for (int i = 0; i < results.size(); i++) {
                 Judger.JudgeResult result = results.get(i);
                 log.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, StatusDescription(result.statusCode), result.time);
             }
+            FileUtil.deleteRecursively(exeFile);
+            FileUtil.deleteRecursively(tempDir);
+
             return JudgeResultUtil.buildResult(results, securityCheckFailed, false, checkpointsCount);
+
         } catch (Exception e) {
-            log.error("Failed to execute judge tasks: {}", e.getMessage());
+            log.error("Failed to execute judge tasks: {}", e.getMessage(), e);
             return JudgeResultUtil.buildResult(null, false, true, 1);
         }
     }

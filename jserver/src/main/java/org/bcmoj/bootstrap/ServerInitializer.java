@@ -9,24 +9,26 @@ import org.bcmoj.utils.KeywordFileUtil;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
- * This class is responsible for initializing and starting the BCMOJ server.
- * It handles command line arguments, optional configuration file loading,
- * logging configuration, keyword file initialization, and server startup.
+ * Initializes and starts the BCMOJ Judge Server.
+ * Handles command line arguments, config file, logging, keyword file, and server startup.
  */
 @Slf4j
 public class ServerInitializer {
+
     public static void start(CommandLine cmd) {
         boolean debug = cmd.hasOption("debug");
         configureLogging(debug);
-
-        Properties props = new Properties();
-        String configFilePath = cmd.getOptionValue("config");
+        Properties props = CLIParser.toProperties(cmd);
+        String configFilePath = props.getProperty("config");
         if (configFilePath != null) {
             try (FileInputStream fis = new FileInputStream(configFilePath)) {
-                props.load(fis);
+                Properties fileProps = new Properties();
+                fileProps.load(fis);
+                fileProps.forEach(props::putIfAbsent);
                 log.info("Loaded config file: {}", configFilePath);
             } catch (IOException e) {
                 log.error("Failed to load config file '{}': {}", configFilePath, e.getMessage());
@@ -34,22 +36,16 @@ public class ServerInitializer {
             }
         }
 
-        if (cmd.hasOption("host")) props.setProperty("host", cmd.getOptionValue("host"));
-        if (cmd.hasOption("port")) props.setProperty("port", cmd.getOptionValue("port"));
-        if (cmd.hasOption("kwfile")) props.setProperty("kwfile", cmd.getOptionValue("kwfile"));
-        if (cmd.hasOption("comp")) props.setProperty("CompilerPath", cmd.getOptionValue("comp"));
-        if (cmd.hasOption("std")) props.setProperty("CppStandard", cmd.getOptionValue("std"));
-
-        // default values
-        props.putIfAbsent("CompilerPath", "g++");
-        props.putIfAbsent("CppStandard", "c++11");
-
         String host = props.getProperty("host");
         String portStr = props.getProperty("port");
         String kwFile = props.getProperty("kwfile");
-        String compilerPath = props.getProperty("CompilerPath");
-        String cppStandard = props.getProperty("CppStandard");
-
+        String compilerPath = props.getProperty("CompilerPath", "g++");
+        String cppStandard = props.getProperty("CppStandard", "c++11");
+        if ((host == null || portStr == null || kwFile == null) && configFilePath == null) {
+            log.error("Missing required parameters: host={}, port={}, kwfile={}", host, portStr, kwFile);
+            CLIParser.printHelp();
+            System.exit(1);
+        }
         if (debug) {
             log.debug("--------------------------------");
             log.debug("Host: {}", host);
@@ -61,13 +57,9 @@ public class ServerInitializer {
             log.debug("--------------------------------");
         }
 
-        if (isBlank(host) || isBlank(portStr) || isBlank(kwFile)) {
-            log.error("Missing required parameters: host={}, port={}, kwfile={}", host, portStr, kwFile);
-            System.exit(1);
-        }
         int port;
         try {
-            port = Integer.parseInt(portStr);
+            port = Integer.parseInt(Objects.requireNonNull(portStr));
         } catch (NumberFormatException e) {
             log.error("Invalid port number: {}", portStr);
             System.exit(1);
@@ -114,9 +106,5 @@ public class ServerInitializer {
             log.error("Failed to start server: {}", e.getMessage());
             System.exit(1);
         }
-    }
-
-    private static boolean isBlank(String s) {
-        return s == null || s.isBlank();
     }
 }
