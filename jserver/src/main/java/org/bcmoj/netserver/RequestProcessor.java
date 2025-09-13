@@ -110,9 +110,6 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
         this.cppStandard = cppStandard;
     }
 
-
-
-
     /**
      * Called when the channel is active (client connected).
      * Sets MDC context for logging.

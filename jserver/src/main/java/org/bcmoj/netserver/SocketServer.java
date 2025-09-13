@@ -69,6 +69,7 @@ public class SocketServer {
      *
      * @throws InterruptedException if the thread is interrupted during startup or operation
      */
+
     public void start() throws InterruptedException {
         bossGroup = new NioEventLoopGroup(1);
         workerGroup = new NioEventLoopGroup();
