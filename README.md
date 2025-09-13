@@ -9,20 +9,25 @@
 > [!WARNING]
 > **这个项目目前处于开发阶段,可能存在未经查明的bug
 > 如果您发现任何bug，请在[issue](https://github.com/SleepingCui/BCMOJ/issues)中反馈。**
-### **BCMOJ** ———一个轻量化的在线代码评测系统<sub>~~(几位初中生花100+h堆石山代码堆出来的玩意)~~</sub>
+---
+## **BCMOJ** ———一个轻量化的在线代码评测系统<sub>~~(几位初中生花100+h堆石山代码堆出来的玩意)~~</sub>
+**这坨石山囊括了许多是个oj都有的功能**
+- 多模式判题
+- Markdown + LaTex 支持
+- 微服务架构,WebApp与JudgeServer分离
 
 ---
-
-## 项目架构
-<p align="center">
-  <img src="https://raw.githubusercontent.com/SleepingCui/BCMOJ/master/imgs/md1.svg" alt="System Architecture" width="50%"/>
-</p>
 
 ## 安装&使用
 
 ### 详见[Wiki](https://github.com/SleepingCui/BCMOJ/wiki)
 
 ---
+
+## 致谢
+- 感谢[@MxingFoew1034](https://github.com/MxingFoew1034)在代码方面的支持和协作
+- 感谢[@LeiXu](https://github.com/853683892)在架构方面的支持
+- 以及本项目中使用的[第三方库](./docs/ThirdParty.md)。
 
 ## ScreenShots
 
