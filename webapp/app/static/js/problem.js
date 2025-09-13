@@ -40,26 +40,26 @@ function showToast(message, type='info'){
 }
 
 function loadRequiredLibs(){
-  console.log('[LoadLibs] Checking required libraries...');
+  console.log('[Libs] Checking required libraries...');
   return new Promise(resolve=>{
-    if(typeof marked!=='undefined' && typeof MathJax!=='undefined'){ 
-      console.log('[LoadLibs] marked & MathJax already loaded');
+    if(typeof marked!=='undefined' && typeof renderMathInElement!=='undefined'){ 
+      console.log('[Libs] marked & KaTeX already loaded');
       resolve(); 
       return; 
     }
     let loaded=0; const total=2;
     const check=()=>{loaded++; console.log(`[LoadLibs] loaded ${loaded}/${total}`); if(loaded===total) resolve();}
     if(typeof marked==='undefined'){ 
-      console.log('[LoadLibs] Loading marked.js'); 
+      console.log('[Libs] Loading marked.js'); 
       let s=document.createElement('script'); 
       s.src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'; 
       s.onload=check; 
       document.head.appendChild(s); 
     } else check();
-    if(typeof MathJax==='undefined'){ 
-      console.log('[LoadLibs] Loading MathJax'); 
+    if(typeof renderMathInElement==='undefined'){ 
+      console.log('[Libs] Loading KaTeX'); 
       let s=document.createElement('script'); 
-      s.src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'; 
+      s.src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js'; 
       s.onload=check; 
       document.head.appendChild(s); 
     } else check();
@@ -74,8 +74,18 @@ function renderContent() {
       try {
           desc.innerHTML = marked.parse(desc.textContent);
           console.log('[Render] Markdown parsed');
-          if (typeof MathJax !== 'undefined') {
-              MathJax.typesetPromise([desc]).then(()=>console.log('[Render] MathJax typeset complete'));
+
+          if (typeof renderMathInElement !== 'undefined') {
+              renderMathInElement(desc, {
+                  delimiters: [
+                      { left: "$$", right: "$$", display: true },
+                      { left: "$", right: "$", display: false },
+                      { left: "\\(", right: "\\)", display: false },
+                      { left: "\\[", right: "\\]", display: true }
+                  ],
+                  throwOnError: false
+              });
+              console.log('[Render] KaTeX render complete');
           }
       } catch (e) {
           desc.innerHTML = orig;

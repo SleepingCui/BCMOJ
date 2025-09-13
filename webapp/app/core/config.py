@@ -48,8 +48,6 @@ class ConfigManager:
             'email_password': 'password',
             'email_smtp_server': 'smtp.example.com',
             'email_smtp_port': 587
-        }, {
-            'email_smtp_port': 'TLS port'
         })
         add_section_header(email_config, section_comment("Email Configuration"))
         config['email_config'] = email_config
@@ -66,12 +64,10 @@ class ConfigManager:
             'secret_key': 'your_secret_key_here',
             'upload_folder': 'tmp',
             'userdata_folder': 'userdata',
-            'uwsgi_stats_url': 'http://0.0.0.0:9191',
             'gunicorn_workers': 4,
             'disable_color_log': False
         }, {
             'secret_key': 'Used for session encryption, set to a strong random string',
-            'uwsgi_stats_url': 'uWSGI stats server URL for monitoring'
         })
         add_section_header(app_settings, section_comment("Application Settings"))
         config['app_settings'] = app_settings

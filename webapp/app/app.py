@@ -254,15 +254,6 @@ def about():
 def get_contributors():
     return fetch_contributors()
 
-#uwsgi STATUS
-@app.route('/uwsgi_stats')
-def uwsgi_stats():
-    return render_template('uwsgi_stats.html')
-
-@app.route('/uwsgi_stats/data')
-def uwsgi_stats_data():
-    return get_uwsgi_stats_data()
-
 @app.route('/check_update')
 @login_required
 def check_update():
