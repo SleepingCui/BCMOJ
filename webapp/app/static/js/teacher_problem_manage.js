@@ -112,7 +112,7 @@ function renderProblemEditor(p) {
     const description = p.description || ''
     const time_limit = p.time_limit || 1000
     const example_visible_count = p.example_visible_count ?? 2
-    const compare_mode = p.compare_mode || 1   // 新增
+    const compare_mode = p.compare_mode || 1
     const examples = Array.isArray(p.examples) ? p.examples : []
 
     div.innerHTML = `
@@ -158,7 +158,7 @@ function addProblemForm() {
         <hr>
         <input placeholder="标题" style="width: 100%;"><br><br>
         <label>题目描述：</label><br>
-        <textarea placeholder="描述" style="width: 100%; height: 150px;"></textarea><br><br>
+        <textarea placeholder="支持Markdown和LaTeX 公式示例: $ x ={-b \\pm \\sqrt{b^2-4ac}\\over 2a} $" style="width: 100%; height: 150px;"></textarea><br><br>
         时间限制(ms): <input type="number" value="1000"><br><br>
         判题模式:
         <select id="compareModeSelect">
@@ -214,9 +214,7 @@ function saveProblem(btn, problem_id = null) {
     const time_limit = inputs[1].value
     const compare_mode = compareModeSelect ? parseInt(compareModeSelect.value) : 1
     const example_visible_count = inputs[2] ? parseInt(inputs[2].value) || 2 : 2
-
     const exampleDivs = Array.from(parent.querySelectorAll('.examples > div'))
-
     const examples = exampleDivs.map(e => {
         const inputs = e.querySelectorAll('textarea')
         return {
