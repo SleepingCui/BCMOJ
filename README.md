@@ -29,6 +29,8 @@
 - 感谢[@LeiXu](https://github.com/853683892)在架构方面的支持
 - 以及本项目中使用的[第三方库](THIRD_PARTY_LIBS.md)。
 
+---
+
 ## ScreenShots
 
 <p align="center">
