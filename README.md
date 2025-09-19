@@ -30,7 +30,8 @@
 ## ScreenShots
 
 <p align="center">
-  <img src="/imgs/ss1.png" alt="ss1"/>
-  <img src="/imgs/ss2.png" alt="ss2"/>
-  <img src="/imgs/ss3.png" alt="ss3"/>
+  <img src="imgs/ss1.jpeg" alt="ss1"/>
+  <img src="imgs/ss2.jpeg" alt="ss2"/>
+  <img src="imgs/ss4.jpeg" alt="ss3"/>
+  <img src="imgs/ss3.jpeg" alt="ss4"/>
 </p>
