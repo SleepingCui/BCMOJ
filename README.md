@@ -13,8 +13,9 @@
 ## **BCMOJ** ———一个轻量化的在线代码评测系统<sub>~~(几位初中生花100+h堆石山代码堆出来的玩意)~~</sub>
 **这坨石山囊括了许多是个oj都有的功能**
 - 多模式判题
-- Markdown + LaTex 支持
+- Markdown + LaTeX 支持
 - 微服务架构,WebApp与JudgeServer分离
+- WSGI支持
 
 ---
 
