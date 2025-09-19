@@ -28,7 +28,9 @@
 ## 致谢
 - 感谢[@MxingFoew1034](https://github.com/MxingFoew1034)在代码方面的支持和协作
 - 感谢[@LeiXu](https://github.com/853683892)在架构方面的支持
-- 以及本项目中使用的[第三方库](THIRD_PARTY_LIBS.md)。
+- 以及本项目中使用的[第三方库](THIRD_PARTY_LIBS.md)
+
+---
 
 ## ScreenShots
 
