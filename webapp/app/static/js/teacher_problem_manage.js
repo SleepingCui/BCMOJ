@@ -2,6 +2,7 @@ async function fetchTeacherData() {
     try {
         const res = await axios.get('/teacher/api')
         const data = res.data
+        console.log('[Data] Fetched teacher data:', data)
         
         if (!data) {
             alert('获取数据失败：服务器返回空数据')
@@ -52,13 +53,13 @@ function renderProblems(problems) {
     }
     
     problems.forEach(p => {
-        if (!p.problem_id || !p.title) return
-        
-        const opt = document.createElement('option')
-        opt.value = p.problem_id
-        opt.textContent = `${p.problem_id} - ${p.title}`
-        select.appendChild(opt)
+    if (!p.problem_id) return
+    const opt = document.createElement('option')
+    opt.value = p.problem_id
+    opt.textContent = `${p.problem_id} - ${p.title || '(未命名题目)'}`
+    select.appendChild(opt)
     })
+
     
     window._problemData = problems
 }
@@ -76,42 +77,8 @@ function renderProblemEditor(p) {
 
     const title = p.title || ''
     const description = p.description || ''
-    const time_limit = p.time_limit || 1000
-    const example_visible_count = p.example_visible_count ?? 2
-    const examples = Array.isArray(p.examples) ? p.examples : []
-
-    div.innerHTML = `
-        <hr>
-        <input value="${title}" placeholder="标题" style="width: 100%;"><br><br>
-        <label>题目描述：</label><br>
-        <textarea style="width: 100%; height: 150px;">${description}</textarea><br><br>
-        时间限制(ms): <input type="number" value="${time_limit}"><br><br>
-        显示示例数量: <input type="number" value="${example_visible_count}" min="0" max="${examples.length}"><br><br>
-        <div class="examples">
-            <label>样例：</label>
-            ${examples.map(e => `
-                <div style="margin-bottom: 10px; border: 1px solid #ddd; padding: 10px; position: relative;">
-                    <button onclick="removeExample(this)" style="position: absolute; top: 5px; right: 5px; background-color: #dc3545; color: white; border: none; border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 12px;">删除</button>
-                    输入:<br>
-                    <textarea style="width: 100%; height: 80px;">${e.input || ''}</textarea><br>
-                    输出:<br>
-                    <textarea style="width: 100%; height: 80px;">${e.output || ''}</textarea>
-                </div>`).join('')}
-        </div>
-        <button onclick="addExample(this)">添加样例</button>
-        <button onclick="saveProblem(this, ${p.problem_id})">保存修改</button>
-        <button onclick="deleteProblem(${p.problem_id})" style="background-color: #dc3545;">删除题目</button>
-    `
-    container.appendChild(div)
-}function renderProblemEditor(p) {
-    const container = document.getElementById('problemEditor')
-    container.innerHTML = ''
-    const div = document.createElement('div')
-
-    const title = p.title || ''
-    const description = p.description || ''
-    const time_limit = p.time_limit || 1000
-    const example_visible_count = p.example_visible_count ?? 2
+    const time_limit = Number(p.time_limit) || 1000
+    const example_visible_count = Number(p.example_visible_count) || 2
     const compare_mode = p.compare_mode || 1
     const examples = Array.isArray(p.examples) ? p.examples : []
 
@@ -120,7 +87,7 @@ function renderProblemEditor(p) {
         <input value="${title}" placeholder="标题" style="width: 100%;"><br><br>
         <label>题目描述：</label><br>
         <textarea style="width: 100%; height: 150px;">${description}</textarea><br><br>
-        时间限制(ms): <input type="number" value="${time_limit}"><br><br>
+        时间限制(ms): <input type="number" value="${time_limit}" min="1"><br><br>
         判题模式:
         <select id="compareModeSelect">
             <option value="1" ${compare_mode == 1 ? 'selected' : ''}>STRICT (严格模式)</option>
@@ -147,7 +114,6 @@ function renderProblemEditor(p) {
     `
     container.appendChild(div)
 }
-
 
 
 function addProblemForm() {
