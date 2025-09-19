@@ -30,7 +30,7 @@
 ## ScreenShots
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/SleepingCui/BCMOJ/master/imgs/ss1.png" alt="ss1"/>
-  <img src="https://raw.githubusercontent.com/SleepingCui/BCMOJ/master/imgs/ss2.png" alt="ss2"/>
-  <img src="https://raw.githubusercontent.com/SleepingCui/BCMOJ/master/imgs/ss3.png" alt="ss3"/>
+  <img src="/imgs/ss1.png" alt="ss1"/>
+  <img src="/imgs/ss2.png" alt="ss2"/>
+  <img src="/imgs/ss3.png" alt="ss3"/>
 </p>

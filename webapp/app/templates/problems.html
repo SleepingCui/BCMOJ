@@ -127,16 +127,16 @@ window.appData = {
 {% if user_id not in ['None', ''] %}
 <div class="action-buttons">
     {% if usergroup in ['admin', 'teacher'] %}
-        <a href="/admin_results" class="btn btn-primary action-btn"><i class="bi bi-list-check"></i> 所有评测记录</a>
+        <a href="/admin_results" class="btn btn-purp action-btn"><i class="bi bi-list-check"></i> 所有评测记录</a>
     {% else %}
-        <a href="{{ url_for('results', userid=user_id) }}" class="btn btn-primary action-btn"><i class="bi bi-list-check"></i> 评测记录</a>
+        <a href="{{ url_for('results', userid=user_id) }}" class="btn btn-purp action-btn"><i class="bi bi-list-check"></i> 评测记录</a>
     {% endif %}
 
     {% if usergroup == 'admin' %}
-        <a href="{{ url_for('admin_page') }}" class="btn btn-success action-btn"><i class="bi bi-gear"></i> 管理员控制台</a>
-        <a href="{{ url_for('teacher_page') }}" class="btn btn-info action-btn"><i class="bi bi-journal-check"></i> 题目管理</a>
+        <a href="{{ url_for('admin_page') }}" class="btn btn-purp action-btn"><i class="bi bi-gear"></i> 管理员控制台</a>
+        <a href="{{ url_for('teacher_page') }}" class="btn btn-purp action-btn"><i class="bi bi-journal-check"></i> 题目管理</a>
     {% elif usergroup == 'teacher' %}
-        <a href="{{ url_for('teacher_page') }}" class="btn btn-info action-btn"><i class="bi bi-journal-check"></i> 题目管理</a>
+        <a href="{{ url_for('teacher_page') }}" class="btn btn-purp action-btn"><i class="bi bi-journal-check"></i> 题目管理</a>
     {% endif %}
 </div>
 {% endif %}
