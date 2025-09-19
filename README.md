@@ -17,13 +17,8 @@
 - 微服务架构,WebApp与JudgeServer分离
 - WSGI支持
 
----
-
 ## 安装&使用
-
 ### 详见[Wiki](https://github.com/SleepingCui/BCMOJ/wiki)
-
----
 
 ## 致谢
 - 感谢[@MxingFoew1034](https://github.com/MxingFoew1034)在代码方面的支持和协作
