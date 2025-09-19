@@ -24,7 +24,7 @@ import java.util.concurrent.*;
 @Slf4j
 public class Compiler {
 
-    public static int compileProgram(File programPath, File executableFile, boolean enableO2, long timeoutMs, String compilerPath) throws Exception {
+    public static int compileProgram(File programPath, File executableFile, boolean enableO2, long timeoutMs, String compilerPath, String cppStandard) throws Exception {
         if (System.getProperty("os.name").toLowerCase().contains("win") && !executableFile.getName().toLowerCase().endsWith(".exe")) {
             executableFile = new File(executableFile.getAbsolutePath() + ".exe");
         }
@@ -34,7 +34,7 @@ public class Compiler {
         command.add("-o");
         command.add(executableFile.getAbsolutePath());
         command.add(programPath.getAbsolutePath());
-        command.add("-std=c++11");
+        command.add("-std=" + cppStandard);
         if (enableO2) command.add("-O2");
 
         log.debug("Compile command: {}", String.join(" ", command));

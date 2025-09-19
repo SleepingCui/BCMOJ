@@ -1,56 +1,89 @@
 package org.bcmoj.netserver;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
 
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.lang.reflect.Method;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
+@RunWith(org.mockito.junit.MockitoJUnitRunner.class)
 public class RequestProcessorTest {
-    private EmbeddedChannel channel;
-    @Before
-    public void setup() {
-        channel = new EmbeddedChannel(new RequestProcessor("src/test/resources/keywords.txt","g++"));
-    }
-    @After
-    public void teardown() {
-        channel.close();
-    }
-    @Test
-    public void testFullRequestProcessing() {  //shit code
-        String filename = "0721.cpp";
-        String jsonConfig = "{\"timeLimit\":1000,\"securityCheck\":true,\"enableO2\":false,\"compareMode\":1,\"checkpoints\":{\"1_in\":\"input data for test 1\",\"1_out\":\"expected output for test 1\",\"2_in\":\"input data for test 2\",\"2_out\":\"expected output for test 2\"}}\n";
-        String dummyHash = "fuck you";
-        byte[] fileContent = "int main(){return 0;}".getBytes(StandardCharsets.UTF_8);
-        byte[] filenameBytes = filename.getBytes(StandardCharsets.UTF_8);
-        byte[] jsonBytes = jsonConfig.getBytes(StandardCharsets.UTF_8);
-        byte[] hashBytes = dummyHash.getBytes(StandardCharsets.UTF_8);
-        ByteBuf buf = Unpooled.buffer();
 
-        buf.writeInt(filenameBytes.length);
-        buf.writeBytes(filenameBytes);
-        buf.writeLong(fileContent.length);
-        buf.writeBytes(fileContent);
-        buf.writeInt(jsonBytes.length);
-        buf.writeBytes(jsonBytes);
-        buf.writeInt(hashBytes.length);
-        buf.writeBytes(hashBytes);
-        channel.writeInbound(buf);
-        Object outboundMsg = channel.readOutbound();
-        assertNotNull(outboundMsg);
-        assertTrue(outboundMsg instanceof ByteBuf);
-        ByteBuf respBuf = (ByteBuf) outboundMsg;
-        int respLen = respBuf.readInt();
-        byte[] respBytes = new byte[respLen];
-        respBuf.readBytes(respBytes);
-        String response = new String(respBytes, StandardCharsets.UTF_8);
-        assertNotNull(response);
-        assertFalse(response.isEmpty());
-        respBuf.release();
+    @Mock
+    private ChannelHandlerContext ctx;
+    private RequestProcessor processor;
+
+    @Before
+    public void setUp() {
+        processor = new RequestProcessor("kw.txt", "g++", "c++17");
+    }
+
+    @Test
+    public void testGetFileExtension() throws Exception {
+        Method m = RequestProcessor.class.getDeclaredMethod("getFileExtension", String.class);
+        m.setAccessible(true);
+        assertEquals(".cpp", m.invoke(null, "1.cpp"));
+        assertEquals("", m.invoke(null, "fuckyou"));
+        assertEquals(".gz", m.invoke(null, "shit.tar.gz"));
+    }
+
+    @Test
+    public void testParseCheckpointCount_validJson() throws Exception {
+        String json = "{ \"checkpoints\": [\"a.in\", \"b.in\"] }";
+        Method m = RequestProcessor.class.getDeclaredMethod("parseCheckpointCount", String.class);
+        m.setAccessible(true);
+        int count = (int) m.invoke(processor, json);
+        assertTrue(count >= 1);
+    }
+
+    @Test
+    public void testParseCheckpointCount_invalidJson() throws Exception {
+        String json = "1";
+        Method m = RequestProcessor.class.getDeclaredMethod("parseCheckpointCount", String.class);
+        m.setAccessible(true);
+        int count = (int) m.invoke(processor, json);
+        assertEquals(1, count); //fallback
+    }
+
+    @Test
+    public void testCleanupDeletesTempFile() throws Exception {
+        File tmp = File.createTempFile("test", ".txt");
+        assertTrue(tmp.exists());
+        java.lang.reflect.Field f = RequestProcessor.class.getDeclaredField("tempFile");
+        f.setAccessible(true);
+        f.set(processor, tmp);
+        Method m = RequestProcessor.class.getDeclaredMethod("cleanup");
+        m.setAccessible(true);
+        m.invoke(processor);
+        assertFalse(tmp.exists());
+    }
+
+    @Test
+    public void testChannelActiveAndInactive() throws Exception {
+        EmbeddedChannel channel = new EmbeddedChannel();
+        when(ctx.channel()).thenReturn(channel);
+        processor.channelActive(ctx);
+        processor.channelInactive(ctx);
+    }
+
+    @Test
+    public void testChannelRead_invalidFilenameLength() {
+        io.netty.buffer.ByteBuf buf = Unpooled.buffer();
+        buf.writeInt(-114514);
+
+        try {
+            processor.channelRead(ctx, buf);
+            fail("Expected IOException");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("Invalid filename length"));
+        }
     }
 }

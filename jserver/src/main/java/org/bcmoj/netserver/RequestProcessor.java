@@ -18,7 +18,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Netty channel handler that processes incoming client requests for
@@ -75,6 +80,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
     private final JsonValidateUtil validator = new JsonValidateUtil();
     private final String kwFilePath;
     private final String compilerPath;
+    private final String cppStandard;
     private State state = State.READ_FILENAME_LENGTH;
 
     private int filenameLength;
@@ -94,11 +100,14 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
      * Constructs a RequestProcessor with the given keyword file path
      * for judge server processing.
      *
-     * @param kwFilePath path to the keyword file used by JudgeServer
+     * @param kwFilePath   path to the keyword file used by JudgeServer
+     * @param compilerPath path to the compiler used by JudgeServer
+     * @param cppStandard  C++ standard version used by JudgeServer
      */
-    public RequestProcessor(String kwFilePath,String compilerPath) {
+    public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard) {
         this.kwFilePath = kwFilePath;
         this.compilerPath = compilerPath;
+        this.cppStandard = cppStandard;
     }
 
     /**
@@ -269,45 +278,58 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * Performs hash verification, JSON validation,
-     * calls the judge server and sends the response back to client.
-     * Closes the channel after processing.
+     * Submits a judging task to the thread pool, performing hash verification,
+     * JSON validation, invoking the judge server, and sending the result to the client.
+     * Cleans up resources and closes the channel after processing.
      *
-     * @param ctx the channel handler context
-     * @throws IOException if I/O errors occur
      */
-    private void processJudge(ChannelHandlerContext ctx) throws IOException {
-        try {
-            if (declaredHash != null) {
-                String actualHash = FileHashUtil.calculateSHA256(tempFile);
-                log.info("Actual hash: {}", actualHash);
-                if (!actualHash.equalsIgnoreCase(declaredHash)) {
-                    log.warn("File hash mismatch! Sending error result...");
-                    sendResponse(ctx, JudgeResultUtil.buildResult(List.of(), false, true, parseCheckpointCount(jsonConfig)));
-                    cleanup();
-                    ctx.close();
+    ThreadFactory namedThreadFactory = new ThreadFactory() {
+        private final AtomicInteger count = new AtomicInteger(1);
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "JudgeWorker-" + count.getAndIncrement());
+            t.setDaemon(false);
+            return t;
+        }
+    };
+    private final ExecutorService JudgeTaskExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), namedThreadFactory);
+    private void processJudge(ChannelHandlerContext ctx) {
+        Map<String, String> contextMap = MDC.getCopyOfContextMap();
+        JudgeTaskExecutor.submit(() -> {
+            if (contextMap != null) {MDC.setContextMap(contextMap);}
+            try {
+                if (declaredHash != null) {
+                    try {
+                        String actualHash = FileHashUtil.calculateSHA256(tempFile);
+                        log.info("Actual hash: {}", actualHash);
+                        if (!actualHash.equalsIgnoreCase(declaredHash)) {
+                            log.warn("File hash mismatch! Sending error result...");
+                            sendResponse(ctx, JudgeResultUtil.buildResult(List.of(), false, true, parseCheckpointCount(jsonConfig)));
+                            return;
+                        }
+                    } catch (NoSuchAlgorithmException e) {
+                        log.warn("Hash calculation failed: {}", e.getMessage());
+                    }
+                }
+                if (!validator.validate(jsonConfig)) {
+                    String errorJson = validator.getLastErrorJson();
+                    if (errorJson != null) {
+                        sendResponse(ctx, errorJson);
+                    }
                     return;
                 }
-            }
-        } catch (NoSuchAlgorithmException e) {
-            log.warn("Hash calculation failed: {}", e.getMessage());
-        }
+                String response = JudgeServer.serve(jsonConfig, compilerPath, cppStandard, tempFile, new File(kwFilePath));
+                log.info("JudgeServer response: {}", response);
+                sendResponse(ctx, response);
 
-        if (!validator.validate(jsonConfig)) {
-            String errorJson = validator.getLastErrorJson();
-            if (errorJson != null) {
-                sendResponse(ctx, errorJson);
+            } catch (Exception e) {
+                log.error("Judging failed", e);
+            } finally {
+                cleanup();
+                ctx.close();
+                MDC.clear();
             }
-            cleanup();
-            ctx.close();
-            return;
-        }
-
-        String response = JudgeServer.serve(jsonConfig, compilerPath, tempFile, new File(kwFilePath));
-        log.info("JudgeServer response: {}", response);
-        sendResponse(ctx, response);
-        cleanup();
-        ctx.close();
+        });
     }
 
     /**

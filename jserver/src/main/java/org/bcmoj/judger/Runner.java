@@ -35,8 +35,7 @@ public class Runner {
     public static RunResult runProgram(File executableFile, String inputContent, int timeLimitMs) throws IOException, InterruptedException, TimeoutException {
         String command;
         if (!System.getProperty("os.name").toLowerCase().contains("win")) {
-            boolean success = executableFile.setExecutable(true);
-            if (!success) {
+            if (!executableFile.setExecutable(true)) {
                 log.warn("Failed to set executable permission on file: {}", executableFile.getAbsolutePath());
             }
         }

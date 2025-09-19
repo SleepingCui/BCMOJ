@@ -4,12 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ problem.title }} - 提交代码</title>
-<link rel="stylesheet" href="/static/css/github.min.css">
-<link rel="stylesheet" href="/static/css/problem.css">
-</style>
-</head>
-<body>
 
+<link rel="stylesheet" href="/static/css/problem.css">
+<link rel="stylesheet" href="/static/css/github-markdown.min.css">
+<link rel="stylesheet" href="/static/css/github.min.css">
+<link rel="stylesheet" href="/static/css/katex.min.css">
+<script defer src="/static/js/katex.min.js"></script>
+<script defer src="/static/js/auto-render.min.js"></script>
+
+<body>
 <div class="toast-container"></div>
 <header class="topbar d-flex align-items-center justify-content-between px-4 py-2 shadow-sm sticky-top bg-white">
   <div class="d-flex align-items-center">
@@ -27,7 +30,7 @@
 
     <div class="description">
       <h2>题目描述</h2>
-      <div class="markdown-content" style="white-space: pre-wrap;">{{ problem.description }}</div>
+      <div class="markdown-content markdown-body" style="white-space: pre-wrap;">{{ problem.description }}</div>
       <p><strong>时间限制:</strong> {{ problem.time_limit }} ms</p>
     </div>
     <div class="examples">
@@ -45,18 +48,28 @@
       </div>
       {% endfor %}
     </div>
-    <div class="upload-area">
-      <h2>提交你的代码</h2>
-      <form id="submitForm" method="post" enctype="multipart/form-data">
-        <input type="file" name="code" id="fileInput" accept=".cpp,.c,.java,.py,.js,.go,.rs">
-        <textarea id="codePasteArea" placeholder="你也可以在这里粘贴代码..." rows="10" spellcheck="false"></textarea>
-        <p style="color: #888;">你可以拖动文件到页面任意位置，或将代码粘贴到上方文本框</p>
-        <button type="submit" class="btn-submit">提交</button>
-        <label style="margin-left:10px;">
-          <input type="checkbox" id="enableO2"> 启用 -O2 优化
-        </label>
-      </form>
+   <div class="upload-area">
+  <h2>提交你的代码</h2>
+  <form id="submitForm" method="post" enctype="multipart/form-data">
+    <input type="file" name="code" id="fileInput" accept=".cpp" style="display:none">
+
+    <textarea id="codePasteArea" placeholder="你也可以在这里粘贴代码..." rows="10" spellcheck="false"></textarea>
+    <p style="color: #888;">你可以拖动文件到页面任意位置，或将代码粘贴到上方文本框</p>
+    
+
+    <div class="upload-controls">
+      <label for="fileInput" class="file-btn">选择文件</label>
+      <button type="submit" class="btn-submit">提交</button>
+      <label class="toggle-label">
+        <span class="toggle-switch">
+          <input type="checkbox" id="enableO2">
+          <span class="slider"></span>
+          </span>
+          启用 -O2 优化
+          </label>
     </div>
+  </form>
+</div>
     <div id="resultArea" class="result-area" style="display:none;">
       <h2>评测结果</h2>
       <div id="results"></div>
@@ -69,7 +82,6 @@
 </div>
 
 <script src="/static/js/marked.min.js"></script>
-<script src="/static/js/tex-mml-chtml.js"></script>
 <script src="/static/js/problem.js"></script>
 
 </body>

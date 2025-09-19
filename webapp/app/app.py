@@ -124,12 +124,6 @@ def problems():
 
 @app.route('/problem/<int:problem_id>')
 def problem(problem_id):
-    if not logged_in():
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'error': 'unauthorized'}), 401
-        else:
-            return redirect(url_for('login', next=request.url))
-
     problem, examples = get_problem_with_examples(problem_id)
     if not problem:
         return "题目不存在", 404
@@ -138,8 +132,10 @@ def problem(problem_id):
 
 
 @app.route('/submit/<int:problem_id>', methods=['POST'])
-@login_required
 def submit(problem_id):
+    if not logged_in():
+        return jsonify({'error': 'unauthorized'}), 401
+
     cpp_file = request.files.get('code')
     result, status_code = submit_solution(problem_id, cpp_file)
     return jsonify(result), status_code
@@ -253,15 +249,6 @@ def about():
 @app.route("/api/contributors")
 def get_contributors():
     return fetch_contributors()
-
-#uwsgi STATUS
-@app.route('/uwsgi_stats')
-def uwsgi_stats():
-    return render_template('uwsgi_stats.html')
-
-@app.route('/uwsgi_stats/data')
-def uwsgi_stats_data():
-    return get_uwsgi_stats_data()
 
 @app.route('/check_update')
 @login_required

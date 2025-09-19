@@ -25,12 +25,14 @@ public class PropertiesExportUtil {
         String port = cmdLineProps.getProperty("port", "");
         String kwFile = cmdLineProps.getProperty("kwfile", "");
         String compilerPath = cmdLineProps.getProperty("comp", cmdLineProps.getProperty("CompilerPath", "g++"));
+        String cppStandard = cmdLineProps.getProperty("std", cmdLineProps.getProperty("CppStandard", "c++11"));
 
         Properties propsToExport = new Properties();
-        propsToExport.setProperty("ServerIP", host);
-        propsToExport.setProperty("ServerPort", port);
-        propsToExport.setProperty("KeywordsFile", kwFile);
+        propsToExport.setProperty("host", host);
+        propsToExport.setProperty("port", port);
+        propsToExport.setProperty("kwfile", kwFile);
         propsToExport.setProperty("CompilerPath", compilerPath);
+        propsToExport.setProperty("CppStandard", cppStandard);
 
         try (FileOutputStream fos = new FileOutputStream("exported_config.properties")) {
             propsToExport.store(fos, "Exported BCMOJ Server Properties (from command line only)");

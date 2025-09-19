@@ -7,7 +7,7 @@ import org.bcmoj.bootstrap.Bootstrap;
  * <p>
  * Starts the application by delegating to {@link org.bcmoj.bootstrap.Bootstrap}.
  *
- * @author SleepingCui
+ * @author SleepingCui & MxingFoew1034
  * @version ${project.version}
  */
 public class Main {
