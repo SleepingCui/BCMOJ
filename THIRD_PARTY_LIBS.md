@@ -1,32 +1,29 @@
-## WebApp
+# 项目中使用的部分第三方库
 
-| 库名 | 链接 |
-|------|------|
-| Flask | [Flask](https://flask.palletsprojects.com/) |
-| Celery | [Celery](https://docs.celeryq.dev/) |
-| SQLAlchemy | [SQLAlchemy](https://www.sqlalchemy.org/) |
-| PyMySQL | [PyMySQL](https://pypi.org/project/PyMySQL/) |
-| Redis | [Redis Python](https://pypi.org/project/redis/) |
+[Flask](https://flask.palletsprojects.com/)
 
----
+[Celery](https://docs.celeryq.dev/)
 
-## JudgeServer
+[SQLAlchemy](https://www.sqlalchemy.org/)
 
-| 库名 | 链接 |
-|------|------|
-| log4j | [Log4j](https://logging.apache.org/log4j/2.x/) |
-| SLF4J | [SLF4J](http://www.slf4j.org/) |
-| Netty | [Netty](https://netty.io/) |
-| Jackson Databind | [Jackson Databind](https://github.com/FasterXML/jackson-databind) |
-| Lombok | [Project Lombok](https://projectlombok.org/) |
+[PyMySQL](https://pypi.org/project/PyMySQL/)
 
----
+[Redis](https://pypi.org/project/redis/)
 
-## Frontend
+[Log4j](https://logging.apache.org/log4j/2.x/)
 
-| 库名 | 链接 |
-|------|------|
-| Ajax | [MDN Ajax](https://developer.mozilla.org/en-US/docs/Web/Guide/AJAX) |
-| KaTeX | [KaTeX](https://katex.org/) |
-| GitHub Markdown CSS | [GitHub Markdown CSS](https://github.com/sindresorhus/github-markdown-css) |
-| Bootstrap | [Bootstrap](https://getbootstrap.com/) |
+[SLF4J](http://www.slf4j.org/)
+
+[Netty](https://netty.io/)
+
+[Jackson](https://github.com/FasterXML/jackson-databind)
+
+[Lombok](https://projectlombok.org/)
+
+[Ajax](https://developer.mozilla.org/en-US/docs/Web/Guide/AJAX)
+
+[KaTeX](https://katex.org/)
+
+[GitHub Markdown CSS](https://github.com/sindresorhus/github-markdown-css)
+
+[Bootstrap](https://getbootstrap.com/)
