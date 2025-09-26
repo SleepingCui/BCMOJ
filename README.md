@@ -69,7 +69,6 @@ JudgeServer 与 WebApp 之间通过 **自定义通信协议**交互，支持文�
 | 5   | System Error             |
 | 1   | Accepted                 |
 
-也就是说，你可以把 JudgeServer 调教得比你的猫还听话——要快、有序，或者调皮一点，随你心情，但它绝不会乱跑代码。
 
 
 ## 安装&使用
