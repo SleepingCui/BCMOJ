@@ -23,7 +23,7 @@ public class RequestProcessorTest {
 
     @Before
     public void setUp() {
-        processor = new RequestProcessor("kw.txt", "g++", "c++17");
+        processor = new RequestProcessor("kw.txt", "g++", "c++17", false);
     }
 
     @Test

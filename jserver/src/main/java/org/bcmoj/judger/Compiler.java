@@ -24,7 +24,21 @@ import java.util.concurrent.*;
 @Slf4j
 public class Compiler {
 
-    public static int compileProgram(File programPath, File executableFile, boolean enableO2, long timeoutMs, String compilerPath, String cppStandard) throws Exception {
+    /**
+     * Compiles a C++ program into an executable file.
+     *
+     * @param programPath         Path to the C++ source file to be compiled
+     * @param executableFile      Path where the compiled executable will be generated
+     * @param enableO2            Whether to enable the -O2 optimization flag
+     * @param disableSecurityArgs Whether to disable compiler security flags such as
+     *                            -D_FORTIFY_SOURCE=2, -fstack-protector-strong, -fno-asm, -fno-builtin, -Wall, -Wextra
+     * @param timeoutMs           Maximum time in milliseconds to wait for the compilation process
+     * @param compilerPath        Path to the compiler executable; defaults to "g++" if null or empty
+     * @param cppStandard         C++ standard version to use (e.g., "c++17", "c++20")
+     * @return Exit code of the compilation process (0 indicates success)
+     * @throws Exception If an error occurs during compilation or the process times out
+     */
+    public static int compileProgram(File programPath, File executableFile, boolean enableO2, boolean disableSecurityArgs, long timeoutMs, String compilerPath, String cppStandard) throws Exception {
         if (System.getProperty("os.name").toLowerCase().contains("win") && !executableFile.getName().toLowerCase().endsWith(".exe")) {
             executableFile = new File(executableFile.getAbsolutePath() + ".exe");
         }
@@ -35,6 +49,14 @@ public class Compiler {
         command.add(executableFile.getAbsolutePath());
         command.add(programPath.getAbsolutePath());
         command.add("-std=" + cppStandard);
+        if (!disableSecurityArgs) {
+            command.add("-D_FORTIFY_SOURCE=2");
+            command.add("-fstack-protector-strong");
+            command.add("-fno-asm");
+            command.add("-fno-builtin");
+            command.add("-Wall");
+            command.add("-Wextra");
+        }
         if (enableO2) command.add("-O2");
 
         log.debug("Compile command: {}", String.join(" ", command));

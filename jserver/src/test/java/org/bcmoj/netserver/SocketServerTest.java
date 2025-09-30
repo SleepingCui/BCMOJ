@@ -20,7 +20,7 @@ public class SocketServerTest {
 
     @Before
     public void startServer() throws InterruptedException {
-        server = new SocketServer(HOST, PORT, "src/test/resources/keywords.txt","g++"," c++11");
+        server = new SocketServer(HOST, PORT, false,"src/test/resources/keywords.txt","g++"," c++11");
         serverThread = new Thread(() -> {
             try {
                 server.start();

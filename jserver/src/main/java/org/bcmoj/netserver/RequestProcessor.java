@@ -78,6 +78,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
     private static final int MAX_FILENAME_CHARS = 128;
 
     private final JsonValidateUtil validator = new JsonValidateUtil();
+    private final boolean DisableSecurityArgs;
     private final String kwFilePath;
     private final String compilerPath;
     private final String cppStandard;
@@ -103,11 +104,13 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
      * @param kwFilePath   path to the keyword file used by JudgeServer
      * @param compilerPath path to the compiler used by JudgeServer
      * @param cppStandard  C++ standard version used by JudgeServer
+     * @param DisableSecurityArgs Disable Compiler security flags
      */
-    public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard) {
+    public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard, boolean DisableSecurityArgs) {
         this.kwFilePath = kwFilePath;
         this.compilerPath = compilerPath;
         this.cppStandard = cppStandard;
+        this.DisableSecurityArgs = DisableSecurityArgs;
     }
 
     /**
@@ -169,16 +172,15 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
         try {
             while (in.isReadable()) {
                 switch (state) {
-                    case READ_FILENAME_LENGTH:
+                    case READ_FILENAME_LENGTH -> {
                         if (in.readableBytes() < 4) return;
                         filenameLength = in.readInt();
                         if (filenameLength <= 0 || filenameLength > MAX_FILENAME_LENGTH) {
                             throw new IOException("Invalid filename length: " + filenameLength);
                         }
                         state = State.READ_FILENAME;
-                        break;
-
-                    case READ_FILENAME:
+                    }
+                    case READ_FILENAME -> {
                         if (in.readableBytes() < filenameLength) return;
                         byte[] nameBytes = new byte[filenameLength];
                         in.readBytes(nameBytes);
@@ -190,9 +192,8 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         tempFile = File.createTempFile(UUID.randomUUID().toString(), getFileExtension(filename));
                         fos = new FileOutputStream(tempFile);
                         state = State.READ_FILE_SIZE;
-                        break;
-
-                    case READ_FILE_SIZE:
+                    }
+                    case READ_FILE_SIZE -> {
                         if (in.readableBytes() < 8) return;
                         fileSize = in.readLong();
                         if (fileSize < 0) {
@@ -201,9 +202,8 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         bytesReadForFile = 0;
                         state = State.READ_FILE_CONTENT;
                         log.info("Expecting file content size: {}", fileSize);
-                        break;
-
-                    case READ_FILE_CONTENT:
+                    }
+                    case READ_FILE_CONTENT -> {
                         long toRead = Math.min(in.readableBytes(), fileSize - bytesReadForFile);
                         byte[] fileBytes = new byte[(int) toRead];
                         in.readBytes(fileBytes);
@@ -214,9 +214,8 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                             log.info("File received successfully, saved {} bytes", fileSize);
                             state = State.READ_JSON_LENGTH;
                         }
-                        break;
-
-                    case READ_JSON_LENGTH:
+                    }
+                    case READ_JSON_LENGTH -> {
                         if (in.readableBytes() < 4) return;
                         jsonLength = in.readInt();
                         if (jsonLength <= 0) {
@@ -224,9 +223,8 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         }
                         jsonBuilder.setLength(0);
                         state = State.READ_JSON;
-                        break;
-
-                    case READ_JSON:
+                    }
+                    case READ_JSON -> {
                         int jsonBytesToRead = Math.min(in.readableBytes(), jsonLength - jsonBuilder.length());
                         byte[] jsonBytes = new byte[jsonBytesToRead];
                         in.readBytes(jsonBytes);
@@ -236,9 +234,8 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                             log.info("Received JSON config ({} bytes):\n{}", jsonLength, jsonConfig);
                             state = State.READ_HASH_LENGTH;
                         }
-                        break;
-
-                    case READ_HASH_LENGTH:
+                    }
+                    case READ_HASH_LENGTH -> {
                         if (in.readableBytes() < 4) return;
                         hashLength = in.readInt();
                         if (hashLength < 0) {
@@ -252,9 +249,8 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                             hashBuilder.setLength(0);
                             state = State.READ_HASH;
                         }
-                        break;
-
-                    case READ_HASH:
+                    }
+                    case READ_HASH -> {
                         int hashBytesToRead = Math.min(in.readableBytes(), hashLength - hashBuilder.length());
                         byte[] hashBytes = new byte[hashBytesToRead];
                         in.readBytes(hashBytes);
@@ -265,11 +261,11 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                             state = State.PROCESSING;
                             processJudge(ctx);
                         }
-                        break;
-
-                    case PROCESSING:
+                    }
+                    case PROCESSING -> {
                         in.skipBytes(in.readableBytes());
                         return;
+                    }
                 }
             }
         } finally {
@@ -318,7 +314,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                     }
                     return;
                 }
-                String response = JudgeServer.serve(jsonConfig, compilerPath, cppStandard, tempFile, new File(kwFilePath));
+                String response = JudgeServer.serve(jsonConfig, compilerPath, cppStandard, tempFile, new File(kwFilePath), DisableSecurityArgs);
                 log.info("JudgeServer response: {}", response);
                 sendResponse(ctx, response);
 

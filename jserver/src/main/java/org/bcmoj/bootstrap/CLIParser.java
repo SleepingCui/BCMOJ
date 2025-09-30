@@ -17,6 +17,8 @@ public class CLIParser {
         options.addOption(Option.builder().longOpt("config").hasArg().argName("FILE").desc("Optional path to a configuration file to load additional server properties").build());
         options.addOption(Option.builder().longOpt("comp").hasArg().argName("FILE").desc("Path to the C++ compiler executable to use for code compilation (default: g++)").build());
         options.addOption(Option.builder().longOpt("std").hasArg().argName("STD").desc("C++ standard to use for compilation (e.g., c++11, c++17; default: c++11)").build());
+        options.addOption(Option.builder().longOpt("disable_security_args").desc("Disable additional compiler security arguments").build());
+
     }
     public static CommandLine parse(String[] args) {
         CommandLineParser parser = new DefaultParser();
@@ -31,6 +33,7 @@ public class CLIParser {
     }
     public static Properties toProperties(CommandLine cmd) {
         Properties props = new Properties();
+
         if (cmd.hasOption("host")) props.setProperty("host", cmd.getOptionValue("host"));
         if (cmd.hasOption("port")) props.setProperty("port", cmd.getOptionValue("port"));
         if (cmd.hasOption("kwfile")) props.setProperty("kwfile", cmd.getOptionValue("kwfile"));
@@ -39,8 +42,11 @@ public class CLIParser {
         if (cmd.hasOption("std")) props.setProperty("CppStandard", cmd.getOptionValue("std"));
         if (cmd.hasOption("debug")) props.setProperty("debug", "true");
         if (cmd.hasOption("extract")) props.setProperty("extract", "true");
+        if (cmd.hasOption("disable_security_args")) props.setProperty("disable_security_args", "true");
+
         return props;
     }
+
     public static void printHelp() {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("java -jar BCMOJ.jar", options, true);

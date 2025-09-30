@@ -81,7 +81,7 @@ public class JudgerTest {
         if (System.getProperty("os.name").toLowerCase().contains("win")) exeName += ".exe";
         File exeFile = new File(tempDir, exeName);
 
-        int compileCode = Compiler.compileProgram(cppFile, exeFile, false, 5000, "g++", "c++11");
+        int compileCode = Compiler.compileProgram(cppFile, exeFile, false, false, 5000, "g++", "c++11");
         exeFile.deleteOnExit();
         tempDir.deleteOnExit();
         return exeFile;

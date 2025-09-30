@@ -64,9 +64,10 @@ public class JudgeServer {
      * @param keywordsFilePath path to the keyword file used for security check
      * @param compilerPath     path to the compiler
      * @param cppStandard      C++ standard version
+     * @param DisableSecurityArgs Disable Compiler security flags
      * @return JSON string representing aggregated judge results
      */
-    public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath) {
+    public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath, boolean DisableSecurityArgs) {
         ObjectMapper mapper = new ObjectMapper();
         File tempDir = null;
         File exeFile = null;
@@ -94,8 +95,8 @@ public class JudgeServer {
             if (System.getProperty("os.name").toLowerCase().contains("win")) exeName += ".exe";
             exeFile = new File(tempDir, exeName);
 
-            log.info("Compiling file: {}...", cppFilePath.getAbsolutePath());
-            int compileCode = Compiler.compileProgram(cppFilePath, exeFile, config.enableO2, 10_000, compilerPath, cppStandard);
+            log.info("Compiling file: {} with enableO2={} , disableSecurityArgs={}", cppFilePath.getAbsolutePath(), config.enableO2, DisableSecurityArgs);
+            int compileCode = Compiler.compileProgram(cppFilePath, exeFile, config.enableO2, DisableSecurityArgs, 10_000, compilerPath, cppStandard);
             if (compileCode != 0) {
                 List<Judger.JudgeResult> compileFailResults = new ArrayList<>();
                 for (int i = 0; i < checkpointsCount; i++) {
