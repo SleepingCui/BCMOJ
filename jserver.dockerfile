@@ -1,12 +1,17 @@
 FROM maven:3.9.4-eclipse-temurin-17 AS build
-WORKDIR /jserver-work
-COPY jserver ./jserver
 WORKDIR /app/jserver
-RUN mvn clean package
+COPY jserver ./
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential g++ gcc \
+    && mvn clean package -DskipTests \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 FROM eclipse-temurin:17-jdk
-RUN apt-get update && apt-get install -y build-essential g++ gcc
 WORKDIR /jserver-work
 COPY --from=build /app/jserver/target/*-jar-with-dependencies.jar ./jserver.jar
 
+RUN useradd -m judge
+USER judge
+
 EXPOSE 12345
-CMD ["sh", "-c", "java -jar jserver.jar --host=0.0.0.0 --port=12345 --kwfile=keywords.txt --std=c++11"]
+ENTRYPOINT ["java", "-jar", "jserver.jar"]
+CMD ["--host=0.0.0.0", "--port=12345", "--kwfile=keywords.txt", "--std=c++11"]

@@ -67,7 +67,6 @@ public class Judger {
             tempExe = Files.createTempFile("exe_copy_", System.getProperty("os.name").toLowerCase().contains("win") ? ".exe" : "").toFile();
             Files.copy(originalExe.toPath(), tempExe.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             Runner.RunResult runResult = Runner.runProgram(tempExe, StringUtil.unescapeString(inputContent), time);
-
             if (runResult.exitCode != 0) {
                 log.warn("Runtime error, exit code {}", runResult.exitCode);
                 return new JudgeResult(RUNTIME_ERROR, runResult.elapsedTime);
