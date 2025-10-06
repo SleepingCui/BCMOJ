@@ -1,0 +1,46 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: bcmoj-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: bcmoj
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  webapp:
+    build:
+      context: ./webapp
+    container_name: bcmoj-webapp
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: password
+      EMAIL_PASSWORD: password
+      EMAIL_SENDER: example@example.com
+      EMAIL_SMTP_SERVER: smtp.example.com
+      EMAIL_SMTP_PORT: 587
+      JUDGE_HOST: jserver
+      JUDGE_PORT: 12345
+      SECRET_KEY: supersecretkey
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  jserver:
+    build:
+      context: ./jserver
+      dockerfile: Dockerfile
+    container_name: bcmoj-jserver
+    depends_on:
+      - webapp
+    ports:
+      - "12345:12345"
+    restart: always
