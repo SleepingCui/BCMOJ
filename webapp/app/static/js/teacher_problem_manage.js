@@ -100,21 +100,20 @@ function renderProblemEditor(p) {
         </div>
         <div style="margin-bottom:10px;">
             <label>题目描述：</label>
-            <textarea style="width:100%; height:120px; padding:6px 10px;">${description}</textarea>
+            <textarea style="width:100%; height:320px; padding:6px 10px;">${description}</textarea>
         </div>
         <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
             <div>时间限制(ms): <input type="number" value="${time_limit}" min="1" style="width:100px; padding:4px;"></div>
             <div>判题模式:
                 <select id="compareModeSelect" style="padding:4px;">
-                    <option value="1" ${compare_mode==1?'selected':''}>STRICT</option>
-                    <option value="2" ${compare_mode==2?'selected':''}>IGNORE_SPACES</option>
-                    <option value="3" ${compare_mode==3?'selected':''}>CASE_INSENSITIVE</option>
-                    <option value="4" ${compare_mode==4?'selected':''}>FLOAT_TOLERANT</option>
+                    <option value="1" ${compare_mode==1?'selected':''}>严格匹配</option>
+                    <option value="2" ${compare_mode==2?'selected':''}>忽略空格</option>
+                    <option value="3" ${compare_mode==3?'selected':''}>忽略大小写</option>
+                    <option value="4" ${compare_mode==4?'selected':''}>浮点容差</option>
                 </select>
             </div>
             <div>显示示例数量: <input type="number" value="${example_visible_count}" min="0" max="${examples.length}" style="width:60px; padding:4px;"></div>
         </div>
-        <!-- 样例和按钮放在同一个父元素下 -->
         <div class="example-section" style="margin-bottom:10px;">
             <div class="examples" style="margin-bottom:10px;">
                 <label>样例：</label>
