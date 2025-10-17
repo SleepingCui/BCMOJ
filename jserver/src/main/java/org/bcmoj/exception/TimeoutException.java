@@ -1,4 +1,4 @@
-package org.bcmoj.judger;
+package org.bcmoj.exception;
 
 import lombok.Getter;
 

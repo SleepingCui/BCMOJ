@@ -20,6 +20,7 @@ public class JsonValidateUtilTest {
         String json = """
             {
               "timeLimit": 1000,
+              "memLimit": 256,
               "securityCheck": true,
               "checkpoints": {
                 "1_in": "i",
@@ -40,6 +41,7 @@ public class JsonValidateUtilTest {
         String json = """
             {
               "timeLimit": 1000,
+              "memLimit": 256,
               "securityCheck": true,
               "checkpoints": {
                 "1_in": "i"
@@ -57,6 +59,7 @@ public class JsonValidateUtilTest {
         String json = """
             {
               "timeLimit": 1000,
+              "memLimit": 256,
               "securityCheck": true,
               "checkpoints": {
                 "1_out": "o"
@@ -74,6 +77,7 @@ public class JsonValidateUtilTest {
         String json = """
             {
               "timeLimit": 1000,
+              "memLimit": 256,
               "securityCheck": true,
               "checkpoints": {}
             }
