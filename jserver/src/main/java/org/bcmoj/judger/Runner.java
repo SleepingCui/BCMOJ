@@ -87,7 +87,7 @@ public class Runner {
 
                 // Check for common OOM exit code (137 is SIGKILL, often used by OOM killer)
                 if (exitCode == 137) {
-                    log.info("Process (PID {}) was terminated by the OOM killer ({}).", process.pid(), exitCode);
+                    log.info("Process (PID {}) was terminated by the OOM killer ({})", process.pid(), exitCode);
                     elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
                     finalMaxMemoryKB = limiter.cleanupAndGetMaxMemory();
                     throw new MemoryLimitExceededException(elapsedTime, finalMaxMemoryKB);
@@ -97,13 +97,13 @@ public class Runner {
                 output = readAll(process.getInputStream());
                 elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
                 finalMaxMemoryKB = limiter.cleanupAndGetMaxMemory();
-                log.info("Process (PID {}) finished. Max memory used: {} KB.", process.pid(), finalMaxMemoryKB);
+                log.info("Process (PID {}) finished. Max memory used: {} KB", process.pid(), finalMaxMemoryKB);
 
             } else {
                 if (isLinux) {
-                    log.warn("Memory limiting and monitoring are disabled.");
+                    log.warn("Memory limiting and monitoring are disabled");
                 } else {
-                    log.warn("Memory limiting is not supported on this OS ({}). Memory limit is ignored.", osName);
+                    log.warn("Memory limiting is not supported on this OS ({}). Memory limit is ignored", osName);
                 }
                 boolean finished = process.waitFor(timeLimitMs, java.util.concurrent.TimeUnit.MILLISECONDS);
                 if (!finished) {
@@ -121,7 +121,7 @@ public class Runner {
                 try {
                     limiter.cleanupAndGetMaxMemory();
                 } catch (InterruptedException e) {
-                    log.warn("Linux limiter cleanup in finally interrupted for PID {}.", process.pid());
+                    log.warn("Linux limiter cleanup in finally interrupted for PID {}", process.pid());
                     Thread.currentThread().interrupt();
                 }
             }

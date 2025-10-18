@@ -69,10 +69,14 @@ public class LinuxMemoryLimiter {
      * Sets up the cgroup and starts memory monitoring.
      *
      * <p>This method creates the cgroup directory, sets the memory limit,
-     * adds the process to the cgroup, and starts the memory monitoring thread.</p>
+     * attempts to add the process to the cgroup, and starts the memory monitoring thread.</p>
+     * <p>If the process has already finished before adding it to the cgroup, it logs a warning
+     * and skips the cgroup setup and monitoring.</p>
      *
      * @throws IOException If an error occurs during cgroup setup (e.g., creating directory,
-     *                     writing limit file, adding process to cgroup).
+     *                     writing limit file) and the process is still alive.
+     *                     If the process dies during the PID assignment step, it logs a warning
+     *                     and returns without throwing an exception.
      */
     public void setup() throws IOException {
         log.debug("Attempting to set up cgroup '{}' for memory limit {} KB using cgroup v{}.", cgroupName, memoryLimitKB, isV2 ? 2 : 1);
@@ -92,12 +96,25 @@ public class LinuxMemoryLimiter {
             limitWriter.write(limitValue);
         }
         log.debug("Set memory limit to {} in cgroup '{}'.", limitValue, cgroupName);
+        if (!process.isAlive()) {
+            log.warn("Process PID {} has already finished before adding it to cgroup '{}'", pid, cgroupName);
+            log.warn("Skipping cgroup assignment and memory monitoring");
+            return;
+        }
 
         try (FileWriter tasksWriter = new FileWriter(cgroupTasksPath)) {
             tasksWriter.write(String.valueOf(pid));
+        } catch (IOException e) {
+            if (!process.isAlive()) {
+                log.warn("Process PID {} has already finished before adding it to cgroup '{}'", pid, cgroupName);
+                log.warn("Skipping cgroup assignment and memory monitoring");
+                return;
+            } else {
+                log.error("Failed to add process PID {} to cgroup '{}' tasks file '{}'. Process is still alive. Error: {}", pid, cgroupName, cgroupTasksPath, e.getMessage());
+                throw e;
+            }
         }
         log.debug("Added PID {} to cgroup '{}'.", pid, cgroupName);
-
         startMemoryMonitoring();
     }
 
@@ -136,7 +153,7 @@ public class LinuxMemoryLimiter {
                                     log.warn("Could not parse memory value from line: '{}'. Error: {}", line, e.getMessage());
                                 }
                             }
-                            break; // Found VmRSS
+                            break;
                         }
                     }
                     if (!rssFound) {
@@ -147,7 +164,7 @@ public class LinuxMemoryLimiter {
                         log.warn("Error reading /proc/{}/status: {}", pid, e.getMessage());
                     } else {
                         log.debug("Process PID {} likely finished, stopping memory monitor.", pid);
-                        break; // Process ended
+                        break;
                     }
                 }
                 try {
@@ -232,6 +249,8 @@ public class LinuxMemoryLimiter {
             } else {
                 log.debug("Successfully deleted cgroup directory '{}'.", cgroupPath);
             }
+        } else {
+            log.debug("Cgroup directory '{}' does not exist, skipping deletion.", cgroupPath);
         }
         return finalMaxMemory;
     }
