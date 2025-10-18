@@ -43,3 +43,4 @@ services:
       - webapp
     ports:
       - "12345:12345"
+    privileged: true
