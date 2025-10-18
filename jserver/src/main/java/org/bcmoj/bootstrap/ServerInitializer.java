@@ -5,12 +5,15 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.bcmoj.netserver.SocketServer;
+import org.bcmoj.utils.ComplierCheckUtil;
 import org.bcmoj.utils.KeywordFileUtil;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.List;
 
 /**
  * Initializes and starts the BCMOJ Judge Server.
@@ -41,13 +44,21 @@ public class ServerInitializer {
         String kwFile = props.getProperty("kwfile");
         String compilerPath = props.getProperty("CompilerPath", "g++");
         String cppStandard = props.getProperty("CppStandard", "c++11");
+        boolean disableSecArgs = cmd.hasOption("disable_security_args");
+
         if ((host == null || portStr == null || kwFile == null) && configFilePath == null) {
-            log.error("Missing required parameters: host={}, port={}, kwfile={}", host, portStr, kwFile);
+            List<String> missing = new ArrayList<>();
+            if (host == null) missing.add("host");
+            if (portStr == null) missing.add("port");
+            if (kwFile == null) missing.add("kwfile");
+
+            log.error("Missing required parameters: {}", String.join(", ", missing));
             CLIParser.printHelp();
             System.exit(1);
         }
         if (debug) {
             log.debug("--------------------------------");
+            log.debug("Compiler Version: {}",ComplierCheckUtil.getGppVersion(compilerPath));
             log.debug("Host: {}", host);
             log.debug("Port: {}", portStr);
             log.debug("Keyword file: {}", kwFile);
@@ -74,7 +85,7 @@ public class ServerInitializer {
             }
             return;
         }
-        startServer(host, port, kwFile, compilerPath, cppStandard);
+        startServer(host, port, kwFile, disableSecArgs ,compilerPath, cppStandard);
     }
 
     private static void configureLogging(boolean debug) {
@@ -96,15 +107,56 @@ public class ServerInitializer {
         }
     }
 
-    private static void startServer(String host, int port, String kwFile, String compilerPath, String cppStandard) {
+    /**
+     * Checks the g++ version and determines whether to disable compiler security flags.
+     *
+     * @param DisableSecurityArgs current value of DisableSecurityArgs
+     * @param compilerPath        path to g++ executable
+     * @return updated DisableSecurityArgs value
+     */
+    private static boolean checkAndHandleCompilerSecurity(boolean DisableSecurityArgs, String compilerPath) {
+        if (!DisableSecurityArgs) {
+            String gppVersion = ComplierCheckUtil.getGppVersion(compilerPath);
+            if (gppVersion != null) {
+                String[] parts = gppVersion.split("\\.");
+                int major = parts.length > 0 ? Integer.parseInt(parts[0]) : 0;
+                int minor = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
+
+                if (major < 4 || (major == 4 && minor < 9)) {
+                    log.warn("********************************************************************************");
+                    log.warn("                                   WARNING");
+                    log.warn("          Detected g++ version {} is older than 4.9.0", gppVersion);
+                    log.warn("      Compiler security flags will be automatically disabled for safety.");
+                    log.warn("********************************************************************************");
+                    return true;
+                }
+            } else {
+                log.warn("Failed to detect g++ version, disabling security flags as precaution.");
+                return true;
+            }
+        } else {
+            log.warn("********************************************************************************");
+            log.warn("                                   WARNING");
+            log.warn(" Compiler security flags will be disabled, which may reduce compilation safety.");
+            log.warn("********************************************************************************");
+        }
+        return DisableSecurityArgs;
+    }
+
+
+    private static void startServer(String host, int port, String kwFile, boolean DisableSecurityArgs, String compilerPath, String cppStandard) {
         try {
+            DisableSecurityArgs = checkAndHandleCompilerSecurity(DisableSecurityArgs, compilerPath);
+
             log.info("Starting server...");
-            SocketServer server = new SocketServer(host, port, kwFile, compilerPath, cppStandard);
+            SocketServer server = new SocketServer(host, port, DisableSecurityArgs, kwFile, compilerPath, cppStandard);
             server.start();
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+
         } catch (Exception e) {
             log.error("Failed to start server: {}", e.getMessage());
             System.exit(1);
         }
     }
+
 }

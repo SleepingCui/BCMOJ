@@ -31,7 +31,11 @@
     <div class="description">
       <h2>题目描述</h2>
       <div class="markdown-content markdown-body" style="white-space: pre-wrap;">{{ problem.description }}</div>
-      <p><strong>时间限制:</strong> {{ problem.time_limit }} ms</p>
+      <p class="limits">
+        <span class="time-limit"><strong>时间限制:</strong> {{ problem.time_limit }} ms</span>
+        <span class="mem-limit"><strong>内存限制:</strong> {{ problem.mem_limit }} KB</span>
+      </p>
+
     </div>
     <div class="examples">
       <h2>示例</h2>

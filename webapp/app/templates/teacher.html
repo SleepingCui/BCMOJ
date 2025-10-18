@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <title>教师题目管理</title>
     <script src="/static/js/axios.min.js"></script>
-    <link rel="stylesheet" href="/static/css/teacher_problem_manage.css">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/teacher_problem_manage.css" rel="stylesheet">
 </head>
 <body>
     <header>
-        <h1>教师题目管理</h1 >
+        <h1>教师题目管理</h1>
         <div class="user-info">
-            <a href="/problems" style="color: white; text-decoration: none;">返回</a>
+            <a href="/problems">返回</a>
         </div>
-        
     </header>
 
     <div class="section">
@@ -29,8 +29,9 @@
     <div class="footer">
         <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
     </div>
-    
-    <script src="/static/js/teacher_problem_manage.js"></script>
 
+    <div class="toast-container"></div>
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/teacher_problem_manage.js"></script>
 </body>
 </html>

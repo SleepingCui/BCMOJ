@@ -11,29 +11,26 @@
 > 如果您发现任何bug，请在[issue](https://github.com/SleepingCui/BCMOJ/issues)中反馈。**
 ---
 ## **BCMOJ** ———一个轻量化的在线代码评测系统<sub>~~(几位初中生花100+h堆石山代码堆出来的玩意)~~</sub>
-**这坨石山囊括了许多是个oj都有的功能**
-- 多模式判题 (严格模式,忽略空格,不区分大小写,浮点容错)
+
+### 特点
+
+- 多模式判题 (忽略空格,不区分大小写,浮点容错)
 - Markdown + LaTeX 支持
+- 基于cgroup的内存限制 **(Linux Only)**
 - 微服务架构,WebApp与JudgeServer分离
 - WSGI支持
+- Docker支持
 
-这坨石山前端使用 **Flask + MySQL**，负责用户界面、题目管理和提交处理；判题服务（JudgeServer）用 **Netty** 搭建，专门干评测这档子事。
-前后端分离的微服务架构让系统既轻量又可扩展，系统崩了也不用慌 ~~(大概率)~~。
+### 介绍
 
-JudgeServer 与 WebApp 之间通过 **Socket**交互，支持文件和 JSON 配置的上传。例如每次评测请求中包含：
 
-1. 文件名长度 + 文件名
-2. 文件大小 + 文件内容
-3. JSON 配置长度 + JSON 配置（可设置 `timeLimit`、`securityCheck`、`enableO2`、`compareMode` 和测试点 `checkpoints`）
-4. 可选哈希值用于验证文件完整性
 
-JudgeServer使用状态机逐步读取数据，验证哈希和 JSON 配置后执行评测，最终将结果返回客户端。临时文件在处理完成或断开连接后自动删除，整个过程带有完整日志以便追踪。
-
-配置示例：
+### 配置示例
 
 ```json
 { 
   "timeLimit": 1145,
+  "memLimit": 1000,
   "securityCheck": false,
   "enableO2": true,
   "compareMode": 1,
@@ -46,28 +43,31 @@ JudgeServer使用状态机逐步读取数据，验证哈希和 JSON 配置后执
 }
 ```
 
-返回结果示例：
+### 判题结果示例
 
 ```json
 {
   "1_res": 1,
   "1_time": 15.2041,
+  "1_mem": 133,
   "2_res": 1,
-  "2_time": 18.5166
+  "2_time": 18.5166,
+  "2_mem": 133
 }
 ```
 
-状态码说明：
+### 状态码说明
 
-| 状态码 | 含义                       |
-| --- | ------------------------ |
-| -5  | Security Check Failed    |
-| -4  | Compile Error            |
-| -3  | Wrong Answer             |
-| 2   | Real Time Limit Exceeded |
-| 4   | Runtime Error            |
-| 5   | System Error             |
-| 1   | Accepted                 |
+| 状态码 | 含义                     |
+| ------ | ------------------------ |
+| -5     | Security Check Failed    |
+| -4     | Compile Error            |
+| -3     | Wrong Answer             |
+| 2      | Real Time Limit Exceeded |
+| 3      | Memory Limit Exceeded    |
+| 4      | Runtime Error            |
+| 5      | System Error             |
+| 1      | Accepted                 |
 
 
 

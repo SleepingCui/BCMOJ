@@ -27,6 +27,7 @@ import java.util.concurrent.*;
  *     <li>-4: Compile Error</li>
  *     <li>-3: Wrong Answer</li>
  *     <li>2: Real Time Limit Exceeded</li>
+ *     <li>3: Memory Limit Exceeded</li>
  *     <li>4: Runtime Error</li>
  *     <li>5: System Error</li>
  *     <li>1: Accepted</li>
@@ -50,6 +51,7 @@ public class JudgeServer {
 
     public static class Config {
         public int timeLimit;
+        public int memLimit;
         public JsonNode checkpoints;
         public boolean securityCheck;
         public boolean enableO2;
@@ -59,14 +61,15 @@ public class JudgeServer {
     /**
      * Serves judging requests for a C++ program.
      *
-     * @param jsonConfig       JSON string containing checkpoints, time limits, and flags
+     * @param jsonConfig       JSON string containing checkpoints, time limits, mem limits, and flags
      * @param cppFilePath      path to the submitted C++ source file
      * @param keywordsFilePath path to the keyword file used for security check
      * @param compilerPath     path to the compiler
      * @param cppStandard      C++ standard version
+     * @param DisableSecurityArgs Disable Compiler security flags
      * @return JSON string representing aggregated judge results
      */
-    public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath) {
+    public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath, boolean DisableSecurityArgs) {
         ObjectMapper mapper = new ObjectMapper();
         File tempDir = null;
         File exeFile = null;
@@ -94,12 +97,12 @@ public class JudgeServer {
             if (System.getProperty("os.name").toLowerCase().contains("win")) exeName += ".exe";
             exeFile = new File(tempDir, exeName);
 
-            log.info("Compiling file: {}...", cppFilePath.getAbsolutePath());
-            int compileCode = Compiler.compileProgram(cppFilePath, exeFile, config.enableO2, 10_000, compilerPath, cppStandard);
+            log.info("Compiling file: {} with enableO2={} , disableSecurityArgs={}", cppFilePath.getAbsolutePath(), config.enableO2, DisableSecurityArgs);
+            int compileCode = Compiler.compileProgram(cppFilePath, exeFile, config.enableO2, DisableSecurityArgs, 10_000, compilerPath, cppStandard);
             if (compileCode != 0) {
                 List<Judger.JudgeResult> compileFailResults = new ArrayList<>();
                 for (int i = 0; i < checkpointsCount; i++) {
-                    compileFailResults.add(new Judger.JudgeResult(-4, 0.0));
+                    compileFailResults.add(new Judger.JudgeResult(-4, 0.0, 0L));
                 }
                 return JudgeResultUtil.buildResult(compileFailResults, false, false, checkpointsCount);
             }
@@ -118,7 +121,7 @@ public class JudgeServer {
                 final String output = checkpoints.get(i + "_out").asText();
                 File finalExeFile = exeFile;
                 Future<Judger.JudgeResult> future = executor.submit(() ->
-                        Judger.judge(finalExeFile, input, output, config.timeLimit, mode)
+                        Judger.judge(finalExeFile, input, output, config.timeLimit, config.memLimit, mode ,false)
                 );
                 futures.add(future);
             }
@@ -130,13 +133,13 @@ public class JudgeServer {
                     results.add(future.get());
                 } catch (InterruptedException | ExecutionException e) {
                     log.error("Checkpoint execution error: {}", e.getMessage(), e);
-                    results.add(new Judger.JudgeResult(5, 0.0));
+                    results.add(new Judger.JudgeResult(5, 0.0, 0L));
                 }
             }
             log.info("========== Results ==========");
             for (int i = 0; i < results.size(); i++) {
                 Judger.JudgeResult result = results.get(i);
-                log.info("Checkpoint {} result: {} ({}), Time: {}ms", i + 1, result.statusCode, StatusDescription(result.statusCode), result.time);
+                log.info("Checkpoint {} result: {} ({}), Time: {}ms, Memory: {}KB", i + 1, result.statusCode, StatusDescription(result.statusCode), result.time, result.maxMemoryUsedKB);
             }
             FileUtil.deleteRecursively(exeFile);
             FileUtil.deleteRecursively(tempDir);
@@ -160,6 +163,7 @@ public class JudgeServer {
             case -4 -> "Compile Error";
             case -3 -> "Wrong Answer";
             case 2 -> "Real Time Limit Exceeded";
+            case 3 -> "Memory Limit Exceeded";
             case 4 -> "Runtime Error";
             case 5 -> "System Error";
             case 1 -> "Accepted";

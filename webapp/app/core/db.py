@@ -1,10 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import OperationalError
 import random
 import string
 import hashlib
+import time
 from .config import get_config
 
 config = get_config()
@@ -33,6 +35,7 @@ class Problem(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
     time_limit = db.Column(db.Integer, nullable=False, default=1000)
+    mem_limit = db.Column(db.Integer, nullable=False, default=1000)
     example_visible_count = db.Column(db.Integer, nullable=False, default=2)
     compare_mode = db.Column(db.Integer, nullable=False, default=1)
 
@@ -55,6 +58,7 @@ class CheckpointResult(db.Model):
     checkpoint_id = db.Column(db.Integer, primary_key=True)
     result = db.Column(db.Integer)
     time = db.Column(db.Float)
+    mem = db.Column(db.Integer)
     judge_result = db.relationship('JudgeResult', backref=db.backref('checkpoints', lazy=True, cascade="all, delete"))
 
 
@@ -66,21 +70,28 @@ class Example(db.Model):
     output = db.Column(db.Text, nullable=False)
     problem = db.relationship('Problem', backref=db.backref('examples', lazy=True, cascade="all, delete"))
     
-def init_db(app): #create db if not exist
+def init_db(app):  # create db if not exist
     db_name = raw_db_config['db_name']
-    base_uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@" \
-               f"{raw_db_config['db_host']}:{raw_db_config['db_port']}"
-
-    engine = create_engine(base_uri, echo=False)
-    with engine.connect() as conn:
-        conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{db_name}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"))
-        conn.commit()
+    base_uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@{raw_db_config['db_host']}:{raw_db_config['db_port']}"
+    max_retries = 10
+    for attempt in range(10):
+        try:
+            engine = create_engine(base_uri, echo=False)
+            with engine.connect() as conn:
+                conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{db_name}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"))
+                conn.commit()
+            break
+        except OperationalError:
+            if attempt < max_retries - 1:
+                app.logger.warning(f"[DB] Database not ready, retrying in 3s... ({attempt+1}/{10}) ({DB_URI})")
+                time.sleep(3)
+            else:
+                raise
 
     app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
     migrate.init_app(app, db)
-
     with app.app_context():
         db.create_all()
         admin_user = User.query.filter_by(username='admin').first()
@@ -96,9 +107,7 @@ def init_db(app): #create db if not exist
             )
             db.session.add(admin_user)
             db.session.commit()
-
             app.logger.info(f"[DB] Default admin user created: username=admin password={generated_password} email=admin@example.com")
-
 
 def init_migrate(app): #update
     app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI

@@ -3,6 +3,7 @@ const resultMapping = {
   "-4": "Compile Error",
   "-3": "Wrong Answer",
   "2": "Real Time Limit Exceeded",
+  "3": "Memory Limit Exceeded",
   "4": "Runtime Error",
   "5": "System Error",
   "1": "Accepted",
@@ -14,6 +15,7 @@ const resultColorMapping = {
   "Compile Error": "result-fail",
   "Wrong Answer": "result-fail",
   "Real Time Limit Exceeded": "result-fail",
+  "Memory Limit Exceeded": "result-fail",
   "Runtime Error": "result-fail",
   "System Error": "result-fail",
   "Unknown Status": "result-default"
@@ -189,10 +191,12 @@ function setupFormHandlers(){
             const resultText=resultMapping[res.result]||resultMapping["default"];
             const resultClass=resultColorMapping[resultText]||resultColorMapping["Unknown Status"];
             const p=document.createElement('p');
-            p.innerHTML=`测试点 ${res.checkpoint}: <span class="${resultClass}">${resultText}</span> (用时 ${res.time} ms)`;
+            p.innerHTML=`测试点 ${res.checkpoint}: <span class="${resultClass}">${resultText}</span> (Time used ${res.time} ms, Mem used ${res.mem || 0} KB)`;
+
             resultsDiv.appendChild(p);
             console.log(`[Submit] Checkpoint ${res.checkpoint}: ${resultText}, ${res.time}ms`);
-            showToast(`测试点 ${res.checkpoint}: ${resultText} (用时 ${res.time} ms)`, resultText==='Accepted'?'success':'error');
+            showToast(`测试点 ${res.checkpoint}: ${resultText} (Time used ${res.time} ms, Mem used ${res.mem || 0} KB)`, resultText==='Accepted'?'success':'error');
+
           });
         } else {
           const msg = '评测失败: '+(data.error||'未知错误');
