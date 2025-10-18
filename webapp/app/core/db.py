@@ -35,6 +35,7 @@ class Problem(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
     time_limit = db.Column(db.Integer, nullable=False, default=1000)
+    mem_limit = db.Column(db.Integer, nullable=False, default=1000)
     example_visible_count = db.Column(db.Integer, nullable=False, default=2)
     compare_mode = db.Column(db.Integer, nullable=False, default=1)
 
@@ -57,6 +58,7 @@ class CheckpointResult(db.Model):
     checkpoint_id = db.Column(db.Integer, primary_key=True)
     result = db.Column(db.Integer)
     time = db.Column(db.Float)
+    mem = db.Column(db.Integer)
     judge_result = db.relationship('JudgeResult', backref=db.backref('checkpoints', lazy=True, cascade="all, delete"))
 
 

@@ -89,6 +89,7 @@ function renderProblemEditor(p) {
     const title = p.title || '';
     const description = p.description || '';
     const time_limit = Number(p.time_limit) || 1000;
+    const mem_limit = Number(p.mem_limit) || 1000;
     const example_visible_count = Number(p.example_visible_count) || 2;
     const compare_mode = p.compare_mode || 1;
     const examples = Array.isArray(p.examples) ? p.examples : [];
@@ -104,6 +105,7 @@ function renderProblemEditor(p) {
         </div>
         <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
             <div>时间限制(ms): <input type="number" value="${time_limit}" min="1" style="width:100px; padding:4px;"></div>
+            <div>内存限制(KB): <input type="number" value="${mem_limit}" min="1" style="width:100px; padding:4px;"></div>
             <div>判题模式:
                 <select id="compareModeSelect" style="padding:4px;">
                     <option value="1" ${compare_mode==1?'selected':''}>严格匹配</option>
@@ -150,6 +152,7 @@ function addProblemForm() {
         </div>
         <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
             <div>时间限制(ms): <input type="number" value="1000" style="width:100px; padding:4px;"></div>
+            <div>内存限制(KB): <input type="number" value="1000" style="width:100px; padding:4px;"></div>
             <div>判题模式:
                 <select id="compareModeSelect" style="padding:4px;">
                     <option value="1" selected>STRICT</option>
@@ -170,6 +173,7 @@ function addProblemForm() {
     `;
     container.appendChild(div);
 }
+
 function addExample(btn){
     const section = btn.closest('.example-section');
     const div = section.querySelector('.examples');
@@ -201,11 +205,13 @@ function saveProblem(btn, problem_id=null){
 
     const titleInput = container.querySelector('input[placeholder="标题"]');
     const descTextarea = container.querySelector('textarea[placeholder], textarea:not(.example-text)');
-    const timeLimitInput = container.querySelector('div > input[type="number"]');
+    const inputs = container.querySelectorAll('div > input[type="number"]');
+    const timeLimitInput = inputs[0];      
+    const memLimitInput = inputs[1];    
     const compareModeSelect = container.querySelector('#compareModeSelect');
-    const exampleCountInput = Array.from(container.querySelectorAll('input[type="number"]')).find(i => i!==timeLimitInput);
+    const exampleCountInput = Array.from(inputs).find(i => i!==timeLimitInput && i!==memLimitInput);
 
-    if(!titleInput || !descTextarea || !timeLimitInput){
+    if(!titleInput || !descTextarea || !timeLimitInput || !memLimitInput){
         showToast('无法读取题目信息','warning');
         return;
     }
@@ -213,15 +219,17 @@ function saveProblem(btn, problem_id=null){
     const title = titleInput.value.trim();
     const description = descTextarea.value.trim();
     const time_limit = Number(timeLimitInput.value) || 1000;
+    const mem_limit = Number(memLimitInput.value) || 1000;  
     const compare_mode = compareModeSelect ? parseInt(compareModeSelect.value) : 1;
     const example_visible_count = exampleCountInput ? parseInt(exampleCountInput.value) || 2 : 2;
+
     const exampleDivs = Array.from(container.querySelectorAll('.examples > div'));
     const examples = exampleDivs.map(e => {
         const areas = e.querySelectorAll('textarea');
         return { input: areas[0]?.value.trim()||'', output: areas[1]?.value.trim()||'' };
     }).filter(e => e.input || e.output);
 
-    const data = { title, description, time_limit, compare_mode, example_visible_count, examples };
+    const data = { title, description, time_limit, mem_limit, compare_mode, example_visible_count, examples };
     if(problem_id) data.problem_id = problem_id;
 
     const url = problem_id ? '/teacher/api/update_problem' : '/teacher/api/create_problem';

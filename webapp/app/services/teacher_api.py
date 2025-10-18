@@ -6,9 +6,19 @@ def get_teacher_problem_data():
     for p in Problem.query.all():
         examples = Example.query.filter_by(problem_id=p.problem_id).with_entities(Example.input, Example.output).all()
         examples = [{'input': ex.input, 'output': ex.output} for ex in examples]
-        problem_data = {"problem_id": p.problem_id,"title": p.title,"description": p.description,"time_limit": p.time_limit,"example_visible_count": p.example_visible_count,"examples": examples}
+        problem_data = {
+            "problem_id": p.problem_id,
+            "title": p.title,
+            "description": p.description,
+            "time_limit": p.time_limit,
+            "mem_limit": p.mem_limit,        
+            "example_visible_count": p.example_visible_count,
+            "compare_mode": p.compare_mode,
+            "examples": examples
+        }
         problems.append(problem_data)
     return jsonify({"problems": problems})
+
 
 
 def teacher_create_problem(data):
@@ -16,6 +26,7 @@ def teacher_create_problem(data):
         title=data["title"],
         description=data["description"],
         time_limit=data["time_limit"],
+        mem_limit=data.get("mem_limit", 1000), 
         example_visible_count=data.get("example_visible_count", 2),
         compare_mode=data.get("compare_mode", 1)
     )
@@ -27,12 +38,14 @@ def teacher_create_problem(data):
     db.session.commit()
     return "OK"
 
+
 def teacher_update_problem(data):
     problem = Problem.query.get(data["problem_id"])
     if problem:
         problem.title = data["title"]
         problem.description = data["description"]
         problem.time_limit = data["time_limit"]
+        problem.mem_limit = data.get("mem_limit", problem.mem_limit)  
         problem.example_visible_count = data.get("example_visible_count", 2)
         problem.compare_mode = data.get("compare_mode", 1)
         Example.query.filter_by(problem_id=problem.problem_id).delete()
@@ -41,24 +54,6 @@ def teacher_update_problem(data):
             db.session.add(example)
         db.session.commit()
     return "OK"
-
-def get_teacher_problem_data():
-    problems = []
-    for p in Problem.query.all():
-        examples = Example.query.filter_by(problem_id=p.problem_id).with_entities(Example.input, Example.output).all()
-        examples = [{'input': ex.input, 'output': ex.output} for ex in examples]
-        problem_data = {
-            "problem_id": p.problem_id,
-            "title": p.title,
-            "description": p.description,
-            "time_limit": p.time_limit,
-            "example_visible_count": p.example_visible_count,
-            "compare_mode": p.compare_mode,
-            "examples": examples
-        }
-        problems.append(problem_data)
-    return jsonify({"problems": problems})
-
 
 def teacher_delete_problem(problem_id):
     problem = Problem.query.get(problem_id)

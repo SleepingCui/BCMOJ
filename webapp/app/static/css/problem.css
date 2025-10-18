@@ -290,3 +290,13 @@ mjx-container, .mjx-chtml {
   align-items: center;
   gap: 0.5rem;
 }
+
+.limits {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.time-limit, .mem-limit {
+  font-weight: normal;
+}

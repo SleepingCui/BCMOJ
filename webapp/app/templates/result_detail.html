@@ -12,38 +12,43 @@
     <h3>测试点结果</h3>
     <table>
         <thead>
-            <tr>
-                <th>测试点编号</th>
-                <th>结果</th>
-                <th>耗时 (ms)</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for r in checkpoint_results %}
-            <tr>
-                <td>{{ r.checkpoint_id }}</td>
-                <td>
-                    {% set code = r.result %}
-                    {% if code == 1 %}
-                        <span class="status-Accepted">Accepted</span>
-                    {% elif code == -3 %}
-                        <span class="status-Wrong">Wrong Answer</span>
-                    {% elif code == 2 %}
-                        <span class="status-Time">Real Time Limit Exceeded</span>
-                    {% elif code == 4 %}
-                        <span class="status-Runtime">Runtime Error</span>
-                    {% elif code == -4 %}
-                        <span class="status-Compile">Compile Error</span>
-                    {% elif code == -5 %}
-                        <span class="status-Security">Security Check Failed</span>
-                    {% else %}
-                        <span class="status-System">System Error</span>
-                    {% endif %}
-                </td>
-                <td>{{ "%.2f"|format(r.time) }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
+    <tr>
+        <th>测试点编号</th>
+        <th>结果</th>
+        <th>耗时 (ms)</th>
+        <th>内存 (KB)</th>
+    </tr>
+</thead>
+<tbody>
+{% for r in checkpoint_results %}
+    <tr>
+        <td>{{ r.checkpoint_id }}</td>
+        <td>
+            {% set code = r.result %}
+            {% if code == 1 %}
+                <span class="status-Accepted">Accepted</span>
+            {% elif code == -3 %}
+                <span class="status-Wrong">Wrong Answer</span>
+            {% elif code == 2 %}
+                <span class="status-Time">Real Time Limit Exceeded</span>
+            {% elif code == 3 %}
+                <span class="status-Memory">Memory Limit Exceeded</span>
+            {% elif code == 4 %}
+                <span class="status-Runtime">Runtime Error</span>
+            {% elif code == -4 %}
+                <span class="status-Compile">Compile Error</span>
+            {% elif code == -5 %}
+                <span class="status-Security">Security Check Failed</span>
+            {% else %}
+                <span class="status-System">System Error</span>
+            {% endif %}
+        </td>
+        <td>{{ "%.2f"|format(r.time) }}</td>
+        <td>{{ r.mem or 0 }}</td>
+    </tr>
+{% endfor %}
+</tbody>
+
     </table>
 
     <h3>源代码</h3>
