@@ -44,3 +44,5 @@ services:
     ports:
       - "12345:12345"
     privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
