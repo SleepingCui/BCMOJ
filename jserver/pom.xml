@@ -7,7 +7,7 @@
 
     <groupId>org.bcmoj.judger</groupId>
     <artifactId>jserver</artifactId>
-    <version>1.0.12-beta</version>
+    <version>1.0.13-beta</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
