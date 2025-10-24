@@ -8,6 +8,7 @@ import string
 import hashlib
 import time
 from .config import get_config
+from sqlalchemy import create_engine
 
 config = get_config()
 raw_db_config = config['db_config']
@@ -70,6 +71,19 @@ class Example(db.Model):
     output = db.Column(db.Text, nullable=False)
     problem = db.relationship('Problem', backref=db.backref('examples', lazy=True, cascade="all, delete"))
     
+
+def get_db_uri(db_name=None):
+    config = get_config()
+    raw_db_config = config['db_config']
+    if db_name is None:
+        uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@{raw_db_config['db_host']}:{raw_db_config['db_port']}"
+    else:
+        uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@{raw_db_config['db_host']}:{raw_db_config['db_port']}/{db_name}"
+    return uri
+
+def get_db_engine(db_name=None):
+    return create_engine(get_db_uri(db_name), echo=False)
+
 def init_db(app):  # create db if not exist
     db_name = raw_db_config['db_name']
     base_uri = f"mysql+pymysql://{raw_db_config['db_user']}:{raw_db_config['db_password']}@{raw_db_config['db_host']}:{raw_db_config['db_port']}"
