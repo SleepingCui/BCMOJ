@@ -2,34 +2,30 @@ const { username, userId, usergroup, totalPages, query, version } = window.appDa
 
 function showToast(message, type = 'info') {
     console.log(`[Toast][${type.toUpperCase()}] ${message}`);
-    const toastContainer = document.querySelector('.toast-container');
+    const $toastContainer = $('.toast-container');
     const toastId = 'toast-' + Date.now();
-    const toastEl = document.createElement('div');
-    toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
-    toastEl.id = toastId;
-    toastEl.setAttribute('role', 'alert');
-    toastEl.setAttribute('aria-live', 'assertive');
-    toastEl.setAttribute('aria-atomic', 'true');
-    toastEl.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                ${message}
+    const $toastEl = $(`
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-    `;
-    toastContainer.appendChild(toastEl);
-    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    `);
+    $toastContainer.append($toastEl);
+    const toast = new bootstrap.Toast($toastEl[0], { delay: 3000 });
     toast.show();
-    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+    $toastEl.on('hidden.bs.toast', function() {
+        $toastEl.remove();
+    });
 }
 
 function initUserInfo(username, userId, usergroup) {
     console.log('[Init] Initializing user info');
-    const userInfo = document.getElementById('userInfo');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const editBtn = document.getElementById('editAccountBtn');
+    const $userInfo = $('#userInfo');
+    const $loginBtn = $('#loginBtn');
+    const $logoutBtn = $('#logoutBtn');
+    const $editBtn = $('#editAccountBtn');
 
     if (username && userId && userId !== 'None') {
         let badgeColor = 'secondary';
@@ -37,108 +33,92 @@ function initUserInfo(username, userId, usergroup) {
         else if (usergroup === 'teacher') badgeColor = 'info';
         else if (usergroup === 'student') badgeColor = 'success';
 
-        userInfo.innerHTML = `
+        $userInfo.html(`
             <i class="bi bi-person-circle"></i>
             <span>${username} [${userId}]</span>
             <span class="badge bg-${badgeColor} ms-1">${usergroup}</span>
-        `;
-        loginBtn.classList.add('d-none');
-        logoutBtn.classList.remove('d-none');
-        editBtn.classList.remove('d-none');
+        `);
+        $loginBtn.addClass('d-none');
+        $logoutBtn.removeClass('d-none');
+        $editBtn.removeClass('d-none');
         console.log(`[Init] User logged in: ${username} [${userId}], group: ${usergroup}`);
     } else {
-        userInfo.innerHTML = `<i class="bi bi-person-circle"></i><span>未登录</span>`;
-        loginBtn.classList.remove('d-none');
-        logoutBtn.classList.add('d-none');
-        editBtn.classList.add('d-none');
+        $userInfo.html(`<i class="bi bi-person-circle"></i><span>未登录</span>`);
+        $loginBtn.removeClass('d-none');
+        $logoutBtn.addClass('d-none');
+        $editBtn.addClass('d-none');
         console.log('[Init] User not logged in');
     }
 }
 
 function initSearchInput() {
     console.log('[Init] Initializing search input focus effect');
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('focus', function() {
-            this.parentElement.classList.add('shadow');
-            console.log('[Action] Search input focused');
+    const $searchInput = $('#searchInput');
+    if ($searchInput.length) {
+        $searchInput.on('focus', function() {
+            $(this).parent().addClass('shadow');
         });
-        searchInput.addEventListener('blur', function() {
-            this.parentElement.classList.remove('shadow');
-            console.log('[Action] Search input blurred');
+        $searchInput.on('blur', function() {
+            $(this).parent().removeClass('shadow');
         });
     }
 }
 
 function jumpToPage() {
-    const pageInput = document.getElementById('jumpPage');
-    const pageNum = parseInt(pageInput.value);
+    const $pageInput = $('#jumpPage');
+    const pageNum = parseInt($pageInput.val());
 
     if (isNaN(pageNum) || pageNum < 1 || pageNum > parseInt(totalPages)) {
         showToast('请输入有效的页码', 'danger');
-        console.error('[Error] Invalid page number:', pageInput.value);
         return;
     }
-    console.log(`[Action] Jumping to page ${pageNum}`);
     window.location.href = `{{ url_for('problems') }}?q=${encodeURIComponent(query)}&page=${pageNum}`;
 }
 
-
-document.addEventListener('DOMContentLoaded', () => {
+$(document).ready(function() {
     console.log('[Init] DOM loaded. Initializing UI...');
     initUserInfo(username, userId, usergroup);
     initSearchInput();
 
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const editBtn = document.getElementById('editAccountBtn');
-
-    if (loginBtn) loginBtn.addEventListener('click', () => {
+    $('#loginBtn').on('click', function() {
         console.log('[Action] Login button clicked');
         showToast('正在跳转...', 'info');
         window.location.href = '/login';
     });
 
-    if (logoutBtn) logoutBtn.addEventListener('click', () => {
+    $('#logoutBtn').on('click', function() {
         console.log('[Action] Logout button clicked');
         showToast('您已成功登出', 'success');
         window.location.href = '/logout';
     });
 
-    if (editBtn) editBtn.addEventListener('click', () => {
+    $('#editAccountBtn').on('click', function() {
         console.log('[Action] Edit account button clicked');
         window.location.href = '/edit_account';
     });
 
     if (usergroup === 'admin') {
-        const checkUpdateBtn = document.getElementById('checkUpdateBtn');
-        if (checkUpdateBtn) {
-            checkUpdateBtn.addEventListener('click', () => {
-                console.log('[Action] Check update button clicked');
-                showToast('正在检查更新...', 'info');
-                fetch('/check_update')
-                    .then(res => { 
-                        if (!res.ok) throw new Error('Network response was not ok'); 
-                        return res.json(); 
-                    })
-                    .then(data => {
-                        if (data.error) {
-                            showToast(data.error, 'danger');
-                            console.error('[Error] Update check failed:', data.error);
-                        } else {
-                            showToast(data.message, 'success');
-                            console.log('[Action] Update check success:', data.message);
-                            if (data.latest && data.latest !== version) {
-                                console.log('[Action] New version available:', data.latest);
-                                window.open('https://github.com/SleepingCui/BCMOJ/releases/latest', '_blank');
-                            }
+        $('#checkUpdateBtn').on('click', function() {
+            console.log('[Action] Check update button clicked');
+            showToast('正在检查更新...', 'info');
+            fetch('/check_update')
+                .then(res => {
+                    if (!res.ok) throw new Error('Network response was not ok');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        showToast(data.error, 'danger');
+                    } else {
+                        showToast(data.message, 'success');
+                        if (data.latest && data.latest !== version) {
+                            window.open('https://github.com/SleepingCui/BCMOJ/releases/latest', '_blank');
                         }
-                    })
-                    .catch(err => {
-                        showToast('检查更新失败: ' + err.message, 'danger');
-                        console.error('[Error] Update check exception:', err);
-                    });
-            });
-        }
+                    }
+                })
+                .catch(err => {
+                    showToast('检查更新失败: ' + err.message, 'danger');
+                });
+        });
     }
 });

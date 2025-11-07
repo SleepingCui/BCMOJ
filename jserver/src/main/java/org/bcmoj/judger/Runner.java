@@ -66,6 +66,7 @@ public class Runner {
         ProcessBuilder builder = new ProcessBuilder(executableFile.getAbsolutePath());
         builder.redirectErrorStream(true);
         Process process = builder.start();
+
         long startTime = System.nanoTime();
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()))) {
             writer.write(inputContent);
@@ -82,7 +83,16 @@ public class Runner {
             if (isLinux && !DisableMemLimit) {
                 limiter = new LinuxMemoryLimiter(process, memoryLimitKB);
                 limiter.setup();
-                limiter.waitForProcess(timeLimitMs);
+
+
+                long elapsedSoFar = (System.nanoTime() - startTime) / 1_000_000;
+                long remainingTime = timeLimitMs - elapsedSoFar;
+                if (remainingTime <= 0) {
+                    process.destroyForcibly();
+                    elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
+                    throw new TimeoutException(timeLimitMs);
+                }
+                limiter.waitForProcess(remainingTime);
                 exitCode = limiter.getExitCode();
 
                 // Check for common OOM exit code (137 is SIGKILL, often used by OOM killer)
@@ -105,7 +115,16 @@ public class Runner {
                 } else {
                     log.warn("Memory limiting is not supported on this OS ({}). Memory limit is ignored", osName);
                 }
-                boolean finished = process.waitFor(timeLimitMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+
+                long elapsedSoFar = (System.nanoTime() - startTime) / 1_000_000;
+                long remainingTime = timeLimitMs - elapsedSoFar;
+
+                if (remainingTime <= 0) {
+                    process.destroyForcibly();
+                    elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
+                    throw new TimeoutException(timeLimitMs);
+                }
+                boolean finished = process.waitFor(remainingTime, java.util.concurrent.TimeUnit.MILLISECONDS);
                 if (!finished) {
                     process.destroyForcibly();
                     throw new TimeoutException(timeLimitMs);
@@ -127,6 +146,7 @@ public class Runner {
             }
         }
     }
+
     private static String readAll(InputStream in) throws IOException {
         StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
