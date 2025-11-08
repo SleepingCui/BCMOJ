@@ -66,6 +66,7 @@ public class Judger {
      * @param time Time limit in milliseconds
      * @param compareMode Output comparison mode
      * @param memoryLimitKB Memory limit in kilobytes
+     * @param DisableMemLimit Flag to disable memory limiting and monitoring entirely.
      * @return {@link JudgeResult} containing status code, execution time, and max memory used
      * @throws MemoryLimitExceededException If the process exceeds the memory limit.
      */

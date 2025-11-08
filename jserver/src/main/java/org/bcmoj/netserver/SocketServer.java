@@ -50,6 +50,7 @@ public class SocketServer {
      * @param host                  the host address to bind, e.g. "0.0.0.0"
      * @param port                  the port number to listen on, e.g. 12345
      * @param DisableSecurityArgs   Disable Compiler security flags
+     * @param DisableMemLimit       Disable memory limit for the judging process
      * @param kwFilePath            the path to the keyword file used by the judge service
      * @param compilerPath          path to the compiler used by the judge service
      * @param cppStandard           C++ standard version, e.g. "c++11"

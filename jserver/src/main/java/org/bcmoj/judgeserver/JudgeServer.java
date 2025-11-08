@@ -67,6 +67,7 @@ public class JudgeServer {
      * @param compilerPath     path to the compiler
      * @param cppStandard      C++ standard version
      * @param DisableSecurityArgs Disable Compiler security flags
+     * @param DisableMemLimit  Disable memory limit for the judging process
      * @return JSON string representing aggregated judge results
      */
     public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath, boolean DisableSecurityArgs, boolean DisableMemLimit) {

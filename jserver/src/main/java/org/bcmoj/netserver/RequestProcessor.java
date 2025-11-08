@@ -106,6 +106,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
      * @param compilerPath path to the compiler used by JudgeServer
      * @param cppStandard  C++ standard version used by JudgeServer
      * @param DisableSecurityArgs Disable Compiler security flags
+     * @param DisableMemLimit   Disable memory limit for the judging process
      */
     public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard, boolean DisableSecurityArgs, boolean DisableMemLimit) {
         this.kwFilePath = kwFilePath;
