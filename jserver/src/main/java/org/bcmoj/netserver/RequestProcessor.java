@@ -79,6 +79,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
 
     private final JsonValidateUtil validator = new JsonValidateUtil();
     private final boolean DisableSecurityArgs;
+    private final boolean DisableMemLimit;
     private final String kwFilePath;
     private final String compilerPath;
     private final String cppStandard;
@@ -106,11 +107,13 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
      * @param cppStandard  C++ standard version used by JudgeServer
      * @param DisableSecurityArgs Disable Compiler security flags
      */
-    public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard, boolean DisableSecurityArgs) {
+    public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard, boolean DisableSecurityArgs, boolean DisableMemLimit) {
         this.kwFilePath = kwFilePath;
         this.compilerPath = compilerPath;
         this.cppStandard = cppStandard;
         this.DisableSecurityArgs = DisableSecurityArgs;
+        this.DisableMemLimit = DisableMemLimit;
+
     }
 
     /**
@@ -314,7 +317,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                     }
                     return;
                 }
-                String response = JudgeServer.serve(jsonConfig, compilerPath, cppStandard, tempFile, new File(kwFilePath), DisableSecurityArgs);
+                String response = JudgeServer.serve(jsonConfig, compilerPath, cppStandard, tempFile, new File(kwFilePath), DisableSecurityArgs, DisableMemLimit);
                 log.info("JudgeServer response: {}", response);
                 sendResponse(ctx, response);
 

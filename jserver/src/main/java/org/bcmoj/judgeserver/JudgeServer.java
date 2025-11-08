@@ -69,7 +69,7 @@ public class JudgeServer {
      * @param DisableSecurityArgs Disable Compiler security flags
      * @return JSON string representing aggregated judge results
      */
-    public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath, boolean DisableSecurityArgs) {
+    public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath, boolean DisableSecurityArgs, boolean DisableMemLimit) {
         ObjectMapper mapper = new ObjectMapper();
         File tempDir = null;
         File exeFile = null;
@@ -121,7 +121,7 @@ public class JudgeServer {
                 final String output = checkpoints.get(i + "_out").asText();
                 File finalExeFile = exeFile;
                 Future<Judger.JudgeResult> future = executor.submit(() ->
-                        Judger.judge(finalExeFile, input, output, config.timeLimit, config.memLimit, mode ,false)
+                        Judger.judge(finalExeFile, input, output, config.timeLimit, config.memLimit, mode ,DisableMemLimit)
                 );
                 futures.add(future);
             }

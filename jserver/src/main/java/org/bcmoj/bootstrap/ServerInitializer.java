@@ -45,6 +45,7 @@ public class ServerInitializer {
         String compilerPath = props.getProperty("CompilerPath", "g++");
         String cppStandard = props.getProperty("CppStandard", "c++11");
         boolean disableSecArgs = cmd.hasOption("disable_security_args");
+        boolean disableMemLimit = cmd.hasOption("disable_mem_limit");
 
         if ((host == null || portStr == null || kwFile == null) && configFilePath == null) {
             List<String> missing = new ArrayList<>();
@@ -85,7 +86,7 @@ public class ServerInitializer {
             }
             return;
         }
-        startServer(host, port, kwFile, disableSecArgs ,compilerPath, cppStandard);
+        startServer(host, port, kwFile, disableSecArgs, disableMemLimit, compilerPath, cppStandard);
     }
 
     private static void configureLogging(boolean debug) {
@@ -107,14 +108,14 @@ public class ServerInitializer {
         }
     }
 
-    /**
-     * Checks the g++ version and determines whether to disable compiler security flags.
+/**
+     * Checks g++ version and determines whether to disable compiler security flags.
      *
      * @param DisableSecurityArgs current value of DisableSecurityArgs
      * @param compilerPath        path to g++ executable
      * @return updated DisableSecurityArgs value
      */
-    private static boolean checkAndHandleCompilerSecurity(boolean DisableSecurityArgs, String compilerPath) {
+    private static boolean shouldDisableSecArgs(boolean DisableSecurityArgs, String compilerPath) {
         if (!DisableSecurityArgs) {
             String gppVersion = ComplierCheckUtil.getGppVersion(compilerPath);
             if (gppVersion != null) {
@@ -144,12 +145,12 @@ public class ServerInitializer {
     }
 
 
-    private static void startServer(String host, int port, String kwFile, boolean DisableSecurityArgs, String compilerPath, String cppStandard) {
+    private static void startServer(String host, int port, String kwFile, boolean DisableSecurityArgs, boolean DisableMemLimit, String compilerPath, String cppStandard) {
         try {
-            DisableSecurityArgs = checkAndHandleCompilerSecurity(DisableSecurityArgs, compilerPath);
+            DisableSecurityArgs = shouldDisableSecArgs(DisableSecurityArgs, compilerPath);
 
             log.info("Starting server...");
-            SocketServer server = new SocketServer(host, port, DisableSecurityArgs, kwFile, compilerPath, cppStandard);
+            SocketServer server = new SocketServer(host, port, DisableSecurityArgs, DisableMemLimit, kwFile, compilerPath, cppStandard);
             server.start();
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
 

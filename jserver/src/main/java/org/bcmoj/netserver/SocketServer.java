@@ -37,6 +37,7 @@ public class SocketServer {
     private final String host;
     private final int port;
     private final boolean DisableSecurityArgs;
+    private final boolean DisableMemLimit;
     private final String cppStandard;
     private final String kwFilePath;
     private final String compilerPath;
@@ -54,10 +55,11 @@ public class SocketServer {
      * @param cppStandard           C++ standard version, e.g. "c++11"
      * 
      */
-    public SocketServer(String host, int port, boolean DisableSecurityArgs, String kwFilePath, String compilerPath, String cppStandard) {
+    public SocketServer(String host, int port, boolean DisableSecurityArgs, boolean DisableMemLimit, String kwFilePath, String compilerPath, String cppStandard) {
         this.host = host;
         this.port = port;
         this.DisableSecurityArgs = DisableSecurityArgs;
+        this.DisableMemLimit = DisableMemLimit;
         this.kwFilePath = kwFilePath;
         this.compilerPath = compilerPath;
         this.cppStandard = cppStandard;
@@ -81,7 +83,7 @@ public class SocketServer {
             bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
-                            ch.pipeline().addLast(new RequestProcessor(kwFilePath,compilerPath,cppStandard,DisableSecurityArgs));
+                            ch.pipeline().addLast(new RequestProcessor(kwFilePath,compilerPath,cppStandard,DisableSecurityArgs,DisableMemLimit));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);

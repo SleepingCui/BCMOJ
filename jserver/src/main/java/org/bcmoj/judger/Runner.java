@@ -15,7 +15,7 @@ import java.io.*;
  * <p>Provides custom TimeoutException and MemoryLimitExceededException.</p>
  *
  * <p>On Linux, it optionally delegates memory limiting and monitoring to LinuxMemoryLimiter
- * based on the {@code DisableMem} flag.</p>
+ * based on the {@code disableMemLimit} flag.</p>
  * <p>On Windows and other OS, only time limit is enforced.</p>
  *
  * <p>Logging includes execution start, end, and any permission issues.</p>
@@ -45,15 +45,15 @@ public class Runner {
      * @param executableFile The compiled executable file to run.
      * @param inputContent   The input string to provide to the executable.
      * @param timeLimitMs    The time limit in milliseconds.
-     * @param memoryLimitKB  The memory limit in kilobytes. (Ignored if {@code DisableMem} is true, or on Windows/other OS)
-     * @param DisableMemLimit     Flag to disable memory limiting and monitoring entirely.
+     * @param memoryLimitKB  The memory limit in kilobytes. (Ignored if {@code disableMemLimit} is true, or on Windows/other OS)
+     * @param disableMemLimit     Flag to disable memory limiting and monitoring entirely.
      * @return A RunResult containing output, elapsed time, exit code, and max memory used (0 if disabled).
      * @throws IOException        If an I/O error occurs.
      * @throws InterruptedException If the thread is interrupted.
      * @throws TimeoutException   If the process exceeds the time limit.
-     * @throws MemoryLimitExceededException If the process exceeds the memory limit (only possible if {@code DisableMem} is false and on Linux).
+     * @throws MemoryLimitExceededException If the process exceeds the memory limit (only possible if {@code disableMemLimit} is false and on Linux).
      */
-    public static RunResult runProgram(File executableFile, String inputContent, int timeLimitMs, long memoryLimitKB, boolean DisableMemLimit) throws IOException, InterruptedException, TimeoutException, MemoryLimitExceededException {
+    public static RunResult runProgram(File executableFile, String inputContent, int timeLimitMs, long memoryLimitKB, boolean disableMemLimit) throws IOException, InterruptedException, TimeoutException, MemoryLimitExceededException {
         String osName = System.getProperty("os.name").toLowerCase();
         boolean isLinux = osName.contains("linux");
 
@@ -80,49 +80,33 @@ public class Runner {
         long finalMaxMemoryKB = 0;
 
         try {
-            if (isLinux && !DisableMemLimit) {
+            long elapsedSoFar = (System.nanoTime() - startTime) / 1_000_000;
+            long remainingTime = timeLimitMs - elapsedSoFar;
+            if (remainingTime <= 0) {
+                process.destroyForcibly();
+                elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
+                throw new TimeoutException(timeLimitMs);
+            }
+
+            if (isLinux && !disableMemLimit) {
                 limiter = new LinuxMemoryLimiter(process, memoryLimitKB);
                 limiter.setup();
-
-
-                long elapsedSoFar = (System.nanoTime() - startTime) / 1_000_000;
-                long remainingTime = timeLimitMs - elapsedSoFar;
-                if (remainingTime <= 0) {
-                    process.destroyForcibly();
-                    elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
-                    throw new TimeoutException(timeLimitMs);
-                }
                 limiter.waitForProcess(remainingTime);
                 exitCode = limiter.getExitCode();
 
-                // Check for common OOM exit code (137 is SIGKILL, often used by OOM killer)
-                if (exitCode == 137) {
-                    log.info("Process (PID {}) was terminated by the OOM killer ({})", process.pid(), exitCode);
+                if (exitCode == 137) { // SIGKILL, often from OOM killer
+                    log.info("Process (PID {}) was terminated by the OOM killer (exit code {})", process.pid(), exitCode);
                     elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
                     finalMaxMemoryKB = limiter.cleanupAndGetMaxMemory();
                     throw new MemoryLimitExceededException(elapsedTime, finalMaxMemoryKB);
                 }
-
-                // If not OOM, proceed with normal flow: read output, get memory, return result
-                output = readAll(process.getInputStream());
-                elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
                 finalMaxMemoryKB = limiter.cleanupAndGetMaxMemory();
                 log.info("Process (PID {}) finished. Max memory used: {} KB", process.pid(), finalMaxMemoryKB);
-
             } else {
                 if (isLinux) {
                     log.warn("Memory limiting and monitoring are disabled");
                 } else {
                     log.warn("Memory limiting is not supported on this OS ({}). Memory limit is ignored", osName);
-                }
-
-                long elapsedSoFar = (System.nanoTime() - startTime) / 1_000_000;
-                long remainingTime = timeLimitMs - elapsedSoFar;
-
-                if (remainingTime <= 0) {
-                    process.destroyForcibly();
-                    elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
-                    throw new TimeoutException(timeLimitMs);
                 }
                 boolean finished = process.waitFor(remainingTime, java.util.concurrent.TimeUnit.MILLISECONDS);
                 if (!finished) {
@@ -130,9 +114,12 @@ public class Runner {
                     throw new TimeoutException(timeLimitMs);
                 }
                 exitCode = process.exitValue();
-                output = readAll(process.getInputStream());
-                elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
             }
+
+
+            output = readAll(process.getInputStream());
+            elapsedTime = (System.nanoTime() - startTime) / 1_000_000.0;
+
             return new RunResult(output, elapsedTime, exitCode, finalMaxMemoryKB);
 
         } finally {
