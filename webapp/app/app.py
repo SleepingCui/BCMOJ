@@ -48,7 +48,7 @@ def index():
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(os.path.join(app.root_path, 'favicon.ico'), 'image/vnd.microsoft.icon')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -132,10 +132,8 @@ def problem(problem_id):
 
 
 @app.route('/submit/<int:problem_id>', methods=['POST'])
+@login_required
 def submit(problem_id):
-    if not logged_in():
-        return jsonify({'error': 'unauthorized'}), 401
-
     cpp_file = request.files.get('code')
     result, status_code = submit_solution(problem_id, cpp_file)
     return jsonify(result), status_code
@@ -158,9 +156,8 @@ def results(userid, resultid, page):
 
 # admin
 @app.route('/admin')
+@admin_required
 def admin_page():
-    if 'usergroup' not in session or session['usergroup'] != 'admin':
-        abort(403)
     return render_template("admin.html")
 
 @app.route("/admin/api")
@@ -207,9 +204,8 @@ def admin_delete_problem():
 
 # teacher
 @app.route('/teacher')
+@teacher_required
 def teacher_page():
-    if 'usergroup' not in session or session['usergroup'] not in ['admin', 'teacher']:
-        abort(403)
     return render_template("teacher.html")
 
 @app.route("/teacher/api")

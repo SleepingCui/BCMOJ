@@ -1,12 +1,12 @@
 import functools
-from flask import session, redirect, url_for, request, jsonify, current_app as app
+from flask import session, redirect, url_for, request, jsonify, current_app as app, abort
 from functools import wraps
 
 def admin_required(f):
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
         if "usergroup" not in session or session["usergroup"] != "admin":
-            return redirect(url_for("login"))
+            return abort(403)
         return f(*args, **kwargs)
     return decorated_function
 
@@ -14,7 +14,7 @@ def teacher_required(f):
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
         if "usergroup" not in session or session["usergroup"] not in ["teacher", "admin"]:
-            return redirect(url_for("login"))
+            return abort(403)
         return f(*args, **kwargs)
     return decorated_function
 
