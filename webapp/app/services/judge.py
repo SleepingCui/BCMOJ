@@ -43,26 +43,13 @@ K_TIME = "_time"
 K_MEM = "_mem"
 
 class JudgeServerClient:
-    """
-    Client for communicating with JudgeServer.
-    """
+
     def __init__(self, host, port, timeout=30):
         self.host = host
         self.port = port
         self.timeout = timeout
 
     def send_code_and_config(self, file_path: Path, config: dict, file_hash: str = ""):
-        """
-        Send code file and config to JudgeServer, receive results.
-
-        Args:
-            file_path (Path): Path to C++ source file.
-            config (dict): Judge configuration.
-            file_hash (str): Optional file hash.
-
-        Returns:
-            list[dict] | None: List of judge results or None on failure.
-        """
         results = []
         json_data = json.dumps(config)
         app.logger.info(f"Sending config to JudgeServer: {json_data}")
