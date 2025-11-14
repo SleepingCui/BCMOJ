@@ -44,8 +44,8 @@ public class ServerInitializer {
         String kwFile = props.getProperty("kwfile");
         String compilerPath = props.getProperty("CompilerPath", "g++");
         String cppStandard = props.getProperty("CppStandard", "c++11");
-        boolean disableSecArgs = cmd.hasOption("disable_security_args");
-        boolean disableMemLimit = cmd.hasOption("disable_mem_limit");
+        boolean disableSecArgs = cmd.hasOption("disable-security-args");
+        boolean disableMemLimit = cmd.hasOption("disable-mem-limit");
 
         if ((host == null || portStr == null || kwFile == null) && configFilePath == null) {
             List<String> missing = new ArrayList<>();
