@@ -136,7 +136,7 @@ button.btn-submit:hover {
 
 .toast-container {
   position: fixed;
-  top: 20px;
+  top: 60px;
   right: 20px;
   z-index: 9999;
 }
