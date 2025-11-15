@@ -1,8 +1,8 @@
 ![BCMOJ](https://socialify.git.ci/SleepingCui/BCMOJ/image?custom_language=Java&description=1&font=Raleway&language=1&name=1&owner=1&pattern=Circuit+Board&theme=Auto)
 
 ![GitHub License](https://img.shields.io/github/license/SleepingCui/BCMOJ)
-![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr/SleepingCui/BCMOJ)
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/SleepingCui/BCMOJ/master)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/SleepingCui/BCMOJ)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/SleepingCui/BCMOJ/maven.yml)
 ![GitHub Release](https://img.shields.io/github/v/release/SleepingCui/BCMOJ)
 
