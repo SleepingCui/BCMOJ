@@ -46,6 +46,7 @@ public class ServerInitializer {
         String cppStandard = props.getProperty("CppStandard", "c++11");
         boolean disableSecArgs = cmd.hasOption("disable-security-args");
         boolean disableMemLimit = cmd.hasOption("disable-mem-limit");
+        boolean useOldFormat = cmd.hasOption("use-old-format");
 
         if ((host == null || portStr == null || kwFile == null) && configFilePath == null) {
             List<String> missing = new ArrayList<>();
@@ -86,7 +87,7 @@ public class ServerInitializer {
             }
             return;
         }
-        startServer(host, port, kwFile, disableSecArgs, disableMemLimit, compilerPath, cppStandard);
+        startServer(host, port, kwFile, disableSecArgs, disableMemLimit, useOldFormat, compilerPath, cppStandard);
     }
 
     private static void configureLogging(boolean debug) {
@@ -145,12 +146,12 @@ public class ServerInitializer {
     }
 
 
-    private static void startServer(String host, int port, String kwFile, boolean DisableSecurityArgs, boolean DisableMemLimit, String compilerPath, String cppStandard) {
+    private static void startServer(String host, int port, String kwFile, boolean DisableSecurityArgs, boolean DisableMemLimit, boolean UseOldFormat, String compilerPath, String cppStandard) {
         try {
             DisableSecurityArgs = shouldDisableSecArgs(DisableSecurityArgs, compilerPath);
 
             log.info("Starting server...");
-            SocketServer server = new SocketServer(host, port, DisableSecurityArgs, DisableMemLimit, kwFile, compilerPath, cppStandard);
+            SocketServer server = new SocketServer(host, port, DisableSecurityArgs, DisableMemLimit, UseOldFormat, kwFile, compilerPath, cppStandard);
             server.start();
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
 

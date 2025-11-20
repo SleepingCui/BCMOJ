@@ -19,6 +19,7 @@ public class CLIParser {
         options.addOption(Option.builder().longOpt("std").hasArg().argName("STD").desc("C++ standard to use for compilation (e.g., c++11, c++17; default: c++11)").build());
         options.addOption(Option.builder().longOpt("disable-security-args").desc("Disable additional compiler security arguments").build());
         options.addOption(Option.builder().longOpt("disable-mem-limit").desc("Disable memory limit for the judging process").build());
+        options.addOption(Option.builder().longOpt("use-old-format").desc("Use the old judging request/response format").build());
     }
     public static CommandLine parse(String[] args) {
         CommandLineParser parser = new DefaultParser();
@@ -44,6 +45,7 @@ public class CLIParser {
         if (cmd.hasOption("extract")) props.setProperty("extract", "true");
         if (cmd.hasOption("disable-security-args")) props.setProperty("disable_security_args", "true");
         if (cmd.hasOption("disable-mem-limit")) props.setProperty("disable_mem_limit", "true");
+        if (cmd.hasOption("use-old-format")) props.setProperty("use_old_format", "true");
 
         return props;
     }
