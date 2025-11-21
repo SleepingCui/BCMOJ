@@ -31,7 +31,7 @@ public class JsonValidateUtilTest {
             }
             """;
 
-        boolean result = validator.validate(json);
+        boolean result = validator.validate(json,true);
         assertTrue("Expected validation to pass", result);
         assertNull("No error should be returned", validator.getLastErrorJson());
     }
@@ -49,7 +49,7 @@ public class JsonValidateUtilTest {
             }
             """;
 
-        boolean result = validator.validate(json);
+        boolean result = validator.validate(json,true);
         assertFalse("Expected validation to fail due to missing _out pair", result);
         assertNotNull("Expected error result", validator.getLastErrorJson());
     }
@@ -67,7 +67,7 @@ public class JsonValidateUtilTest {
             }
             """;
 
-        boolean result = validator.validate(json);
+        boolean result = validator.validate(json,true);
         assertFalse("Expected validation to fail due to missing _in pair", result);
         assertNotNull("Expected error result", validator.getLastErrorJson());
     }
@@ -83,7 +83,7 @@ public class JsonValidateUtilTest {
             }
             """;
 
-        boolean result = validator.validate(json);
+        boolean result = validator.validate(json,true);
         assertFalse("Expected validation to fail due to no input/output pairs", result);
         assertNotNull("Expected error result", validator.getLastErrorJson());
     }
@@ -100,7 +100,7 @@ public class JsonValidateUtilTest {
             }
             """;
 
-        boolean result = validator.validate(json);
+        boolean result = validator.validate(json,true);
         assertFalse("Expected validation to fail due to schema violation", result);
         assertNotNull("Expected error result", validator.getLastErrorJson());
     }
