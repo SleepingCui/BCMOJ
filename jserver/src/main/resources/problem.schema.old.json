@@ -1,24 +1,24 @@
 {
   "type": "object",
-  "required": ["time_limit", "mem_limit", "enable_security_check", "checkpoints"],
+  "required": ["timeLimit", "memLimit", "securityCheck", "checkpoints"],
   "properties": {
-    "time_limit": {
+    "timeLimit": {
       "type": "integer",
       "minimum": 1
     },
-    "mem_limit": {
+    "memLimit": {
       "type": "integer",
       "minimum": 1,
       "description": "Memory limit in kilobytes."
     },
-    "enable_security_check": {
+    "securityCheck": {
       "type": "boolean"
     },
-    "enable_o2": {
+    "enableO2": {
       "type": "boolean",
       "default": false
     },
-    "compare_mode": {
+    "compareMode": {
       "type": "integer",
       "minimum": 1,
       "maximum": 4,
@@ -27,17 +27,13 @@
     },
     "checkpoints": {
       "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "required": ["in", "out"],
-        "properties": {
-          "in": {
-            "type": "string"
-          },
-          "out": {
-            "type": "string"
-          }
-        }
+      "patternProperties": {
+        "^[1-9][0-9]*_in$": { "type": "string" },
+        "^[1-9][0-9]*_out$": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "propertyNames": {
+        "pattern": "^[1-9][0-9]*_(in|out)$"
       }
     }
   }

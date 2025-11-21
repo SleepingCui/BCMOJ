@@ -2,7 +2,7 @@ package org.bcmoj.netserver;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,19 +24,15 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>Block and wait for server shutdown while handling all client connections and requests.</li>
  * </ul>
  *
- * <p><b>Shutdown process:</b></p>
- * <ul>
- *   <li>Gracefully shut down bossGroup and workerGroup to release thread resources.</li>
- * </ul>
- *
  * @author SleepingCui
- * @version 1.0
  */
 @Slf4j
 public class SocketServer {
     private final String host;
     private final int port;
     private final boolean DisableSecurityArgs;
+    private final boolean DisableMemLimit;
+    private final boolean UseOldFormat;
     private final String cppStandard;
     private final String kwFilePath;
     private final String compilerPath;
@@ -49,15 +45,18 @@ public class SocketServer {
      * @param host                  the host address to bind, e.g. "0.0.0.0"
      * @param port                  the port number to listen on, e.g. 12345
      * @param DisableSecurityArgs   Disable Compiler security flags
+     * @param DisableMemLimit       Disable memory limit for the judging process
      * @param kwFilePath            the path to the keyword file used by the judge service
      * @param compilerPath          path to the compiler used by the judge service
      * @param cppStandard           C++ standard version, e.g. "c++11"
      * 
      */
-    public SocketServer(String host, int port, boolean DisableSecurityArgs, String kwFilePath, String compilerPath, String cppStandard) {
+    public SocketServer(String host, int port, boolean DisableSecurityArgs, boolean DisableMemLimit, boolean useOldFormat, String kwFilePath, String compilerPath, String cppStandard) {
         this.host = host;
         this.port = port;
         this.DisableSecurityArgs = DisableSecurityArgs;
+        this.DisableMemLimit = DisableMemLimit;
+        this.UseOldFormat = useOldFormat;
         this.kwFilePath = kwFilePath;
         this.compilerPath = compilerPath;
         this.cppStandard = cppStandard;
@@ -74,14 +73,16 @@ public class SocketServer {
      */
 
     public void start() throws InterruptedException {
-        bossGroup = new NioEventLoopGroup(1);
-        workerGroup = new NioEventLoopGroup();
+        bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
+        workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
-            bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
+            bootstrap.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
-                            ch.pipeline().addLast(new RequestProcessor(kwFilePath,compilerPath,cppStandard,DisableSecurityArgs));
+                            ch.pipeline().addLast(new RequestProcessor(kwFilePath, compilerPath, cppStandard, DisableSecurityArgs, DisableMemLimit, UseOldFormat));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
@@ -93,6 +94,7 @@ public class SocketServer {
             stop();
         }
     }
+
 
     /**
      * Gracefully shuts down the server and releases thread pool resources.

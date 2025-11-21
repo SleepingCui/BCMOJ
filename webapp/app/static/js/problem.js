@@ -20,208 +20,227 @@ const resultColorMapping = {
   "System Error": "result-fail",
   "Unknown Status": "result-default"
 };
+
 const MAX_TOASTS = 8;
 
-function showToast(message, type='info'){
+function showToast(message, type = 'info') {
   console.log(`[Toast] type=${type}, message=${message}`);
-  const container = document.querySelector('.toast-container');
-  const toasts = container.querySelectorAll('.toast');
-  if(toasts.length >= MAX_TOASTS){
+  const $container = $('.toast-container');
+  const $toasts = $container.find('.toast');
+  if ($toasts.length >= MAX_TOASTS) {
     console.log(`[Toast] Max toasts reached, removing oldest`);
-    toasts[0].style.animation = 'slideOut 0.4s forwards';
-    setTimeout(()=>{ toasts[0].remove(); },400);
+    $toasts.first().css('animation', 'slideOut 0.4s forwards');
+    setTimeout(() => {
+      $toasts.first().remove();
+    }, 400);
   }
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<div class="toast-body">${message}</div>`;
-  container.appendChild(toast);
-  setTimeout(()=>{
-    toast.style.animation = 'slideOut 0.4s forwards';
-    setTimeout(()=>toast.remove(),400);
-  },5000);
+  const $toast = $(`<div class="toast toast-${type}"><div class="toast-body">${message}</div></div>`);
+  $container.append($toast);
+  setTimeout(() => {
+    $toast.css('animation', 'slideOut 0.4s forwards');
+    setTimeout(() => $toast.remove(), 400);
+  }, 5000); 
 }
 
-function loadRequiredLibs(){
+function loadRequiredLibs() {
   console.log('[Libs] Checking required libraries...');
-  return new Promise(resolve=>{
-    if(typeof marked!=='undefined' && typeof renderMathInElement!=='undefined'){ 
+  return new Promise(resolve => {
+    if (typeof marked !== 'undefined' && typeof renderMathInElement !== 'undefined') {
       console.log('[Libs] marked & KaTeX already loaded');
-      resolve(); 
-      return; 
+      resolve();
+      return;
     }
-    let loaded=0; const total=2;
-    const check=()=>{loaded++; console.log(`[LoadLibs] loaded ${loaded}/${total}`); if(loaded===total) resolve();}
-    if(typeof marked==='undefined'){ 
-      console.log('[Libs] Loading marked.js'); 
-      let s=document.createElement('script'); 
-      s.src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'; 
-      s.onload=check; 
-      document.head.appendChild(s); 
+    let loaded = 0;
+    const total = 2;
+    const check = () => {
+      loaded++;
+      console.log(`[LoadLibs] loaded ${loaded}/${total}`);
+      if (loaded === total) resolve();
+    };
+    if (typeof marked === 'undefined') {
+      console.log('[Libs] Loading marked.js');
+      let s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+      s.onload = check;
+      document.head.appendChild(s);
     } else check();
-    if(typeof renderMathInElement==='undefined'){ 
-      console.log('[Libs] Loading KaTeX'); 
-      let s=document.createElement('script'); 
-      s.src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js'; 
-      s.onload=check; 
-      document.head.appendChild(s); 
+    if (typeof renderMathInElement === 'undefined') {
+      console.log('[Libs] Loading KaTeX auto-render');
+      let s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js';
+      s.onload = check;
+      document.head.appendChild(s);
     } else check();
   });
 }
+
 
 function renderContent() {
   console.log('[Render] Rendering content...');
-  const desc = document.querySelector('.description div');
-  if (desc) {
-      const orig = desc.innerHTML;
-      try {
-          desc.innerHTML = marked.parse(desc.textContent);
-          console.log('[Render] Markdown parsed');
+  const $desc = $('.description div');
+  if ($desc.length) { 
+    const orig = $desc.html();
+    try {
+      $desc.html(marked.parse($desc.text()));
+      console.log('[Render] Markdown parsed');
 
-          if (typeof renderMathInElement !== 'undefined') {
-              renderMathInElement(desc, {
-                  delimiters: [
-                      { left: "$$", right: "$$", display: true },
-                      { left: "$", right: "$", display: false },
-                      { left: "\\(", right: "\\)", display: false },
-                      { left: "\\[", right: "\\]", display: true }
-                  ],
-                  throwOnError: false
-              });
-              console.log('[Render] KaTeX render complete');
-          }
-      } catch (e) {
-          desc.innerHTML = orig;
-          console.error('[Render] Rendering error:', e);
+      if (typeof renderMathInElement !== 'undefined') {
+        renderMathInElement($desc[0], {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false },
+            { left: "\\(", right: "\\)", display: false },
+            { left: "\\[", right: "\\]", display: true }
+          ],
+          throwOnError: false
+        });
+        console.log('[Render] KaTeX render complete');
       }
+    } catch (e) {
+      $desc.html(orig); 
+      console.error('[Render] Rendering error:', e);
+    }
   } else {
-      console.log('[Render] No description div found');
+    console.log('[Render] No description div found');
   }
 }
 
-function setupDragAndDrop(){
+function setupDragAndDrop() {
   console.log('[DragDrop] Setting up drag & drop');
-  document.addEventListener('dragover', e=>{ e.preventDefault(); });
-  document.addEventListener('drop', e=>{
+  $(document).on('dragover', function (e) {
     e.preventDefault();
-    console.log('[DragDrop] Files dropped:', e.dataTransfer.files);
-    const fileInput=document.getElementById('fileInput');
-    if(e.dataTransfer.files.length>0){
-      fileInput.files=e.dataTransfer.files;
-      const reader=new FileReader();
-      reader.onload=e=>{
+  });
+
+  $(document).on('drop', function (e) {
+    e.preventDefault(); 
+    console.log('[DragDrop] Files dropped:', e.originalEvent.dataTransfer.files);
+    const $fileInput = $('#fileInput');
+    const files = e.originalEvent.dataTransfer.files;
+    if (files.length > 0) {
+
+      const reader = new FileReader();
+      reader.onload = function (readerEvent) {
         console.log('[DragDrop] File content loaded');
-        document.getElementById('codePasteArea').value=e.target.result;
+        $('#codePasteArea').val(readerEvent.target.result);
       };
-      reader.readAsText(e.dataTransfer.files[0]);
+      reader.readAsText(files[0]);
     }
   });
 }
 
-function setupFormHandlers(){
-  console.log('[Form] Setting up form handlers');
-  document.getElementById('codePasteArea').addEventListener('input', ()=>{ 
-    document.getElementById('fileInput').value=''; 
-    console.log('[Form] Code pasted, cleared file input');
+function setupFormHandlers() {
+  $('#codePasteArea').on('input', function () {
+    $('#fileInput').val('');
   });
 
-  document.getElementById('fileInput').addEventListener('change', function(){
-    const file=this.files[0];
+
+  $('#fileInput').on('change', function () {
+    const file = this.files[0]; 
     console.log('[Form] File input changed:', file?.name);
-    if(file){ 
-      const reader=new FileReader(); 
-      reader.onload=e=>{
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (readerEvent) {
         console.log('[Form] File content loaded into textarea');
-        document.getElementById('codePasteArea').value=e.target.result; 
+        $('#codePasteArea').val(readerEvent.target.result);
       };
       reader.readAsText(file);
     }
   });
 
-  document.getElementById('submitForm').addEventListener('submit', async function(e){
-    e.preventDefault();
+  $('#submitForm').on('submit', async function (e) {
+    e.preventDefault(); 
     console.log('[Submit] Form submitted');
-    const fileInput=document.getElementById('fileInput');
-    const codeText=document.getElementById('codePasteArea').value.trim();
-    const resultArea=document.getElementById('resultArea');
-    const resultsDiv=document.getElementById('results');
-    resultsDiv.innerHTML='<p class="loading">Waiting...</p>';
-    resultArea.style.display='block';
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    console.log('[Submit] Preparing FormData');
 
-    const formData=new FormData();
-    formData.append('enableO2', document.getElementById('enableO2')?.checked || false);
+    const codeText = $('#codePasteArea').val().trim();
+    const $fileInput = $('#fileInput');
+    const $resultArea = $('#resultArea');
+    const $resultsDiv = $('#results');
 
-    if(codeText) {
-      formData.append('code', new Blob([codeText],{type:'text/x-c++src'}),'pasted_code.cpp');
+    $resultsDiv.html('<p class="loading">Waiting...</p>');
+    $resultArea.show();
+    $('html, body').animate({ scrollTop: $(document).height() }, 'smooth');
+
+    const formData = new FormData();
+    formData.append('enableO2', $('#enableO2').is(':checked'));
+    if (codeText) {
+      formData.append('code', new Blob([codeText], { type: 'text/x-c++src' }), 'pasted_code.cpp');
       console.log('[Submit] Code appended from textarea');
-    } else if(fileInput.files.length>0) {
-      formData.append('code', fileInput.files[0]);
+    } else if ($fileInput[0].files.length > 0) {
+      formData.append('code', $fileInput[0].files[0]);
       console.log('[Submit] Code appended from file input');
-    } else { 
+    } else {
       const msg = "请上传文件或粘贴代码后再提交。";
-      showToast(msg,'error'); 
-      resultsDiv.innerHTML=`<p class="result-fail">${msg}</p>`;
+      showToast(msg, 'error');
+      $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
       console.log('[Submit] No code provided, aborting');
-      return; 
+      return;
     }
 
-    try{
+    try {
       console.log('[Submit] Sending fetch request...');
-      const response=await fetch(window.location.pathname.replace('/problem/','/submit/'), {method:'POST',body:formData});
-      
-      if(response.status===401){ 
+      const response = await fetch(window.location.pathname.replace('/problem/', '/submit/'), {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.status === 401) {
         const msg = '未登录，请先登录';
-        showToast(msg,'error'); 
-        resultsDiv.innerHTML=`<p class="result-fail">${msg}</p>`;
+        showToast(msg, 'error');
+        $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
         console.log('[Submit] Unauthorized, redirecting to login');
-        window.location.href='/login?next='+encodeURIComponent(window.location.href); 
-        return; 
+        window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
+        return;
       }
 
-      if(response.ok){
-        console.log('[Submit] Response OK');
-        const data=await response.json();
-        console.log('[Submit] Response JSON:', data);
-        resultsDiv.innerHTML='';
-
-        if(data.status==='ok'){
-          console.log('[Submit] Submission results:', data.results);
-          data.results.forEach(res=>{
-            const resultText=resultMapping[res.result]||resultMapping["default"];
-            const resultClass=resultColorMapping[resultText]||resultColorMapping["Unknown Status"];
-            const p=document.createElement('p');
-            p.innerHTML=`测试点 ${res.checkpoint}: <span class="${resultClass}">${resultText}</span> (Time used ${res.time} ms, Mem used ${res.mem || 0} KB)`;
-
-            resultsDiv.appendChild(p);
-            console.log(`[Submit] Checkpoint ${res.checkpoint}: ${resultText}, ${res.time}ms`);
-            showToast(`测试点 ${res.checkpoint}: ${resultText} (Time used ${res.time} ms, Mem used ${res.mem || 0} KB)`, resultText==='Accepted'?'success':'error');
-
-          });
-        } else {
-          const msg = '评测失败: '+(data.error||'未知错误');
-          showToast(msg,'error');
-          resultsDiv.innerHTML=`<p class="result-fail">${msg}</p>`;
-          console.log('[Submit] Evaluation failed:', data.error);
-        }
-      } else {
+      if (!response.ok) { 
         const msg = '提交失败，请稍后再试。';
-        showToast(msg,'error');
-        resultsDiv.innerHTML=`<p class="result-fail">${msg}</p>`;
+        showToast(msg, 'error');
+        $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
         console.log('[Submit] Fetch response not OK, status=', response.status);
+        return;
       }
-    } catch(err){ 
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.toLowerCase().includes('text/html')) {
+        const msg = '未登录，请先登录';
+        showToast(msg, 'error');
+        $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
+        window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
+        return;
+      }
+
+      const data = await response.json();
+      console.log('[Submit] Response JSON:', data);
+      $resultsDiv.empty();
+
+      if (data.status === 'ok') {
+        console.log('[Submit] Submission results:', data.results);
+        data.results.forEach(res => {
+          const resultText = resultMapping[res.result] || resultMapping["default"];
+          const resultClass = resultColorMapping[resultText] || resultColorMapping["Unknown Status"];
+          const $p = $(`<p>测试点 ${res.checkpoint}: <span class="${resultClass}">${resultText}</span> (${res.time} ms - ${res.mem || 0} KB)</p>`);
+          $resultsDiv.append($p);
+          console.log(`[Submit] Checkpoint ${res.checkpoint}: ${resultText}, ${res.time}ms`);
+          showToast(`测试点 ${res.checkpoint}: ${resultText} (${res.time} ms - ${res.mem || 0} KB)`, resultText === 'Accepted' ? 'success' : 'error');
+        });
+      } else {
+        const msg = '评测失败: ' + (data.error || '未知错误');
+        showToast(msg, 'error');
+        $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
+        console.log('[Submit] Evaluation failed:', data.error);
+      }
+    } catch (err) {    
       const msg = '网络错误，请检查连接后重试。';
-      resultsDiv.innerHTML=`<p class="result-fail">${msg}</p>`; 
-      showToast(msg,'error');
+      $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
+      showToast(msg, 'error');
       console.error('[Submit] Network error:', err);
     }
   });
 }
 
-document.addEventListener('DOMContentLoaded', function(){ 
+$(document).ready(function () {
   console.log('[DOM] DOM Loaded');
-  loadRequiredLibs().then(renderContent); 
-  setupDragAndDrop(); 
-  setupFormHandlers(); 
+  loadRequiredLibs().then(renderContent);
+  setupDragAndDrop();
+  setupFormHandlers();
 });

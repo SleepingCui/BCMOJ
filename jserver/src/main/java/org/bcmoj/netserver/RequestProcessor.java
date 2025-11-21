@@ -79,6 +79,8 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
 
     private final JsonValidateUtil validator = new JsonValidateUtil();
     private final boolean DisableSecurityArgs;
+    private final boolean DisableMemLimit;
+    private final boolean UseOldFormat;
     private final String kwFilePath;
     private final String compilerPath;
     private final String cppStandard;
@@ -105,12 +107,17 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
      * @param compilerPath path to the compiler used by JudgeServer
      * @param cppStandard  C++ standard version used by JudgeServer
      * @param DisableSecurityArgs Disable Compiler security flags
+     * @param DisableMemLimit   Disable memory limit for the judging process
      */
-    public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard, boolean DisableSecurityArgs) {
+    public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard, boolean DisableSecurityArgs, boolean DisableMemLimit, boolean UseOldFormat) {
         this.kwFilePath = kwFilePath;
         this.compilerPath = compilerPath;
         this.cppStandard = cppStandard;
         this.DisableSecurityArgs = DisableSecurityArgs;
+        this.DisableMemLimit = DisableMemLimit;
+        this.UseOldFormat = UseOldFormat;
+
+
     }
 
     /**
@@ -300,21 +307,21 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         log.info("Actual hash: {}", actualHash);
                         if (!actualHash.equalsIgnoreCase(declaredHash)) {
                             log.warn("File hash mismatch! Sending error result...");
-                            sendResponse(ctx, JudgeResultUtil.buildResult(List.of(), false, true, parseCheckpointCount(jsonConfig)));
+                            sendResponse(ctx, JudgeResultUtil.buildResult(List.of(), false, true, parseCheckpointCount(jsonConfig),UseOldFormat));
                             return;
                         }
                     } catch (NoSuchAlgorithmException e) {
                         log.warn("Hash calculation failed: {}", e.getMessage());
                     }
                 }
-                if (!validator.validate(jsonConfig)) {
+                if (!validator.validate(jsonConfig,UseOldFormat)) {
                     String errorJson = validator.getLastErrorJson();
                     if (errorJson != null) {
                         sendResponse(ctx, errorJson);
                     }
                     return;
                 }
-                String response = JudgeServer.serve(jsonConfig, compilerPath, cppStandard, tempFile, new File(kwFilePath), DisableSecurityArgs);
+                String response = JudgeServer.serve(jsonConfig, compilerPath, cppStandard, tempFile, new File(kwFilePath), DisableSecurityArgs, DisableMemLimit,UseOldFormat);
                 log.info("JudgeServer response: {}", response);
                 sendResponse(ctx, response);
 
@@ -374,7 +381,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
     private int parseCheckpointCount(String jsonConfig) {
         try {
             JsonNode checkpointsNode = mapper.readTree(jsonConfig).get("checkpoints");
-            int count = validator.countInFiles(checkpointsNode);
+            int count = validator.countIns(checkpointsNode);
             return count <= 0 ? 1 : count;
         } catch (Exception e) {
             log.warn("Failed to parse checkpoints count from JSON config, using default 1");
