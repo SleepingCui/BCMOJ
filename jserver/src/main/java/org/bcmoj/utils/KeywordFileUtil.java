@@ -18,7 +18,6 @@ import java.util.List;
  * </p>
  *
  * @author MxingFoew1034
- * @version 1.0
  */
 public class KeywordFileUtil {
     /**

@@ -8,18 +8,7 @@ import java.util.Map;
  * Provides methods for processing and transforming strings, such as unescaping escape sequences.
  * </p>
  *
- * <p>
- * Example usage:
- * <pre>
- * String escaped = "Hello\\nWorld";
- * String unescaped = StringUtil.unescapeString(escaped);
- * // unescaped == "Hello
- * // World"
- * </pre>
- * </p>
- *
  * @author SleepingCui
- * @version ${project.version}
  */
 public class StringUtil {
 

@@ -108,8 +108,7 @@ public class JsonReadUtil {
         public final int checkpointsCount;
         public final boolean useOldFormat;
 
-        public ConfigResult(int timeLimit, int memLimit, JsonNode checkpoints, boolean securityCheck,
-                            boolean enableO2, int compareMode, int checkpointsCount, boolean useOldFormat) {
+        public ConfigResult(int timeLimit, int memLimit, JsonNode checkpoints, boolean securityCheck, boolean enableO2, int compareMode, int checkpointsCount, boolean useOldFormat) {
             this.timeLimit = timeLimit;
             this.memLimit = memLimit;
             this.checkpoints = checkpoints;

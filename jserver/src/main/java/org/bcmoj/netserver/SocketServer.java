@@ -24,13 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>Block and wait for server shutdown while handling all client connections and requests.</li>
  * </ul>
  *
- * <p><b>Shutdown process:</b></p>
- * <ul>
- *   <li>Gracefully shut down bossGroup and workerGroup to release thread resources.</li>
- * </ul>
- *
  * @author SleepingCui
- * @version 1.0
  */
 @Slf4j
 public class SocketServer {
