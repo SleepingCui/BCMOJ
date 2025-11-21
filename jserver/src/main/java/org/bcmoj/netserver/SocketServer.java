@@ -2,7 +2,7 @@ package org.bcmoj.netserver;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
@@ -79,14 +79,16 @@ public class SocketServer {
      */
 
     public void start() throws InterruptedException {
-        bossGroup = new NioEventLoopGroup(1);
-        workerGroup = new NioEventLoopGroup();
+        bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
+        workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
-            bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
+            bootstrap.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
-                            ch.pipeline().addLast(new RequestProcessor(kwFilePath,compilerPath,cppStandard,DisableSecurityArgs,DisableMemLimit,UseOldFormat));
+                            ch.pipeline().addLast(new RequestProcessor(kwFilePath, compilerPath, cppStandard, DisableSecurityArgs, DisableMemLimit, UseOldFormat));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
@@ -98,6 +100,7 @@ public class SocketServer {
             stop();
         }
     }
+
 
     /**
      * Gracefully shuts down the server and releases thread pool resources.

@@ -109,27 +109,23 @@ public class JudgeServer {
             executor = Executors.newFixedThreadPool(configResult.checkpointsCount);
             List<Future<Judger.JudgeResult>> futures = new ArrayList<>();
 
-            if (configResult.useOldFormat) {
-                for (int i = 1; i <= configResult.checkpointsCount; i++) {
-                    final String input = configResult.checkpoints.get(i + "_in").asText();
-                    final String output = configResult.checkpoints.get(i + "_out").asText();
+            if (configResult.checkpointsCount > 0) {
+                for (int i = 0; i < configResult.checkpointsCount; i++) {
+                    final String input;
+                    final String output;
+                    if (configResult.useOldFormat) {
+                        input = configResult.checkpoints.get((i + 1) + "_in").asText();
+                        output = configResult.checkpoints.get((i + 1) + "_out").asText();
+                    } else {
+                        JsonNode checkpoint = configResult.checkpoints.get(i);
+                        input = checkpoint.get("in").asText();
+                        output = checkpoint.get("out").asText();
+                    }
                     File finalExeFile = exeFile;
                     Future<Judger.JudgeResult> future = executor.submit(() ->
                             Judger.judge(finalExeFile, input, output, configResult.timeLimit, configResult.memLimit, mode, DisableMemLimit)
                     );
                     futures.add(future);
-                }
-            } else {
-                int index = 0;
-                for (JsonNode checkpoint : configResult.checkpoints) {
-                    final String input = checkpoint.get("in").asText();
-                    final String output = checkpoint.get("out").asText();
-                    File finalExeFile = exeFile;
-                    Future<Judger.JudgeResult> future = executor.submit(() ->
-                            Judger.judge(finalExeFile, input, output, configResult.timeLimit, configResult.memLimit, mode, DisableMemLimit)
-                    );
-                    futures.add(future);
-                    index++;
                 }
             }
             executor.shutdown();
