@@ -29,18 +29,19 @@ R_AC = 1      # Accepted
 R_WA = -3     # Wrong Answer
 R_TLE = 2     # Time Limit Exceeded
 R_MLE = 3     # Memory Limit Exceeded
-R_RE = 4      # Runtime Error
-R_SE = 5      # System Error
+R_RE = 4     # Runtime Error
+R_SE = 5     # System Error
 R_CE = -4     # Compile Error
 R_SC_FAILED = -5  # Security Check Failed
 R_UNKNOWN = 0     # Unknown error code
 
-# JSON keys
-K_IN = "_in"
-K_OUT = "_out"
-K_RES = "_res"
-K_TIME = "_time"
-K_MEM = "_mem"
+# JSON keys for new format
+K_NEW_IN = "in"
+K_NEW_OUT = "out"
+K_NEW_RES = "res"
+K_NEW_TIME = "time"
+K_NEW_MEM = "mem"
+
 
 class JudgeServerClient:
 
@@ -50,6 +51,14 @@ class JudgeServerClient:
         self.timeout = timeout
 
     def send_code_and_config(self, file_path: Path, config: dict, file_hash: str = ""):
+        """
+        Send code and config to judge server using new format
+        
+        Args:
+            file_path: Path to the source file
+            config: Configuration dictionary in new format
+            file_hash: File hash for verification
+        """
         results = []
         json_data = json.dumps(config)
         app.logger.info(f"Sending config to JudgeServer: {json_data}")
@@ -109,16 +118,8 @@ class JudgeServerClient:
                     data = json.loads(received.decode('utf-8'))
                     app.logger.info(f"Received data chunk from JudgeServer: {data}")
 
-                    # parse results
-                    for key in data:
-                        if key.endswith(K_RES):
-                            idx = key.split(K_RES)[0]
-                            results.append({
-                                'checkpoint': idx,
-                                'result': data.get(f"{idx}{K_RES}", R_UNKNOWN),
-                                'time': data.get(f"{idx}{K_TIME}", 0.0),
-                                'mem': data.get(f"{idx}{K_MEM}", 0)
-                            })
+                    # Parse results in new format (structured checkpoints)
+                    results.extend(self._parse_new_format_results(data))
 
         except socket.timeout:
             app.logger.error("Socket connection to JudgeServer timed out.")
@@ -134,6 +135,20 @@ class JudgeServerClient:
             return None
 
         app.logger.info(f"Successfully received results from JudgeServer: {results}")
+        return results
+
+    def _parse_new_format_results(self, data):
+        """Parse results in new format (structured checkpoints)"""
+        results = []
+        checkpoints = data.get("checkpoints", {})
+        
+        for checkpoint_id, checkpoint_data in checkpoints.items():
+            results.append({
+                'checkpoint': int(checkpoint_id),
+                'result': checkpoint_data.get(K_NEW_RES, R_UNKNOWN),
+                'time': checkpoint_data.get(K_NEW_TIME, 0.0),
+                'mem': checkpoint_data.get(K_NEW_MEM, 0)
+            })
         return results
 
 
@@ -161,11 +176,6 @@ def _get_problem_data(problem_id):
         return None, None, 'Problem not found'
 
     examples = Example.query.filter_by(problem_id=problem_id).order_by(Example.example_id).all()
-    checkpoints = {}
-    for idx, ex in enumerate(examples, 1):
-        checkpoints[f"{idx}{K_IN}"] = ex.input
-        checkpoints[f"{idx}{K_OUT}"] = ex.output
-
     return problem, examples, None
 
 
@@ -187,19 +197,22 @@ def _parse_options(problem_compare_mode):
     return enable_o2, compare_mode
 
 
-def _build_config(problem, examples, enable_o2, compare_mode):
+def _build_new_format_config(problem, examples, enable_o2, compare_mode):
+    """Build config in new format"""
     checkpoints = {}
     for idx, ex in enumerate(examples, 1):
-        checkpoints[f"{idx}{K_IN}"] = ex.input
-        checkpoints[f"{idx}{K_OUT}"] = ex.output
+        checkpoints[str(idx)] = {
+            "in": ex.input,
+            "out": ex.output
+        }
 
     config_data = {
-        "timeLimit": problem.time_limit,
-        "memLimit": problem.mem_limit,
+        "time_limit": problem.time_limit,
+        "mem_limit": problem.mem_limit,
         "checkpoints": checkpoints,
-        "securityCheck": ENABLE_SECURITY_CHECK,
-        "enableO2": enable_o2,
-        "compareMode": compare_mode
+        "enable_security_check": ENABLE_SECURITY_CHECK,
+        "enable_o2": enable_o2,
+        "compare_mode": compare_mode
     }
     return config_data
 
@@ -257,7 +270,7 @@ def submit_solution(problem_id, cpp_file):
             return {'error': error_msg}, 404
 
         enable_o2, compare_mode = _parse_options(problem.compare_mode)
-        config_data = _build_config(problem, examples, enable_o2, compare_mode)
+        config_data = _build_new_format_config(problem, examples, enable_o2, compare_mode)
 
         file_hash = calculate_file_sha256(temp_path)
         app.logger.info(f"Calculated file hash: {file_hash}")

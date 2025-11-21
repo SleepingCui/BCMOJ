@@ -129,11 +129,8 @@ function setupDragAndDrop() {
 }
 
 function setupFormHandlers() {
-  console.log('[Form] Setting up form handlers');
-
   $('#codePasteArea').on('input', function () {
     $('#fileInput').val('');
-    console.log('[Form] Code pasted, cleared file input');
   });
 
 
@@ -195,35 +192,44 @@ function setupFormHandlers() {
         return;
       }
 
-      if (response.ok) {
-        console.log('[Submit] Response OK');
-        const data = await response.json();
-        console.log('[Submit] Response JSON:', data);
-        $resultsDiv.empty();
-
-        if (data.status === 'ok') {
-          console.log('[Submit] Submission results:', data.results);
-          data.results.forEach(res => {
-            const resultText = resultMapping[res.result] || resultMapping["default"];
-            const resultClass = resultColorMapping[resultText] || resultColorMapping["Unknown Status"];
-            const $p = $(`<p>测试点 ${res.checkpoint}: <span class="${resultClass}">${resultText}</span> (Time used ${res.time} ms, Mem used ${res.mem || 0} KB)</p>`);
-            $resultsDiv.append($p);
-            console.log(`[Submit] Checkpoint ${res.checkpoint}: ${resultText}, ${res.time}ms`);
-            showToast(`测试点 ${res.checkpoint}: ${resultText} (Time used ${res.time} ms, Mem used ${res.mem || 0} KB)`, resultText === 'Accepted' ? 'success' : 'error');
-          });
-        } else {
-          const msg = '评测失败: ' + (data.error || '未知错误');
-          showToast(msg, 'error');
-          $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
-          console.log('[Submit] Evaluation failed:', data.error);
-        }
-      } else { 
+      if (!response.ok) { 
         const msg = '提交失败，请稍后再试。';
         showToast(msg, 'error');
         $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
         console.log('[Submit] Fetch response not OK, status=', response.status);
+        return;
       }
-    } catch (err) {
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.toLowerCase().includes('text/html')) {
+        const msg = '未登录，请先登录';
+        showToast(msg, 'error');
+        $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
+        window.location.href = '/login?next=' + encodeURIComponent(window.location.href);
+        return;
+      }
+
+      const data = await response.json();
+      console.log('[Submit] Response JSON:', data);
+      $resultsDiv.empty();
+
+      if (data.status === 'ok') {
+        console.log('[Submit] Submission results:', data.results);
+        data.results.forEach(res => {
+          const resultText = resultMapping[res.result] || resultMapping["default"];
+          const resultClass = resultColorMapping[resultText] || resultColorMapping["Unknown Status"];
+          const $p = $(`<p>测试点 ${res.checkpoint}: <span class="${resultClass}">${resultText}</span> (${res.time} ms - ${res.mem || 0} KB)</p>`);
+          $resultsDiv.append($p);
+          console.log(`[Submit] Checkpoint ${res.checkpoint}: ${resultText}, ${res.time}ms`);
+          showToast(`测试点 ${res.checkpoint}: ${resultText} (${res.time} ms - ${res.mem || 0} KB)`, resultText === 'Accepted' ? 'success' : 'error');
+        });
+      } else {
+        const msg = '评测失败: ' + (data.error || '未知错误');
+        showToast(msg, 'error');
+        $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
+        console.log('[Submit] Evaluation failed:', data.error);
+      }
+    } catch (err) {    
       const msg = '网络错误，请检查连接后重试。';
       $resultsDiv.html(`<p class="result-fail">${msg}</p>`);
       showToast(msg, 'error');

@@ -13,14 +13,14 @@ def send_verification_email(email, verification_code):
     try:
         msg = MIMEText(f'Your verification code is: {verification_code}', 'plain', 'utf-8')
         msg['Subject'] = 'Password Recovery Verification Code'
-        msg['From'] = EMAIL_CONFIG['sender']
+        msg['From'] = EMAIL_CONFIG['email_sender']
         msg['To'] = email
 
         smtp_port = int(EMAIL_CONFIG.get('smtp_port', 587))
 
-        with smtplib.SMTP(EMAIL_CONFIG['smtp_server'], smtp_port) as server:
+        with smtplib.SMTP(EMAIL_CONFIG['email_smtp_server'], smtp_port) as server:
             server.starttls()
-            server.login(EMAIL_CONFIG['sender'], EMAIL_CONFIG['password'])
+            server.login(EMAIL_CONFIG['email_sender'], EMAIL_CONFIG['email_password'])
             server.send_message(msg)
         return True
     except Exception as e:
