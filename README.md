@@ -25,17 +25,21 @@
 ### 配置示例
 
 ```json
-{ 
-  "timeLimit": 1145,
-  "memLimit": 1000,
-  "securityCheck": false,
-  "enableO2": true,
-  "compareMode": 1,
+{
+  "time_limit": 1000,
+  "mem_limit": 65536,
+  "enable_security_check": false,
+  "enable_o2": true,
+  "compare_mode": 1,
   "checkpoints": {
-    "1_in": "1145",
-    "1_out": "14",
-    "2_in": "1919",
-    "2_out": "810"
+    "1": {
+      "in": "1 2",
+      "out": "3"
+    },
+    "2": {
+      "in": "100 200",
+      "out": "300"
+    }
   }
 }
 ```
@@ -44,12 +48,18 @@
 
 ```json
 {
-  "1_res": 1,
-  "1_time": 15.2041,
-  "1_mem": 133,
-  "2_res": 1,
-  "2_time": 18.5166,
-  "2_mem": 133
+  "checkpoints": {
+    "1": {
+      "res": 1,
+      "time": 15.2854,
+      "mem": 133
+    },
+    "2": {
+      "res": 1,
+      "time": 18.1745,
+      "mem": 133
+    }
+  }
 }
 ```
 
