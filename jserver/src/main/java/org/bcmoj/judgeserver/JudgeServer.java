@@ -113,18 +113,20 @@ public class JudgeServer {
                 for (int i = 0; i < configResult.checkpointsCount; i++) {
                     final String input;
                     final String output;
+
                     if (configResult.useOldFormat) {
                         input = configResult.checkpoints.get((i + 1) + "_in").asText();
                         output = configResult.checkpoints.get((i + 1) + "_out").asText();
                     } else {
-                        JsonNode checkpoint = configResult.checkpoints.get(i);
+                        String key = String.valueOf(i + 1);
+                        JsonNode checkpoint = configResult.checkpoints.get(key);
                         input = checkpoint.get("in").asText();
                         output = checkpoint.get("out").asText();
                     }
                     File finalExeFile = exeFile;
                     Future<Judger.JudgeResult> future = executor.submit(() ->
-                            Judger.judge(finalExeFile, input, output, configResult.timeLimit, configResult.memLimit, mode, DisableMemLimit)
-                    );
+                        Judger.judge(finalExeFile, input, output, configResult.timeLimit, configResult.memLimit, mode, DisableMemLimit)
+                        );
                     futures.add(future);
                 }
             }
