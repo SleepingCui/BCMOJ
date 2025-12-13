@@ -27,3 +27,5 @@
 [GitHub Markdown CSS](https://github.com/sindresorhus/github-markdown-css)
 
 [Bootstrap](https://getbootstrap.com/)
+
+[jQuery](https://jquery.com/)
