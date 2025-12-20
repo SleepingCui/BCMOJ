@@ -13,9 +13,67 @@
     </header>
 
     <div class="section">
-        <h2>编辑 app 设置（需自行重启应用）</h2>
-        <textarea id="configYmlContent"></textarea><br>
-        <button onclick="saveYml()">保存</button>
+        <h2>编辑通用设置 (修改后需重启应用)</h2>
+        <form id="configForm">
+            <div class="form-section">
+                <h3>邮件配置 (email_config)</h3>
+                <div class="form-row">
+                    <label for="emailSender" title="用于发送邮件的邮箱地址">邮箱账号 (email_sender)</label>
+                    <input type="email" id="emailSender" name="email_config.email_sender">
+                </div>
+                <div class="form-row">
+                    <label for="emailPassword" title="用于登录邮箱的密码或授权码">邮箱密码 (email_password)</label>
+                    <input type="password" id="emailPassword" name="email_config.email_password">
+                </div>
+                <div class="form-row">
+                    <label for="emailSmtpServer" title="邮件 SMTP 服务器地址，例如 smtp.example.com">邮件 SMTP 服务器地址 (email_smtp_server)</label>
+                    <input type="text" id="emailSmtpServer" name="email_config.email_smtp_server">
+                </div>
+                <div class="form-row">
+                    <label for="emailSmtpPort" title="邮件 SMTP 端口，默认 587(TLS)，如使用 SSL 通常为 465">邮件 SMTP 端口 (email_smtp_port)</label>
+                    <input type="number" id="emailSmtpPort" name="email_config.email_smtp_port" min="1" max="65535">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>判题配置 (judge_config)</h3>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="enableSecurityCheck" name="judge_config.enable_code_security_check">
+                    <label for="enableSecurityCheck" title="是否启用判题安全关键字检测">启用代码安全检查 (enable_code_security_check)</label>
+                </div>
+                <div class="form-row">
+                    <label for="judgeHost" title="Judge Server 运行的主机 IP">判题服务器地址 (judge_host)</label>
+                    <input type="text" id="judgeHost" name="judge_config.judge_host">
+                </div>
+                <div class="form-row">
+                    <label for="judgePort" title="Judge Server 监听的端口号">判题服务器端口 (judge_port)</label>
+                    <input type="number" id="judgePort" name="judge_config.judge_port" min="1" max="65535">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>应用设置 (app_settings)</h3>
+                <div class="form-row">
+                    <label for="uploadFolder" title="临时存放用户上传代码的目录">上传目录 (upload_folder)</label>
+                    <input type="text" id="uploadFolder" name="app_settings.upload_folder">
+                </div>
+                <div class="form-row">
+                    <label for="userdataFolder" title="用户数据目录">用户数据目录 (userdata_folder)</label>
+                    <input type="text" id="userdataFolder" name="app_settings.userdata_folder">
+                </div>
+                <div class="form-row">
+                    <label for="gunicornWorkers" title="Gunicorn 部署时的 worker 数量，建议根据 CPU 核心数设置">Gunicorn 工作进程数 (gunicorn_workers)</label>
+                    <input type="number" id="gunicornWorkers" name="app_settings.gunicorn_workers" min="1">
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="disableColorLog" name="app_settings.disable_color_log">
+                    <label for="disableColorLog" title="是否禁用彩色日志输出">禁用彩色日志 (disable_color_log)</label>
+                </div>
+            </div>
+
+            <button type="submit">保存通用设置</button>
+        </form>
+        <p class="note">注意：修改配置后需要手动重启 Flask 应用程序才能生效。数据库(db_config)、Flask加密密钥(secret_key)等敏感信息仍需在 config.yml 文件中手动配置。</p>
     </div>
 
     <div class="section">

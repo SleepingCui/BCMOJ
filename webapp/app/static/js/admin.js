@@ -1,3 +1,37 @@
+function flattenConfig(obj, prefix = '', result = {}) {
+    for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            const value = obj[key];
+            const newKey = prefix ? `${prefix}.${key}` : key;
+
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                flattenConfig(value, newKey, result);
+            } else {
+                result[newKey] = value;
+            }
+        }
+    }
+    return result;
+}
+
+function unflattenConfig(flatObj) {
+    const result = {};
+    for (let key in flatObj) {
+        if (flatObj.hasOwnProperty(key)) {
+            let parts = key.split('.');
+            let current = result;
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (!current[parts[i]]) {
+                    current[parts[i]] = {};
+                }
+                current = current[parts[i]];
+            }
+            current[parts[parts.length - 1]] = flatObj[key];
+        }
+    }
+    return result;
+}
+
 async function fetchAdminData() {
     console.log('[Init] Fetching admin data from /admin/api...');
     try {
@@ -5,7 +39,20 @@ async function fetchAdminData() {
         const data = res.data;
         console.log('[Init] Admin data fetched:', data);
 
-        document.getElementById('configYmlContent').value = data.config_yml;
+        const flattenedConfig = flattenConfig(data.general_config);
+        console.log('[Init] Flattened config for form:', flattenedConfig);
+        Object.keys(flattenedConfig).forEach(key => {
+            const element = document.querySelector(`[name="${key}"]`);
+            if (element) {
+                const value = flattenedConfig[key];
+                if (element.type === 'checkbox') {
+                    element.checked = !!value;
+                } else {
+                    element.value = value;
+                }
+            }
+        });
+
         console.log('[Render] Rendering user table...');
         renderUsers(data.users);
     } catch (err) {
@@ -14,21 +61,42 @@ async function fetchAdminData() {
     }
 }
 
-function saveYml() {
-    console.log('[Action] Saving config.yml...');
-    axios.post('/admin/api/save_config_yml', {
-        content: document.getElementById('configYmlContent').value
+function saveGeneralConfig(event) {
+    event.preventDefault();
+    console.log('[Action] Saving general config from form...');
+    const form = document.getElementById('configForm');
+    const formData = new FormData(form);
+    const formObject = {};
+
+    for (const [key, value] of formData.entries()) {
+        const element = document.querySelector(`[name="${key}"]`);
+        if (element && element.type === 'checkbox') {
+            formObject[key] = element.checked;
+        } else {
+            if(element && element.type === 'number' && !isNaN(Number(value))) {
+                 formObject[key] = Number(value);
+            } else {
+                 formObject[key] = value;
+            }
+        }
+    }
+
+    console.log('[Action] Form data collected (before unflattening):', formObject);
+    const nestedConfig = unflattenConfig(formObject);
+    console.log('[Action] Nested config to save:', nestedConfig);
+    axios.post('/admin/api/save_general_config', {
+        general_config: nestedConfig
     }).then(response => {
         if (response.data === 'OK') {
-            console.log('[Action] Config saved successfully');
-            alert("操作成功!");
+            console.log('[Action] General config saved successfully');
+            alert("通用配置保存成功! 请重启应用使更改生效。");
         } else {
-            console.error('[Error] Config save failed:', response.data.reason);
-            alert("操作失败: " + response.data.reason);
+            console.error('[Error] Config save failed:', response.data);
+            alert("通用配置保存失败: " + (response.data.reason || "未知错误"));
         }
     }).catch(err => {
         console.error('[Error] Config save exception:', err);
-        alert('操作失败: ' + err.message);
+        alert('通用配置保存失败: ' + err.message);
     });
 }
 
@@ -107,4 +175,8 @@ function deleteUser(id) {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[Init] DOM loaded. Fetching admin data...');
     fetchAdminData();
+    const configForm = document.getElementById('configForm');
+    if (configForm) {
+        configForm.addEventListener('submit', saveGeneralConfig);
+    }
 });

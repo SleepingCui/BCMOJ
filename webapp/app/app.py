@@ -172,6 +172,14 @@ def admin_save_config_yml():
     content = request.json.get("content", "")
     return save_config_yml(content)
 
+@app.route("/admin/api/save_general_config", methods=["POST"])
+@admin_required
+def admin_save_general_config():
+    new_config = request.json.get("general_config", {})
+    if not isinstance(new_config, dict):
+         return jsonify({"error": "Invalid config format"}), 400
+    return save_general_config(new_config)
+
 @app.route("/admin/api/update_user", methods=["POST"])
 @admin_required
 def admin_update_user():
@@ -183,24 +191,6 @@ def admin_update_user():
 def admin_delete_user():
     userid = request.json.get("userid")
     return delete_user(userid)
-
-@app.route("/admin/api/create_problem", methods=["POST"])
-@admin_required
-def admin_create_problem():
-    data = request.json
-    return create_problem(data)
-
-@app.route("/admin/api/update_problem", methods=["POST"])
-@admin_required
-def admin_update_problem():
-    data = request.json
-    return update_problem(data)
-
-@app.route("/admin/api/delete_problem", methods=["POST"])
-@admin_required
-def admin_delete_problem():
-    problem_id = request.json.get("problem_id")
-    return delete_problem(problem_id)
 
 # teacher
 @app.route('/teacher')
