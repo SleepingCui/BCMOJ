@@ -172,6 +172,49 @@ function deleteUser(id) {
         });
 }
 
+async function testJudgeConnection() {
+    const hostInput = document.getElementById('judgeHost');
+    const portInput = document.getElementById('judgePort');
+    const statusElement = document.getElementById('connectionStatus');
+
+    const host = hostInput.value.trim();
+    const port = portInput.value.trim();
+
+    if (!host) {
+        statusElement.textContent = '请先填写判题服务器地址';
+        statusElement.style.color = 'red';
+        return;
+    }
+    if (!port) {
+        statusElement.textContent = '请先填写判题服务器端口';
+        statusElement.style.color = 'red';
+        return;
+    }
+
+    statusElement.textContent = '测试中...';
+    statusElement.style.color = 'orange';
+
+    try {
+        const response = await axios.post('/admin/api/test_connection', {
+            host: host,
+            port: parseInt(port, 10)
+        });
+
+        if (response.data && response.data.success) {
+            statusElement.textContent = `连接成功 - 延迟: ${response.data.ping_time}ms`;
+            statusElement.style.color = 'green';
+        } else {
+            statusElement.textContent = `连接失败: ${response.data.message || '未知错误'}`;
+            statusElement.style.color = 'red';
+        }
+    } catch (error) {
+        console.error('[Test Connection Error]', error);
+        statusElement.textContent = `测试失败: ${error.message}`;
+        statusElement.style.color = 'red';
+    }
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[Init] DOM loaded. Fetching admin data...');
     fetchAdminData();

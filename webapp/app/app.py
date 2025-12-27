@@ -192,6 +192,10 @@ def admin_delete_user():
     userid = request.json.get("userid")
     return delete_user(userid)
 
+@app.route('/admin/api/test_connection', methods=['POST'])
+def test_connection():
+    return test_judge_connection()
+
 # teacher
 @app.route('/teacher')
 @teacher_required

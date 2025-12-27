@@ -49,6 +49,13 @@
                     <label for="judgePort" title="Judge Server 监听的端口号">判题服务器端口 (judge_port)</label>
                     <input type="number" id="judgePort" name="judge_config.judge_port" min="1" max="65535">
                 </div>
+                <div class="form-row">
+                    <label>测试连接</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button type="button" id="testConnectionBtn" onclick="testJudgeConnection()">测试连接</button>
+                        <span id="connectionStatus"></span>
+                    </div>
+                </div>
             </div>
 
             <div class="form-section">

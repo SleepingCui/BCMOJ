@@ -1,4 +1,6 @@
 import os
+import time
+import socket
 from flask import jsonify, request, current_app as app
 from app.core.db import db, User, Problem, Example
 from ruamel.yaml import YAML
@@ -76,3 +78,25 @@ def delete_user(userid):
         db.session.delete(user)
         db.session.commit()
     return "OK"
+
+def test_judge_connection():
+    data = request.get_json()
+    host = data.get('host')
+    port = data.get('port')
+
+    if not host or not port:
+        return jsonify({'success': False, 'message': 'Host and port are required'}), 400
+
+    start_time = time.time()
+    try:
+        with socket.create_connection((host, port), timeout=5):
+            pass
+        end_time = time.time()
+        ping_time_ms = round((end_time - start_time) * 1000, 2)
+        return jsonify({'success': True, 'ping_time': ping_time_ms})
+    except socket.timeout:
+        return jsonify({'success': False, 'message': '连接超时'}), 408
+    except ConnectionRefusedError:
+        return jsonify({'success': False, 'message': '连接被拒绝'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'连接失败: {str(e)}'}), 500
