@@ -19,3 +19,4 @@ keywords.txt
 /migrations/
 *.properties
 temp/
+venv/

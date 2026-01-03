@@ -1,5 +1,6 @@
 from .judge import submit_solution
 from .auth import verify_user_login, login_user_session, get_redirect_for_user, change_user_info
+from .captcha import generate_captcha, verify_captcha
 from .password import start_password_reset, verify_and_reset_password
 from .decorators import login_required, admin_required, teacher_required
 from .register import register_user
@@ -19,6 +20,8 @@ __all__ = [
     'get_redirect_for_user',
     'start_password_reset',
     'verify_and_reset_password',
+    'generate_captcha',
+    'verify_captcha',
     'login_required',
     'admin_required',
     'teacher_required',

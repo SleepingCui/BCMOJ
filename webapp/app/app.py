@@ -1,6 +1,7 @@
 from flask import Flask, request, session, render_template, redirect, url_for, send_from_directory, flash, abort, jsonify
 
 import os
+import base64
 
 from .core.config import get_config
 from .core.logger import setup_logging, log_route_context
@@ -50,10 +51,21 @@ def index():
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+@app.route('/captcha')
+def captcha():
+    img_str = generate_captcha()
+    img_data = base64.b64decode(img_str)
+    from flask import Response
+    return Response(img_data, mimetype='image/png')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        captcha_input = request.form.get('captcha')
+        if not verify_captcha(captcha_input):
+            flash('验证码错误', 'error')
+            return render_template('register.html')
+        
         success, message = register_user(request.form)
         flash(message, 'success' if success else 'error')
         if success:
@@ -62,12 +74,17 @@ def register():
             return redirect(url_for('register'))
     return render_template('register.html')
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username_or_email = request.form.get('username_or_email')
         password = request.form.get('password')
+        captcha_input = request.form.get('captcha')
+    
+        if not verify_captcha(captcha_input):
+            flash('验证码错误', 'error')
+            return render_template('login.html')
+        
         user = verify_user_login(username_or_email, password)
         if user:
             login_user_session(user, session)
@@ -93,6 +110,11 @@ def edit_account():
 def forgot_password():
     if request.method == 'POST':
         if 'email' in request.form:
+            captcha_input = request.form.get('captcha')
+            if not verify_captcha(captcha_input):
+                flash('验证码错误', 'error')
+                return render_template('forgot_password.html', step=1)
+            
             email = request.form.get('email')
             success, msg = start_password_reset(email)
             flash(msg, 'success' if success else 'error')
