@@ -10,21 +10,10 @@ import org.apache.commons.cli.CommandLine;
 @Slf4j
 public class Bootstrap {
     public static void run(String[] args) {
-        printLogo();
+        log.info("Starting BCMOJ Judge Server...");
+        log.info("Version: {}", VersionUtil.getVersion());
         CommandLine cmd = CLIParser.parse(args);
-        ServerInitializer.start(cmd);
+        ServerInitialize.start(cmd);
     }
-    public static void printLogo() {
-        String version = VersionUtil.getVersion();
-        String logo = String.format("""
-          ____   ____ __  __  ___      _       _ ____\s
-         | __ ) / ___|  \\/  |/ _ \\    | |     | / ___|  ___ _ ____   _____ _ __\s
-         |  _ \\| |   | |\\/| | | | |_  | |  _  | \\___ \\ / _ \\ '__\\ \\ / / _ \\ '__|\s
-         | |_) | |___| |  | | |_| | |_| | | |_| |___) |  __/ |   \\ V /  __/ |\s
-         |____/ \\____|_|  |_|\\___/ \\___/   \\___/|____/ \\___|_|    \\_/ \\___|_|\s
 
-        BCMOJ Judge Server v%s  Developed by SleepingCui & MxingFoew1034
-      \s""", version);
-        System.out.println(logo);
-    }
 }

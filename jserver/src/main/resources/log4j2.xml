@@ -1,27 +1,34 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<configuration status="OFF" monitorInterval="25">
-    <properties>
-        <property name="LOG_HOME">logs</property>
-    </properties>
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="OFF" monitorInterval="30">
+
+    <Properties>
+        <Property name="LOG_HOME">logs</Property>
+    </Properties>
+
     <Appenders>
-        <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%t/%highlight{%-5level}{ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}] [%style{%c{1.}}{cyan}]%replace{ [%X{client}]}{ \[\]}{} %m%n" disableAnsi="false"/>
+
+        <Console name="Console" target="SYSTEM_OUT" immediateFlush="true">
+            <PatternLayout disableAnsi="false" pattern="[%d{HH:mm:ss.SSS}/%highlight{%-5level}{ERROR=Bright Red, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan}] [%style{%t}{magenta}] [%style{%c{1.}}{cyan}]%replace{ [%X{client}]}{ \[\]}{} %msg%n"/>
         </Console>
-        <RollingFile name="rollingFile" fileName="${LOG_HOME}/latest.log" filePattern="${LOG_HOME}/$${date:yyyy-MM-dd}/log-%d{yyyy-MM-dd}-%i.log">
-            <ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY" />
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%t/%-5level] [%c] [%X{client}] %m%n"/>
-            <Policies>
-                <OnStartupTriggeringPolicy />]
-                <SizeBasedTriggeringPolicy size="10MB" />
-                <TimeBasedTriggeringPolicy />
-            </Policies>
-            <DefaultRolloverStrategy max="10" />
-        </RollingFile>
+
+        <Async name="AsyncFile">
+            <RollingFile name="RollingFile" fileName="${LOG_HOME}/latest.log" filePattern="${LOG_HOME}/%d{yyyy-MM-dd}/judge-%i.log.gz" immediateFlush="true" append="true">
+                <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%t] [%c{1.}] [%X{client}] %msg%n"/>
+                <Policies>
+                    <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                    <SizeBasedTriggeringPolicy size="20MB"/>
+                </Policies>
+                <DefaultRolloverStrategy max="30" fileIndex="min"/>
+            </RollingFile>
+        </Async>
+
     </Appenders>
+
     <Loggers>
-        <Root level="trace">
+        <Root level="debug">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="rollingFile" />
+            <AppenderRef ref="AsyncFile"/>
         </Root>
     </Loggers>
-</configuration>
+
+</Configuration>

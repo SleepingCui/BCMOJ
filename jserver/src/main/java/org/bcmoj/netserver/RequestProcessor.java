@@ -264,7 +264,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         hashBuilder.append(new String(hashBytes, StandardCharsets.UTF_8));
                         if (hashBuilder.length() == hashLength) {
                             declaredHash = hashBuilder.toString();
-                            log.info("Declared hash: {}", declaredHash);
+                            log.debug("Declared hash: {}", declaredHash);
                             state = State.PROCESSING;
                             processJudge(ctx);
                         }
@@ -304,9 +304,9 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                 if (declaredHash != null) {
                     try {
                         String actualHash = FileHashUtil.calculateSHA256(tempFile);
-                        log.info("Actual hash: {}", actualHash);
+                        log.debug("Actual hash: {}", actualHash);
                         if (!actualHash.equalsIgnoreCase(declaredHash)) {
-                            log.warn("File hash mismatch! Sending error result...");
+                            log.warn("File hash mismatch! D: {}, A: {}", declaredHash, actualHash);
                             sendResponse(ctx, JudgeResultUtil.buildResult(List.of(), false, true, parseCheckpointCount(jsonConfig),UseOldFormat));
                             return;
                         }

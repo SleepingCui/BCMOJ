@@ -20,7 +20,7 @@ import java.util.List;
  * Handles command line arguments, config file, logging, keyword file, and server startup.
  */
 @Slf4j
-public class ServerInitializer {
+public class ServerInitialize {
 
     public static void start(CommandLine cmd) {
         boolean debug = cmd.hasOption("debug");
