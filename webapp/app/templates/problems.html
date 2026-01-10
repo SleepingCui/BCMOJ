@@ -34,7 +34,10 @@ window.appData = {
             <div class="d-flex align-items-center">
                 <div class="user-info-card animate-fade-in" id="userInfo">
                     <i class="bi bi-person-circle"></i>
-                    <span>未登录</span>
+                    <div class="user-details">
+                        <span id="usernameDisplay" class="username-text">未登录</span>
+                        <span id="userIdDisplay" class="user-id-text" style="display: none;">[ID]</span>
+                    </div>
                 </div>
                 <button class="btn btn-light user-action-btn animate-fade-in" id="loginBtn">登录</button>
                 <button class="btn btn-outline-light user-action-btn animate-fade-in d-none" id="logoutBtn">登出</button>
@@ -115,8 +118,8 @@ window.appData = {
 </div>
 
 <div class="footer">
-    &copy; 2025 BCMOJ. Released under the
-    <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.
+    &copy; <span id="currentYear"></span> BCMOJ. Released under the
+    <a href="https://opensource.org/licenses/MIT  " target="_blank">MIT License</a>.
     | <a href="/about">关于我们</a>
     | v{{ version }}
     {% if usergroup == 'admin' %}
@@ -141,6 +144,7 @@ window.appData = {
 </div>
 {% endif %}
 
+<script src="/static/js/common.js"></script>
 <script src="/static/js/lib/jquery-3.7.1.min.js"></script>
 <script src="/static/js/problems.js"></script>
 <script src="/static/js/lib/popper.min.js"></script>
