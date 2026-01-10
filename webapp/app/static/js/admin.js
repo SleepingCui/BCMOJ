@@ -3,9 +3,19 @@ function flattenConfig(obj, prefix = '', result = {}) {
         if (obj.hasOwnProperty(key)) {
             const value = obj[key];
             const newKey = prefix ? `${prefix}.${key}` : key;
-
             if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
                 flattenConfig(value, newKey, result);
+            } else if (Array.isArray(value)) {
+                value.forEach((item, index) => {
+                    const indexedKey = `${newKey}[${index}]`;
+                    if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+                        flattenConfig(item, indexedKey, result);
+                    } else if (Array.isArray(item)) {
+                        flattenConfig({ '': item }, indexedKey, result);
+                    } else {
+                        result[indexedKey] = item;
+                    }
+                });
             } else {
                 result[newKey] = value;
             }
@@ -18,17 +28,71 @@ function unflattenConfig(flatObj) {
     const result = {};
     for (let key in flatObj) {
         if (flatObj.hasOwnProperty(key)) {
-            let parts = key.split('.');
+            let parts = [];
+            let currentPart = '';
+            let insideBrackets = false;
+
+            for (let char of key) {
+                if (char === '[') {
+                    if(currentPart) parts.push(currentPart);
+                    currentPart = '';
+                    insideBrackets = true;
+                } else if (char === ']') {
+                    parts.push(parseInt(currentPart));
+                    currentPart = '';
+                    insideBrackets = false;
+                } else if (char === '.' && !insideBrackets) {
+                    if(currentPart) parts.push(currentPart);
+                    currentPart = '';
+                } else {
+                    currentPart += char;
+                }
+            }
+            if(currentPart) parts.push(currentPart);
             let current = result;
             for (let i = 0; i < parts.length - 1; i++) {
-                if (!current[parts[i]]) {
-                    current[parts[i]] = {};
+                const part = parts[i];
+                if(typeof parts[i+1] === 'number') {
+                     if(!current[part]) current[part] = []; 
+                } else {
+                     if(!current[part]) current[part] = {};
                 }
-                current = current[parts[i]];
+                current = current[part];
             }
-            current[parts[parts.length - 1]] = flatObj[key];
+            const lastPart = parts[parts.length - 1];
+            current[lastPart] = flatObj[key];
         }
     }
+
+    function fixArrays(obj) {
+        if (Array.isArray(obj)) {
+            obj.forEach(fixArrays);
+        } else if (typeof obj === 'object' && obj !== null) {
+            for (let key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (typeof key === 'number') {
+                         const parent = obj[key];
+                         if(parent && typeof parent === 'object' && !Array.isArray(parent)) {
+                             const keysAreNumbers = Object.keys(parent).every(k => !isNaN(k));
+                             if(keysAreNumbers) {
+                                 const maxIndex = Math.max(...Object.keys(parent).map(k => parseInt(k)));
+                                 const newArr = new Array(maxIndex + 1);
+                                 for(let k in parent) {
+                                     newArr[parseInt(k)] = parent[k];
+                                     fixArrays(parent[k]);
+                                 }
+                                 obj[key] = newArr;
+                                 continue;
+                             }
+                         }
+                    }
+                    fixArrays(obj[key]);
+                }
+            }
+        }
+    }
+
+    fixArrays(result);
     return result;
 }
 
@@ -73,11 +137,11 @@ function saveGeneralConfig(event) {
         if (element && element.type === 'checkbox') {
             formObject[key] = element.checked;
         } else {
-            if(element && element.type === 'number' && !isNaN(Number(value))) {
+             if(element && element.type === 'number' && !isNaN(Number(value))) {
                  formObject[key] = Number(value);
-            } else {
+             } else {
                  formObject[key] = value;
-            }
+             }
         }
     }
 

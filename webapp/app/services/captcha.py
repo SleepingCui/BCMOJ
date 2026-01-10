@@ -6,37 +6,25 @@ import base64
 from flask import session
 from datetime import datetime, timedelta
 import math
-
-CAPTCHA_CONFIG = {
-    'width': 50,           # 验证码图片宽度
-    'height': 30,           # 验证码图片高度
-    'font_size': 90,        # 字体大小
-    'text_length': (4, 5),  # 验证码长度范围
-    'interference_lines': 3,  # 干扰线数量
-    'interference_points': 12, # 干扰点数量
-    'wave_amplitude': (2, 6),  # 波动幅度范围
-    'wave_frequency': (0.05, 0.1),  # 波动频率范围
-    'noise_range': (-5, 5),  # 噪声范围
-    'bg_color': (255, 255, 255),  # 背景色
-    'text_color_range': (0, 50),  # 文字颜色范围
-    'interference_color_range': (200, 230),  # 干扰元素颜色范围
-    'expire_time': 300      # 过期时间
-}
+from app.core.config import get_config
 
 def generate_captcha():
-    width = CAPTCHA_CONFIG['width']
-    height = CAPTCHA_CONFIG['height']
-    font_size = CAPTCHA_CONFIG['font_size']
-    text_min_len, text_max_len = CAPTCHA_CONFIG['text_length']
-    interference_lines = CAPTCHA_CONFIG['interference_lines']
-    interference_points = CAPTCHA_CONFIG['interference_points']
-    wave_amp_min, wave_amp_max = CAPTCHA_CONFIG['wave_amplitude']
-    wave_freq_min, wave_freq_max = CAPTCHA_CONFIG['wave_frequency']
-    noise_min, noise_max = CAPTCHA_CONFIG['noise_range']
-    bg_color = CAPTCHA_CONFIG['bg_color']
-    text_color_min, text_color_max = CAPTCHA_CONFIG['text_color_range']
-    inter_color_min, inter_color_max = CAPTCHA_CONFIG['interference_color_range']
-    expire_time = CAPTCHA_CONFIG['expire_time']
+    config = get_config()
+    captcha_config = config['captcha_config']
+    
+    width = captcha_config['width']
+    height = captcha_config['height']
+    font_size = captcha_config['font_size']
+    text_min_len, text_max_len = tuple(captcha_config['text_length'])
+    interference_lines = captcha_config['interference_lines']
+    interference_points = captcha_config['interference_points']
+    wave_amp_min, wave_amp_max = tuple(captcha_config['wave_amplitude'])
+    wave_freq_min, wave_freq_max = tuple(captcha_config['wave_frequency'])
+    noise_min, noise_max = tuple(captcha_config['noise_range'])
+    bg_color = tuple(captcha_config['bg_color'])
+    text_color_min, text_color_max = tuple(captcha_config['text_color_range'])
+    inter_color_min, inter_color_max = tuple(captcha_config['interference_color_range'])
+    expire_time = captcha_config['expire_time']
     
     captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=random.randint(text_min_len, text_max_len)))
     image = Image.new('RGB', (width, height), bg_color)
@@ -122,9 +110,13 @@ def verify_captcha(user_input):
     return is_valid
 
 def update_captcha_config(**kwargs):
+    config = get_config()
+    captcha_config = config['captcha_config']
     for key, value in kwargs.items():
-        if key in CAPTCHA_CONFIG:
-            CAPTCHA_CONFIG[key] = value
+        if key in captcha_config:
+            captcha_config[key] = value
 
 def get_captcha_config():
-    return CAPTCHA_CONFIG.copy()
+    config = get_config()
+    captcha_config = config['captcha_config']
+    return {k: v for k, v in captcha_config.items()}
