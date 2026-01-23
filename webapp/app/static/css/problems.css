@@ -161,6 +161,32 @@ body {
     gap: 10px;
 }
 
+.user-details {
+    display: flex;
+    flex-direction: row;
+    align-items: center; 
+    gap: 5px; 
+}
+
+.username-text {
+    font-weight: 500;
+}
+
+.user-id-text {
+    font-size: 0.85em; 
+    color: rgba(255, 255, 255, 0.8); 
+}
+
+.user-id-text::before {
+    content: "#";
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.user-id-text::after {
+    content: "";
+    color: rgba(255, 255, 255, 0.6);
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }

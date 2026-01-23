@@ -22,28 +22,40 @@ function showToast(message, type = 'info') {
 
 function initUserInfo(username, userId, usergroup) {
     console.log('[Init] Initializing user info');
-    const $userInfo = $('#userInfo');
+    const $usernameDisplay = $('#usernameDisplay');
+    const $userIdDisplay = $('#userIdDisplay');
+    const $userDetails = $usernameDisplay.parent();
     const $loginBtn = $('#loginBtn');
     const $logoutBtn = $('#logoutBtn');
     const $editBtn = $('#editAccountBtn');
 
     if (username && userId && userId !== 'None') {
+        $usernameDisplay.text(username);
+        $userIdDisplay.text(userId);
+        $userIdDisplay.show();
+
         let badgeColor = 'secondary';
         if (usergroup === 'admin') badgeColor = 'danger';
         else if (usergroup === 'teacher') badgeColor = 'info';
         else if (usergroup === 'student') badgeColor = 'success';
 
-        $userInfo.html(`
-            <i class="bi bi-person-circle"></i>
-            <span>${username} [${userId}]</span>
-            <span class="badge bg-${badgeColor} ms-1">${usergroup}</span>
-        `);
+        let $userGroupBadge = $('.user-group-badge', $userDetails);
+        if ($userGroupBadge.length === 0) {
+            $userGroupBadge = $(`<span class="badge bg-${badgeColor} ms-1 user-group-badge">${usergroup}</span>`);
+            $userDetails.append($userGroupBadge);
+        } else {
+            $userGroupBadge.text(usergroup).removeClass().addClass('user-group-badge badge').addClass(`bg-${badgeColor} ms-1`);
+        }
+
         $loginBtn.addClass('d-none');
         $logoutBtn.removeClass('d-none');
         $editBtn.removeClass('d-none');
         console.log(`[Init] User logged in: ${username} [${userId}], group: ${usergroup}`);
     } else {
-        $userInfo.html(`<i class="bi bi-person-circle"></i><span>未登录</span>`);
+        $usernameDisplay.text('未登录');
+        $userIdDisplay.hide();
+        $('.user-group-badge', $userDetails).remove();
+
         $loginBtn.removeClass('d-none');
         $logoutBtn.addClass('d-none');
         $editBtn.addClass('d-none');
