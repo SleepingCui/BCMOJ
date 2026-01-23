@@ -7,6 +7,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.bcmoj.netserver.SocketServer;
 import org.bcmoj.utils.ComplierCheckUtil;
 import org.bcmoj.utils.KeywordFileUtil;
+import org.bcmoj.utils.PropertiesExportUtil;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -44,9 +45,22 @@ public class ServerInitialize {
         String kwFile = props.getProperty("kwfile");
         String compilerPath = props.getProperty("CompilerPath", "g++");
         String cppStandard = props.getProperty("CppStandard", "c++11");
+        String nettyThreadsStr = props.getProperty("netty-threads");
         boolean disableSecArgs = cmd.hasOption("disable-security-args");
         boolean disableMemLimit = cmd.hasOption("disable-mem-limit");
         boolean useOldFormat = cmd.hasOption("use-old-format");
+        int nettyThreads = 1;
+        if (nettyThreadsStr != null) {
+            try {
+                nettyThreads = Integer.parseInt(nettyThreadsStr);
+                if (nettyThreads < 1) {
+                    log.warn("Invalid netty-threads '{}', must be >=1. Using default 1.", nettyThreadsStr);
+                    nettyThreads = 1;
+                }
+            } catch (NumberFormatException e) {
+                log.warn("Invalid netty-threads '{}', using default 1.", nettyThreadsStr);
+            }
+        }
 
         if ((host == null || portStr == null || kwFile == null) && configFilePath == null) {
             List<String> missing = new ArrayList<>();
@@ -67,6 +81,7 @@ public class ServerInitialize {
             log.debug("Compiler path: {}", compilerPath.equals("g++") ? compilerPath + " (default value)" : compilerPath);
             log.debug("C++ standard: {}", cppStandard.equals("c++11") ? cppStandard + " (default value)" : cppStandard);
             log.debug("Config file: {}", configFilePath != null ? configFilePath : "none");
+            log.debug("Netty threads: {}{}", nettyThreads, nettyThreads == 1 ? " (default value)" : "");
             log.debug("--------------------------------");
         }
 
@@ -81,13 +96,13 @@ public class ServerInitialize {
         initKeywordFile(kwFile);
         if (cmd.hasOption("extract")) {
             try {
-                org.bcmoj.utils.PropertiesExportUtil.export(props);
+                PropertiesExportUtil.export(props);
             } catch (Exception e) {
                 log.error("Failed to export properties: {}", e.getMessage());
             }
             return;
         }
-        startServer(host, port, kwFile, disableSecArgs, disableMemLimit, useOldFormat, compilerPath, cppStandard);
+        startServer(host, port, kwFile, nettyThreads, disableSecArgs, disableMemLimit, useOldFormat, compilerPath, cppStandard);
     }
 
     private static void configureLogging(boolean debug) {
@@ -125,11 +140,7 @@ public class ServerInitialize {
                 int minor = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
 
                 if (major < 4 || (major == 4 && minor < 9)) {
-                    log.warn("********************************************************************************");
-                    log.warn("                                   WARNING");
-                    log.warn("          Detected g++ version {} is older than 4.9.0", gppVersion);
-                    log.warn("      Compiler security flags will be automatically disabled for safety.");
-                    log.warn("********************************************************************************");
+                    log.warn("Detected g++ version {} is older than 4.9.0. \nCompiler security flags will be automatically disabled.", gppVersion);
                     return true;
                 }
             } else {
@@ -137,26 +148,23 @@ public class ServerInitialize {
                 return true;
             }
         } else {
-            log.warn("********************************************************************************");
-            log.warn("                                   WARNING");
-            log.warn(" Compiler security flags will be disabled, which may reduce compilation safety.");
-            log.warn("********************************************************************************");
+            log.warn("Compiler security flags will be disabled, which may reduce compilation safety.");
         }
         return DisableSecurityArgs;
     }
 
 
-    private static void startServer(String host, int port, String kwFile, boolean DisableSecurityArgs, boolean DisableMemLimit, boolean UseOldFormat, String compilerPath, String cppStandard) {
+    private static void startServer(String host, int port, String kwFile, int netty_threads, boolean DisableSecurityArgs, boolean DisableMemLimit, boolean UseOldFormat, String compilerPath, String cppStandard) {
         try {
             DisableSecurityArgs = shouldDisableSecArgs(DisableSecurityArgs, compilerPath);
 
-            log.info("Starting server...");
+            log.info("Initializing server...");
             SocketServer server = new SocketServer(host, port, DisableSecurityArgs, DisableMemLimit, UseOldFormat, kwFile, compilerPath, cppStandard);
-            server.start();
+            server.start(netty_threads);
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
 
         } catch (Exception e) {
-            log.error("Failed to start server: {}", e.getMessage());
+            log.error("Failed to initialize server on {}:{} - {}", host, port, e.getMessage());
             System.exit(1);
         }
     }

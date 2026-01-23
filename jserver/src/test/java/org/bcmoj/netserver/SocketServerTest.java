@@ -23,7 +23,7 @@ public class SocketServerTest {
         server = new SocketServer(HOST, PORT, false, true, true,"src/test/resources/keywords.txt","g++"," c++11");
         serverThread = new Thread(() -> {
             try {
-                server.start();
+                server.start(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

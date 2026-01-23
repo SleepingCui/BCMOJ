@@ -17,6 +17,7 @@ public class CLIParser {
         options.addOption(Option.builder().longOpt("config").hasArg().argName("FILE").desc("Optional path to a configuration file to load additional server properties").build());
         options.addOption(Option.builder().longOpt("comp").hasArg().argName("FILE").desc("Path to the C++ compiler executable to use for code compilation (default: g++)").build());
         options.addOption(Option.builder().longOpt("std").hasArg().argName("STD").desc("C++ standard to use for compilation (e.g., c++11, c++17; default: c++11)").build());
+        options.addOption(Option.builder().longOpt("netty-threads").hasArg().argName("THREADS").desc("Number of Netty I/O worker threads to use for networking (e.g., 4). If omitted, Netty's default is used.").build());
         options.addOption(Option.builder().longOpt("disable-security-args").desc("Disable additional compiler security arguments").build());
         options.addOption(Option.builder().longOpt("disable-mem-limit").desc("Disable memory limit for the judging process").build());
         options.addOption(Option.builder().longOpt("use-old-format").desc("Use the old judging request/response format (1.0.12-beta and below).").build());
@@ -46,6 +47,7 @@ public class CLIParser {
         if (cmd.hasOption("disable-security-args")) props.setProperty("disable_security_args", "true");
         if (cmd.hasOption("disable-mem-limit")) props.setProperty("disable_mem_limit", "true");
         if (cmd.hasOption("use-old-format")) props.setProperty("use_old_format", "true");
+        if (cmd.hasOption("netty-threads")) props.setProperty("netty_threads", cmd.getOptionValue("netty-threads"));
 
         return props;
     }

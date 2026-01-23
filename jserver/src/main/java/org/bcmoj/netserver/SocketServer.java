@@ -72,8 +72,8 @@ public class SocketServer {
      * @throws InterruptedException if the thread is interrupted during startup or operation
      */
 
-    public void start() throws InterruptedException {
-        bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
+    public void start(int netty_threads) throws InterruptedException {
+        bossGroup = new MultiThreadIoEventLoopGroup(netty_threads, NioIoHandler.newFactory());
         workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
 
         try {
@@ -87,13 +87,14 @@ public class SocketServer {
                     })
                     .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
             ChannelFuture future = bootstrap.bind(host, port).sync();
-            log.info("Server started on {}:{}", host, port);
+            log.info("Server successfully started and listening on {}:{}", host, port);
             future.channel().closeFuture().sync();
         } finally {
             log.debug("Server shutting down...");
             stop();
         }
     }
+
 
 
     /**
