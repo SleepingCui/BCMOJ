@@ -8,7 +8,7 @@
     <Appenders>
 
         <Console name="Console" target="SYSTEM_OUT" immediateFlush="true">
-            <PatternLayout disableAnsi="false" pattern="[%d{YYYY-mm-dd HH:mm:ss.SSS}/%style{%t}{magenta}] [%style{%c{1.}}{cyan}/%highlight{%-5level}{ERROR=Bright Red, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan}]%replace{ [%X{client}]}{ \[\]}{} %msg%n"/>
+            <PatternLayout disableAnsi="false" pattern="[%d{YYYY-MM-DD HH:mm:ss.SSS}/%style{%t}{magenta}] [%style{%c{1.}}{cyan}/%highlight{%-5level}{ERROR=Bright Red, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan}]%replace{ [%X{client}]}{ \[\]}{} %msg%n"/>
         </Console>
 
         <Async name="AsyncFile">
