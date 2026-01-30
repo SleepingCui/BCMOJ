@@ -10,8 +10,7 @@ import org.apache.commons.cli.CommandLine;
 @Slf4j
 public class Bootstrap {
     public static void run(String[] args) {
-        log.info("Starting BCMOJ Judge Server...");
-        log.info("Version: {}", VersionUtil.getVersion());
+        log.info("BCMOJ {} is starting",VersionUtil.getVersion());
         CommandLine cmd = CLIParser.parse(args);
         ServerInitialize.start(cmd);
     }
