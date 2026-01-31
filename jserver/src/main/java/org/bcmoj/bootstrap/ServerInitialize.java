@@ -97,6 +97,7 @@ public class ServerInitialize {
         if (cmd.hasOption("extract")) {
             try {
                 PropertiesExportUtil.export(props);
+                System.exit(0);
             } catch (Exception e) {
                 log.error("Failed to export properties: {}", e.getMessage());
             }
