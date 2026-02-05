@@ -8,12 +8,12 @@
     <Appenders>
 
         <Console name="Console" target="SYSTEM_OUT" immediateFlush="true">
-            <PatternLayout disableAnsi="false" pattern="[%d{YYYY-MM-DD HH:mm:ss.SSS}/%style{%t}{magenta}] [%style{%c{1.}}{cyan}/%highlight{%-5level}{ERROR=Bright Red, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan}]%replace{ [%X{client}]}{ \[\]}{} %msg%n"/>
+            <PatternLayout disableAnsi="false" pattern="[%d{YYYY-MM-dd HH:mm:ss.SSS}/%style{%t}{magenta}] [%style{%c{1.}}{cyan}/%highlight{%-5level}{ERROR=Bright Red, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan}]%replace{ [%X{client}]}{ \[\]}{} %msg%n"/>
         </Console>
 
         <Async name="AsyncFile">
             <RollingFile name="RollingFile" fileName="${LOG_HOME}/latest.log" filePattern="${LOG_HOME}/%d{yyyy-MM-dd}/judge-%i.log.gz" immediateFlush="true" append="true">
-                <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%t] [%c{1.}] [%X{client}] %msg%n"/>
+                <PatternLayout pattern="[%d{yyyy-MM- HH:mm:ss.SSS}] [%-5level] [%t] [%c{1.}] [%X{client}] %msg%n"/>
                 <Policies>
                     <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
                     <SizeBasedTriggeringPolicy size="20MB"/>
