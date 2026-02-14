@@ -8,10 +8,11 @@ from .problems import get_problems_list
 from .problem import get_problem_with_examples
 from .results import get_result_detail, get_results_list, check_user_authorization
 from .admin_api import get_admin_data, save_config_yml, save_general_config, update_user, delete_user, test_judge_connection
-from .teacher_api import get_teacher_problem_data, teacher_create_problem, teacher_update_problem, teacher_delete_problem
+from .teacher_api import get_teacher_problem_data, teacher_create_problem, teacher_update_problem, teacher_delete_problem, teacher_groups_api, teacher_create_group_route, teacher_update_group_route, teacher_delete_group_route
 from .admin_results import get_admin_results
 from .about import fetch_contributors
 from .check_update import check_update_service
+from .pgroups import get_groups
 
 __all__ = [
     'submit_solution',
@@ -41,8 +42,13 @@ __all__ = [
     'teacher_create_problem',
     'teacher_update_problem',
     'teacher_delete_problem',
+    'teacher_groups_api',
+    'teacher_create_group_route',
+    'teacher_update_group_route',
+    'teacher_delete_group_route',
     'get_admin_results',
     'fetch_contributors',
     'check_update_service',
-    'change_user_info'
+    'change_user_info',
+    'get_groups'
 ]

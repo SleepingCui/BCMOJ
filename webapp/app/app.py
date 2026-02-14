@@ -152,6 +152,17 @@ def problem(problem_id):
 
     return render_template('problem.html', problem=problem, examples=examples)
 
+@app.route('/problem_groups')
+def problem_groups():
+    groups_with_problems = get_groups() 
+    context = {
+        'groups': groups_with_problems,
+        'username': session.get('username'),
+        'user_id': session.get('user_id'),
+        'usergroup': session.get('usergroup'),
+        'version': 1,
+    }
+    return render_template('problem_groups.html', **context)
 
 @app.route('/submit/<int:problem_id>', methods=['POST'])
 @login_required
@@ -244,6 +255,25 @@ def teacher_update_problem_route():
 def teacher_delete_problem_route():
     return teacher_delete_problem(request.json.get("problem_id"))
 
+@app.route("/teacher/api/groups")
+@teacher_required
+def teacher_groups_api():
+    return teacher_groups_api(request.json)
+
+@app.route("/teacher/api/create_group", methods=["POST"])
+@teacher_required
+def teacher_create_group_route():
+    return teacher_create_group_route(request.json)
+
+@app.route("/teacher/api/update_group", methods=["POST"])
+@teacher_required
+def teacher_update_group_route():
+    return teacher_update_group_route(request.json)
+
+@app.route("/teacher/api/delete_group", methods=["POST"])
+@teacher_required
+def teacher_delete_group_route():
+    return teacher_delete_group_route(request.json)
 
 # admin results
 @app.route('/admin_results', methods=['GET'])

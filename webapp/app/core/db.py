@@ -39,7 +39,8 @@ class Problem(db.Model):
     mem_limit = db.Column(db.Integer, nullable=False, default=1000)
     example_visible_count = db.Column(db.Integer, nullable=False, default=2)
     compare_mode = db.Column(db.Integer, nullable=False, default=1)
-
+    group_id = db.Column(db.Integer, db.ForeignKey('problem_groups.group_id', ondelete='SET NULL'), nullable=True)
+    __table_args__ = (db.Index('idx_group_id', 'group_id'),)
 
 
 class JudgeResult(db.Model):
@@ -70,6 +71,13 @@ class Example(db.Model):
     input = db.Column(db.Text, nullable=False)
     output = db.Column(db.Text, nullable=False)
     problem = db.relationship('Problem', backref=db.backref('examples', lazy=True, cascade="all, delete"))
+
+class ProblemGroup(db.Model):
+    __tablename__ = 'problem_groups'
+    group_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    group_name = db.Column(db.String(255), nullable=False) 
+    description = db.Column(db.Text) 
+    problems = db.relationship('Problem', backref='problem_group', lazy=True)
     
 
 def get_db_uri(db_name=None):
