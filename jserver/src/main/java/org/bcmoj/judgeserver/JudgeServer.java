@@ -2,6 +2,7 @@ package org.bcmoj.judgeserver;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import org.bcmoj.config.JudgeTaskConfig;
 import org.bcmoj.judger.Compiler;
 import org.bcmoj.judger.Judger;
 import org.bcmoj.security.RegexSecurityCheck;
@@ -52,33 +53,28 @@ public class JudgeServer {
 
     /**
      * Serves judging requests for a C++ program.
+     * This version accepts a JudgeTaskConfig object containing all necessary parameters.
      *
+     * @param taskConfig       The configuration object containing compiler, file paths, flags, etc.
      * @param jsonConfig       JSON string containing checkpoints, time limits, mem limits, and flags
-     * @param cppFilePath      path to the submitted C++ source file
-     * @param keywordsFilePath path to the keyword file used for security check
-     * @param compilerPath     path to the compiler
-     * @param cppStandard      C++ standard version
-     * @param DisableSecurityArgs Disable Compiler security flags
-     * @param DisableMemLimit  Disable memory limit for the judging process
-     * @param useOldFormat     if true, uses the old format (timeLimit, memLimit, etc.); if false, uses new format
      * @return JSON string representing aggregated judge results
      */
-    public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath, boolean DisableSecurityArgs, boolean DisableMemLimit, boolean useOldFormat) {
+    public static String serve(JudgeTaskConfig taskConfig, String jsonConfig) { // New signature
         File tempDir = null;
         File exeFile = null;
         ExecutorService executor = null;
         try {
-            JsonReadUtil.ConfigResult configResult = JsonReadUtil.parseConfig(jsonConfig, useOldFormat);
+            JsonReadUtil.ConfigResult configResult = JsonReadUtil.parseConfig(jsonConfig, taskConfig.isUseOldFormat());
 
             boolean securityCheckFailed;
             if (configResult.securityCheck) {
                 SecurityChecker checker = new RegexSecurityCheck();
-                int securityCheckResult = checker.check(cppFilePath, keywordsFilePath);
+                int securityCheckResult = checker.check(taskConfig.getSourceFile(), taskConfig.getKeywordFile());
                 securityCheckFailed = (securityCheckResult == -5);
                 if (securityCheckFailed) {
-                    log.warn("Security check failed for file: {}", cppFilePath.getName());
+                    log.warn("Security check failed for file: {}", taskConfig.getSourceFile().getName());
                     int count = configResult.useOldFormat ? new JsonValidateUtil().countIns(configResult.checkpoints, true) : new JsonValidateUtil().countIns(configResult.checkpoints, false);
-                    return JudgeResultUtil.buildResult(null, true, false, count, useOldFormat);
+                    return JudgeResultUtil.buildResult(null, true, false, count, taskConfig.isUseOldFormat());
                 }
             } else {
                 log.info("Code Security Check is not enabled");
@@ -89,14 +85,14 @@ public class JudgeServer {
             if (System.getProperty("os.name").toLowerCase().contains("win")) exeName += ".exe";
             exeFile = new File(tempDir, exeName);
 
-            log.info("Compiling file: {} with enableO2={} , disableSecurityArgs={}", cppFilePath.getAbsolutePath(), configResult.enableO2, DisableSecurityArgs);
-            int compileCode = Compiler.compileProgram(cppFilePath, exeFile, configResult.enableO2, DisableSecurityArgs, 10_000, compilerPath, cppStandard);
+            log.info("Compiling file: {} with enableO2={} , disableSecurityArgs={}", taskConfig.getSourceFile().getAbsolutePath(), configResult.enableO2, taskConfig.isDisableSecurityArgs());
+            int compileCode = Compiler.compileProgram(taskConfig.getSourceFile(), exeFile, configResult.enableO2, taskConfig.isDisableSecurityArgs(), 10_000, taskConfig.getCompilerPath(), taskConfig.getCppStandard());
             if (compileCode != 0) {
                 List<Judger.JudgeResult> compileFailResults = new ArrayList<>();
                 for (int i = 0; i < configResult.checkpointsCount; i++) {
                     compileFailResults.add(new Judger.JudgeResult(-4, 0.0, 0L));
                 }
-                return JudgeResultUtil.buildResult(compileFailResults, false, false, configResult.checkpointsCount, useOldFormat);
+                return JudgeResultUtil.buildResult(compileFailResults, false, false, configResult.checkpointsCount, taskConfig.isUseOldFormat());
             }
 
             OutputCompareUtil.CompareMode mode = switch (configResult.compareMode) {
@@ -125,8 +121,8 @@ public class JudgeServer {
                     }
                     File finalExeFile = exeFile;
                     Future<Judger.JudgeResult> future = executor.submit(() ->
-                        Judger.judge(finalExeFile, input, output, configResult.timeLimit, configResult.memLimit, mode, DisableMemLimit)
-                        );
+                            Judger.judge(finalExeFile, input, output, configResult.timeLimit, configResult.memLimit, mode, taskConfig.isDisableMemLimit())
+                    );
                     futures.add(future);
                 }
             }
@@ -149,32 +145,17 @@ public class JudgeServer {
             FileUtil.deleteRecursively(exeFile);
             FileUtil.deleteRecursively(tempDir);
 
-            return JudgeResultUtil.buildResult(results, false, false, configResult.checkpointsCount, useOldFormat);
+            return JudgeResultUtil.buildResult(results, false, false, configResult.checkpointsCount, taskConfig.isUseOldFormat()); // Use format from config
 
         } catch (Exception e) {
             log.error("Failed to execute judge tasks: {}", e.getMessage(), e);
-            return JudgeResultUtil.buildResult(null, false, true, 1, useOldFormat);
+            return JudgeResultUtil.buildResult(null, false, true, 1, taskConfig.isUseOldFormat()); // Use format from config
         }
         finally {
             if (executor != null && !executor.isShutdown()) { executor.shutdownNow();}
             if (exeFile != null) { FileUtil.deleteRecursively(exeFile); }
             if (tempDir != null) { FileUtil.deleteRecursively(tempDir); }
         }
-    }
-
-    /**
-     * Serves judging requests using the new format (default behavior)
-     * @param jsonConfig JSON string containing checkpoints, time limits, mem limits, and flags
-     * @param compilerPath path to the compiler
-     * @param cppStandard C++ standard version
-     * @param cppFilePath path to the submitted C++ source file
-     * @param keywordsFilePath path to the keyword file used for security check
-     * @param DisableSecurityArgs Disable Compiler security flags
-     * @param DisableMemLimit Disable memory limit for the judging process
-     * @return JSON string representing aggregated judge results
-     */
-    public static String serve(String jsonConfig, String compilerPath, String cppStandard, File cppFilePath, File keywordsFilePath, boolean DisableSecurityArgs, boolean DisableMemLimit) {
-        return serve(jsonConfig, compilerPath, cppStandard, cppFilePath, keywordsFilePath, DisableSecurityArgs, DisableMemLimit, false); // 默认使用新格式
     }
 
     private static String StatusDescription(int statusCode) {

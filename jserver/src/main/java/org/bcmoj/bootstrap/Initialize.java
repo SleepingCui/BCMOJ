@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.bcmoj.netserver.SocketServer;
+import org.bcmoj.config.ServerConfig;
 import org.bcmoj.utils.ComplierCheckUtil;
 import org.bcmoj.utils.KeywordFileUtil;
 import org.bcmoj.utils.PropertiesExportUtil;
@@ -17,11 +17,13 @@ import java.util.Properties;
 import java.util.List;
 
 /**
- * Initializes and starts the BCMOJ Judge Server.
- * Handles command line arguments, config file, logging, keyword file, and server startup.
+ * Initializes the BCMOJ Judge Server environment.
+ * Handles command line arguments, config file loading, logging setup,
+ * keyword file preparation, and constructs the final ServerConfig object.
+ * Delegates server startup to ServerLauncher.
  */
 @Slf4j
-public class ServerInitialize {
+public class Initialize {
 
     public static void start(CommandLine cmd) {
         boolean debug = cmd.hasOption("debug");
@@ -103,7 +105,8 @@ public class ServerInitialize {
             }
             return;
         }
-        startServer(host, port, kwFile, nettyThreads, disableSecArgs, disableMemLimit, useOldFormat, compilerPath, cppStandard);
+        ServerConfig config = ServerConfig.builder().host(host).port(port).keywordFilePath(kwFile).compilerPath(compilerPath).cppStandard(cppStandard).nettyThreads(nettyThreads).disableSecurityArgs(disableSecArgs).disableMemLimit(disableMemLimit).useOldFormat(useOldFormat).build();
+        ServerLauncher.launch(config);
     }
 
     private static void configureLogging(boolean debug) {
@@ -125,16 +128,9 @@ public class ServerInitialize {
         }
     }
 
-/**
-     * Checks g++ version and determines whether to disable compiler security flags.
-     *
-     * @param DisableSecurityArgs current value of DisableSecurityArgs
-     * @param compilerPath        path to g++ executable
-     * @return updated DisableSecurityArgs value
-     */
-    private static boolean shouldDisableSecArgs(boolean DisableSecurityArgs, String compilerPath) {
-        if (!DisableSecurityArgs) {
-            String gppVersion = ComplierCheckUtil.getGppVersion(compilerPath);
+    private static ServerConfig applySecurityArgLogic(ServerConfig config) {
+        if (!config.isDisableSecurityArgs()) {
+            String gppVersion = ComplierCheckUtil.getGppVersion(config.getCompilerPath());
             if (gppVersion != null) {
                 String[] parts = gppVersion.split("\\.");
                 int major = parts.length > 0 ? Integer.parseInt(parts[0]) : 0;
@@ -142,32 +138,18 @@ public class ServerInitialize {
 
                 if (major < 4 || (major == 4 && minor < 9)) {
                     log.warn("Detected g++ version {} is older than 4.9.0. \nCompiler security flags will be automatically disabled.", gppVersion);
-                    return true;
+                    boolean newDisableFlag = true;
+                    return ServerConfig.builder().host(config.getHost()).port(config.getPort()).keywordFilePath(config.getKeywordFilePath()).compilerPath(config.getCompilerPath()).cppStandard(config.getCppStandard()).nettyThreads(config.getNettyThreads()).disableSecurityArgs(newDisableFlag).disableMemLimit(config.isDisableMemLimit()).useOldFormat(config.isUseOldFormat()).build();
                 }
             } else {
                 log.warn("Failed to detect g++ version, disabling security flags as precaution.");
-                return true;
+                boolean newDisableFlag = true;
+                return ServerConfig.builder().host(config.getHost()).port(config.getPort()).keywordFilePath(config.getKeywordFilePath()).compilerPath(config.getCompilerPath()).cppStandard(config.getCppStandard()).nettyThreads(config.getNettyThreads()).disableSecurityArgs(newDisableFlag).disableMemLimit(config.isDisableMemLimit()).useOldFormat(config.isUseOldFormat()).build();
             }
-        } else {
-            log.warn("Compiler security flags will be disabled, which may reduce compilation safety.");
         }
-        return DisableSecurityArgs;
+        return config;
     }
-
-
-    private static void startServer(String host, int port, String kwFile, int netty_threads, boolean DisableSecurityArgs, boolean DisableMemLimit, boolean UseOldFormat, String compilerPath, String cppStandard) {
-        try {
-            DisableSecurityArgs = shouldDisableSecArgs(DisableSecurityArgs, compilerPath);
-
-            log.info("Initializing server...");
-            SocketServer server = new SocketServer(host, port, DisableSecurityArgs, DisableMemLimit, UseOldFormat, kwFile, compilerPath, cppStandard);
-            server.start(netty_threads);
-            Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
-
-        } catch (Exception e) {
-            log.error("Failed to initialize server on {}:{} - {}", host, port, e.getMessage());
-            System.exit(1);
-        }
+    public static ServerConfig processConfig(ServerConfig initialConfig) {
+        return applySecurityArgLogic(initialConfig);
     }
-
 }

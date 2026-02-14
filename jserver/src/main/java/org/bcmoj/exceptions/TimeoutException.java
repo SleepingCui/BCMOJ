@@ -1,4 +1,4 @@
-package org.bcmoj.exception;
+package org.bcmoj.exceptions;
 
 import lombok.Getter;
 

@@ -12,7 +12,6 @@ public class Bootstrap {
     public static void run(String[] args) {
         log.info("BCMOJ {} is starting",VersionUtil.getVersion());
         CommandLine cmd = CLIParser.parse(args);
-        ServerInitialize.start(cmd);
+        Initialize.start(cmd);
     }
-
 }

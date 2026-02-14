@@ -1,7 +1,7 @@
 package org.bcmoj.judger;
 
 import lombok.SneakyThrows;
-import org.bcmoj.exception.MemoryLimitExceededException;
+import org.bcmoj.exceptions.MemoryLimitExceededException;
 import org.bcmoj.judger.Judger.JudgeResult;
 import org.bcmoj.utils.OutputCompareUtil.CompareMode;
 import org.junit.Test;
