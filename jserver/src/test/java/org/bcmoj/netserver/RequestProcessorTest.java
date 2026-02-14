@@ -3,7 +3,7 @@ package org.bcmoj.netserver;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
-import org.bcmoj.config.ServerConfig; // Import the config class
+import org.bcmoj.config.ServerConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,22 +21,11 @@ public class RequestProcessorTest {
     @Mock
     private ChannelHandlerContext ctx;
     private RequestProcessor processor;
-    private ServerConfig mockConfig; // Create a config object for testing
+    private ServerConfig mockConfig;
 
     @Before
     public void setUp() {
-        // --- Refactored: Create a ServerConfiguration object with test values ---
-        mockConfig = ServerConfig.builder()
-                .keywordFilePath("kw.txt") // corresponds to kwFile
-                .compilerPath("g++")       // corresponds to compilerPath
-                .cppStandard("c++17")      // corresponds to cppStandard
-                .disableSecurityArgs(false) // corresponds to DisableSecurityArgs
-                .disableMemLimit(true)     // corresponds to DisableMemLimit
-                .useOldFormat(true)        // corresponds to UseOldFormat
-                // Host, Port, etc. might not be used by RequestProcessor directly, so we don't set them
-                .build();
-
-        // --- Refactored: Pass the config object to the new constructor ---
+        mockConfig = ServerConfig.builder().host("localhost").port(8080).keywordFilePath("kw.txt").compilerPath("g++").cppStandard("c++17").disableSecurityArgs(false).disableMemLimit(true).useOldFormat(true).build();
         processor = new RequestProcessor(mockConfig);
     }
 
@@ -89,7 +78,7 @@ public class RequestProcessorTest {
     }
 
     @Test
-    public void testChannelRead_invalidFilenameLength() throws Exception { // Added throws Exception
+    public void testChannelRead_invalidFilenameLength() throws Exception {
         io.netty.buffer.ByteBuf buf = Unpooled.buffer();
         buf.writeInt(-114514);
 
@@ -97,8 +86,6 @@ public class RequestProcessorTest {
             processor.channelRead(ctx, buf);
             fail("Expected IOException");
         } catch (Exception e) {
-            // Check if the caught exception is an IOException (or one of its subclasses like the specific one thrown)
-            // The original code threw IOException("Invalid filename length: " + filenameLength)
             assertTrue("Exception was not an IOException or subtype: " + e.getClass().getName(), e instanceof java.io.IOException);
             assertTrue("Exception message did not contain 'Invalid filename length'", e.getMessage().contains("Invalid filename length"));
         }
