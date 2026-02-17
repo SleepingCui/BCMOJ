@@ -1,5 +1,4 @@
 import click
-from app.cli.utils import logo
 from app.core import version
 from app.cli.run import run
 from app.cli.db import db
@@ -24,7 +23,6 @@ def cli(ctx):
       python manage.py db clear
     """
     if ctx.invoked_subcommand is None:
-        click.echo(logo)
         click.echo(f"Version : {version}")
         click.echo(ctx.get_help())
 

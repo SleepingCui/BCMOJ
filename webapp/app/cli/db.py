@@ -1,4 +1,3 @@
-# app/cli/db.py
 
 import click
 import sys

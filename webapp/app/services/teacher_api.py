@@ -11,23 +11,21 @@ def get_teacher_problem_data():
             "title": p.title,
             "description": p.description,
             "time_limit": p.time_limit,
-            "mem_limit": p.mem_limit,        
+            "mem_limit": p.mem_limit,
             "example_visible_count": p.example_visible_count,
             "compare_mode": p.compare_mode,
             "examples": examples,
-            "group_id": p.group_id  
+            "group_id": p.group_id
         }
         problems.append(problem_data)
     return jsonify({"problems": problems})
-
-
 
 def teacher_create_problem(data):
     problem = Problem(
         title=data["title"],
         description=data["description"],
         time_limit=data["time_limit"],
-        mem_limit=data.get("mem_limit", 1000), 
+        mem_limit=data.get("mem_limit", 1000),
         example_visible_count=data.get("example_visible_count", 2),
         compare_mode=data.get("compare_mode", 1)
     )
@@ -37,49 +35,33 @@ def teacher_create_problem(data):
         example = Example(problem_id=problem.problem_id, input=ex["input"], output=ex["output"])
         db.session.add(example)
     db.session.commit()
-    return "OK"
+    return jsonify({'message': '题目创建成功', 'problem_id': problem.problem_id}) 
 
 def teacher_update_problem(data):
     try:
         problem_id = data.get('problem_id')
-        if problem_id:
-            problem = Problem.query.get_or_404(problem_id)
-            problem.title = data['title']
-            problem.description = data['description']
-            problem.time_limit = data['time_limit']
-            problem.mem_limit = data['mem_limit']
-            problem.compare_mode = data['compare_mode']
-            problem.example_visible_count = data['example_visible_count']
-            problem.group_id = data.get('group_id') 
-            
-            db.session.commit()
-            return jsonify({'message': '题目更新成功'})
-        else:
-            new_problem = Problem(
-                title=data['title'],
-                description=data['description'],
-                time_limit=data['time_limit'],
-                mem_limit=data['mem_limit'],
-                compare_mode=data['compare_mode'],
-                example_visible_count=data['example_visible_count'],
-                group_id=data.get('group_id')
-            )
-            db.session.add(new_problem)
-            for ex in data["examples"]:
-                example = Example(problem_id=new_problem.problem_id, input=ex["input"], output=ex["output"])
-                db.session.add(example)
-            db.session.commit()
-            return jsonify({'message': '题目创建成功', 'problem_id': new_problem.problem_id})
+        if not problem_id:
+             return jsonify({'error': 'Missing problem_id'}), 400
+        problem = Problem.query.get_or_404(problem_id)
+        problem.title = data['title']
+        problem.description = data['description']
+        problem.time_limit = data['time_limit']
+        problem.mem_limit = data['mem_limit']
+        problem.compare_mode = data['compare_mode']
+        problem.example_visible_count = data['example_visible_count']
+        problem.group_id = data.get('group_id') 
+
+        db.session.commit()
+        return jsonify({'message': '题目更新成功'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 def teacher_delete_problem(problem_id):
-    problem = Problem.query.get(problem_id)
-    if problem:
-        db.session.delete(problem)
-        db.session.commit()
-    return "OK"
+    problem = Problem.query.get_or_404(problem_id) 
+    db.session.delete(problem)
+    db.session.commit()
+    return jsonify({'message': '题目删除成功'}) 
 
 def teacher_groups_api():
     try:
@@ -99,7 +81,7 @@ def teacher_groups_api():
 
 def teacher_create_group_route():
     try:
-        data = request.json
+        data = request.json 
         if not data or 'group_name' not in data:
             return jsonify({'error': 'Missing group_name'}), 400
 
@@ -109,7 +91,7 @@ def teacher_create_group_route():
         )
         db.session.add(new_group)
         db.session.commit()
-        
+
         return jsonify({'message': '题组创建成功', 'group_id': new_group.group_id}), 200
     except Exception as e:
         db.session.rollback()
@@ -118,7 +100,7 @@ def teacher_create_group_route():
 
 def teacher_update_group_route():
     try:
-        data = request.json
+        data = request.json 
         if not data or 'group_id' not in data or 'group_name' not in data:
             return jsonify({'error': 'Missing group_id or group_name'}), 400
 
@@ -134,7 +116,7 @@ def teacher_update_group_route():
 
 def teacher_delete_group_route():
     try:
-        data = request.json
+        data = request.json 
         if not data or 'group_id' not in data:
             return jsonify({'error': 'Missing group_id'}), 400
 

@@ -7,6 +7,7 @@ from .core.config import get_config
 from .core.logger import setup_logging, log_route_context
 from .core.db import init_db
 from .services import *
+from .core import version
 
 app = Flask(__name__)
 setup_logging(app)
@@ -160,7 +161,7 @@ def problem_groups():
         'username': session.get('username'),
         'user_id': session.get('user_id'),
         'usergroup': session.get('usergroup'),
-        'version': 1,
+        'version': version,
     }
     return render_template('problem_groups.html', **context)
 
@@ -255,10 +256,10 @@ def teacher_update_problem_route():
 def teacher_delete_problem_route():
     return teacher_delete_problem(request.json.get("problem_id"))
 
-@app.route("/teacher/api/groups")
+@app.route("/teacher/api/groups", methods=["GET"]) 
 @teacher_required
-def teacher_groups_api():
-    return teacher_groups_api(request.json)
+def teacher_groups_api_endpoint():
+    return teacher_groups_api() 
 
 @app.route("/teacher/api/create_group", methods=["POST"])
 @teacher_required

@@ -2,7 +2,6 @@ import click
 import sys
 from werkzeug.serving import run_simple
 
-from app.cli.utils import logo
 from app.core.logger import CustomRequestHandler
 
 @click.command("run", short_help="Start the BCMOJ web server.")
@@ -12,7 +11,6 @@ from app.core.logger import CustomRequestHandler
 @click.option("--debug", is_flag=True, help="Enable debug mode (cannot be used with --wsgi)")
 def run(host, port, wsgi, debug):
     """Run the BCMOJ web server."""
-    click.echo(logo)
     
     if wsgi and debug:
         click.echo("[initialize] Error: --wsgi and --debug cannot be used together")

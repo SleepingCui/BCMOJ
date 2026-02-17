@@ -39,6 +39,7 @@ function showConfirm(message) {
 }
 
 function switchTab(tabName) {
+    console.log('[TAB] Switching to tab:', tabName);
     if (tabName === currentTab) return;
 
     document.getElementById(`${currentTab}-tab`).style.display = 'none';
@@ -55,13 +56,22 @@ function switchTab(tabName) {
 
 
 async function fetchTeacherData() {
+    console.log('[PROBLEMS] Fetching teacher data...');
     try {
         const res = await axios.get('/teacher/api');
         const data = res.data;
-        if (!data) { showToast('获取数据失败：服务器返回空数据','warning'); return; }
-        if (!data.problems) { showToast('获取题目数据失败：数据格式错误','warning'); return; }
+        if (!data) { 
+            showToast('获取数据失败：服务器返回空数据','warning'); 
+            return; 
+        }
+        if (!data.problems) { 
+            showToast('获取题目数据失败：数据格式错误','warning'); 
+            return; 
+        }
+        console.log('[PROBLEMS] Received problems data:', data.problems);
         renderProblems(data.problems);
     } catch (error) {
+        console.error('[PROBLEMS] Error fetching data:', error);
         if (error.response) {
             const status = error.response.status;
             const message = error.response.data?.message || '未知错误';
@@ -74,14 +84,19 @@ async function fetchTeacherData() {
 }
 
 function renderProblems(problems) {
+    console.log('[PROBLEMS] Rendering problems:', problems);
     const select = document.getElementById('problemSelect');
     select.innerHTML = '<option disabled selected>请选择题目</option>';
-    if (!Array.isArray(problems)) { showToast('题目数据格式错误','warning'); return; }
+    if (!Array.isArray(problems)) { 
+        showToast('题目数据格式错误','warning'); 
+        return; 
+    }
     if (problems.length === 0) {
         const option = document.createElement('option');
         option.disabled = true;
         option.textContent = '暂无题目';
         select.appendChild(option);
+        console.log('[PROBLEMS] No problems to render');
         return;
     }
     problems.forEach(p => {
@@ -92,15 +107,18 @@ function renderProblems(problems) {
         select.appendChild(opt);
     });
     window._problemData = problems;
+    console.log('[PROBLEMS] Problems rendered successfully');
 }
 
 function selectProblem(select) {
+    console.log('[PROBLEMS] Problem selection changed:', select.value);
     const problem_id = parseInt(select.value);
     const problem = window._problemData ? window._problemData.find(p => p.problem_id === problem_id) : null;
     if (problem) renderProblemEditor(problem);
 }
 
 function renderProblemEditor(p) {
+    console.log('[PROBLEMS] Rendering problem editor for:', p.problem_id, '-', p.title);
     const container = document.getElementById('problemEditor');
     container.innerHTML = '';
     const div = document.createElement('div');
@@ -138,7 +156,6 @@ function renderProblemEditor(p) {
             <div>所属题组:
                 <select id="problemGroupSelect" style="padding:4px;">
                     <option value="" ${!group_id?'selected':''}>无题组</option>
-                    <!-- 选项将通过JavaScript动态加载 -->
                 </select>
             </div>
         </div>
@@ -161,9 +178,11 @@ function renderProblemEditor(p) {
     `;
     container.appendChild(div);
     loadGroupOptionsIntoSelect('problemGroupSelect', group_id);
+    console.log('[PROBLEMS] Problem editor rendered');
 }
 
 function addProblemForm() {
+    console.log('[PROBLEMS] Adding new problem form');
     const container = document.getElementById('problemEditor');
     container.innerHTML = '';
     const div = document.createElement('div');
@@ -192,7 +211,6 @@ function addProblemForm() {
             <div>所属题组:
                 <select id="problemGroupSelect" style="padding:4px;">
                     <option value="">无题组</option>
-                    <!-- 选项将通过JavaScript动态加载 -->
                 </select>
             </div>
         </div>
@@ -206,12 +224,17 @@ function addProblemForm() {
     `;
     container.appendChild(div);
     loadGroupOptionsIntoSelect('problemGroupSelect', null);
+    console.log('[PROBLEMS] New problem form added');
 }
 
 function addExample(btn){
+    console.log('[PROBLEMS] Adding example');
     const section = btn.closest('.example-section');
     const div = section.querySelector('.examples');
-    if(!div){ showToast('无法找到样例容器','warning'); return; }
+    if(!div){ 
+        showToast('无法找到样例容器','warning'); 
+        return; 
+    }
 
     const ex = document.createElement('div');
     ex.style.marginBottom = '6px';
@@ -226,16 +249,22 @@ function addExample(btn){
         输出:<textarea style="width:100%; height:60px; margin-top:4px;"></textarea>
     `;
     div.appendChild(ex);
+    console.log('[PROBLEMS] Example added successfully');
 }
 
 
 async function removeExample(btn) {
+    console.log('[PROBLEMS] Removing example');
     if(await showConfirm('确定要删除这个样例吗？')) btn.parentElement.remove();
 }
 
 function saveProblem(btn, problem_id=null){
+    console.log('[PROBLEMS] Saving problem with ID:', problem_id);
     const container = btn.closest('#problemEditor > div');
-    if(!container){ showToast('无法找到题目容器','warning'); return; }
+    if(!container){ 
+        showToast('无法找到题目容器','warning'); 
+        return; 
+    }
 
     const titleInput = container.querySelector('input[placeholder="标题"]');
     const descTextarea = container.querySelector('textarea[placeholder], textarea:not(.example-text)');
@@ -268,6 +297,7 @@ function saveProblem(btn, problem_id=null){
     const data = { title, description, time_limit, mem_limit, compare_mode, example_visible_count, examples, group_id };
     if(problem_id) data.problem_id = problem_id;
 
+    console.log('[PROBLEMS] Saving data:', data);
     const url = problem_id ? '/teacher/api/update_problem' : '/teacher/api/create_problem';
     axios.post(url, data)
         .then(()=>{
@@ -281,6 +311,7 @@ function saveProblem(btn, problem_id=null){
 }
 
 async function deleteProblem(problem_id) {
+    console.log('[PROBLEMS] Deleting problem with ID:', problem_id);
     if(await showConfirm('确定要删除这个题目吗？')){
         axios.post('/teacher/api/delete_problem',{ problem_id })
             .then(()=>{ 
@@ -294,13 +325,22 @@ async function deleteProblem(problem_id) {
 
 // ----------------- pg ------------------
 async function fetchGroupData() {
+    console.log('[GROUPS] Fetching group data...');
     try {
         const res = await axios.get('/teacher/api/groups');
         const data = res.data;
-        if (!data) { showToast('获取题组数据失败：服务器返回空数据','warning'); return; }
-        if (!data.groups) { showToast('获取题组数据失败：数据格式错误','warning'); return; }
+        if (!data) { 
+            showToast('获取题组数据失败：服务器返回空数据','warning'); 
+            return; 
+        }
+        if (!data.groups) { 
+            showToast('获取题组数据失败：数据格式错误','warning'); 
+            return; 
+        }
+        console.log('[GROUPS] Received groups data:', data.groups);
         renderGroups(data.groups);
     } catch (error) {
+        console.error('[GROUPS] Error fetching group data:', error);
         if (error.response) {
             const status = error.response.status;
             const message = error.response.data?.message || '未知错误';
@@ -313,14 +353,19 @@ async function fetchGroupData() {
 }
 
 function renderGroups(groups) {
+    console.log('[GROUPS] Rendering groups:', groups);
     const select = document.getElementById('groupSelect');
     select.innerHTML = '<option disabled selected>请选择题组</option>';
-    if (!Array.isArray(groups)) { showToast('题组数据格式错误','warning'); return; }
+    if (!Array.isArray(groups)) { 
+        showToast('题组数据格式错误','warning'); 
+        return; 
+    }
     if (groups.length === 0) {
         const option = document.createElement('option');
         option.disabled = true;
         option.textContent = '暂无题组';
         select.appendChild(option);
+        console.log('[GROUPS] No groups to render');
         return;
     }
     groups.forEach(g => {
@@ -331,15 +376,18 @@ function renderGroups(groups) {
         select.appendChild(opt);
     });
     window._groupData = groups;
+    console.log('[GROUPS] Groups rendered successfully');
 }
 
 function selectGroup(select) {
+    console.log('[GROUPS] Group selection changed:', select.value);
     const group_id = parseInt(select.value);
     const group = window._groupData ? window._groupData.find(g => g.group_id === group_id) : null;
     if (group) renderGroupEditor(group);
 }
 
 function renderGroupEditor(g) {
+    console.log('[GROUPS] Rendering group editor for:', g.group_id, '-', g.group_name);
     const container = document.getElementById('groupEditor');
     container.innerHTML = '';
     const div = document.createElement('div');
@@ -374,9 +422,11 @@ function renderGroupEditor(g) {
     container.appendChild(div);
     loadProblemsInGroup(g.group_id);
     loadUnassignedProblemsForAssignment(g.group_id);
+    console.log('[GROUPS] Group editor rendered');
 }
 
 function addGroupForm() {
+    console.log('[GROUPS] Adding new group form');
     const container = document.getElementById('groupEditor');
     container.innerHTML = '';
     const div = document.createElement('div');
@@ -395,11 +445,16 @@ function addGroupForm() {
         </div>
     `;
     container.appendChild(div);
+    console.log('[GROUPS] New group form added');
 }
 
 async function saveGroup(btn, group_id=null){
+    console.log('[GROUPS] Saving group with ID:', group_id);
     const container = btn.closest('#groupEditor > div');
-    if(!container){ showToast('无法找到题组容器','warning'); return; }
+    if(!container){ 
+        showToast('无法找到题组容器','warning'); 
+        return; 
+    }
 
     const nameInput = container.querySelector('input[placeholder="题组名称"]');
     const descTextarea = container.querySelector('textarea[placeholder], textarea:not(#problemListContent_' + (group_id || '') + ')');
@@ -415,6 +470,7 @@ async function saveGroup(btn, group_id=null){
     const data = { group_name, description };
     if(group_id) data.group_id = group_id;
 
+    console.log('[GROUPS] Saving data:', data);
     const url = group_id ? '/teacher/api/update_group' : '/teacher/api/create_group';
     axios.post(url, data)
         .then(()=>{
@@ -428,6 +484,7 @@ async function saveGroup(btn, group_id=null){
 }
 
 async function deleteGroup(group_id) {
+    console.log('[GROUPS] Deleting group with ID:', group_id);
     if(await showConfirm('确定要删除这个题组吗？')){
         axios.post('/teacher/api/delete_group',{ group_id })
             .then(()=>{ 
@@ -440,6 +497,7 @@ async function deleteGroup(group_id) {
 }
 
 async function loadGroupOptionsIntoSelect(selectId, currentValue = null) {
+    console.log('[GROUPS] Loading group options into select:', selectId, 'with current value:', currentValue);
     const selectElement = document.getElementById(selectId);
     if (!selectElement) return;
     while (selectElement.children.length > 1) {
@@ -459,13 +517,15 @@ async function loadGroupOptionsIntoSelect(selectId, currentValue = null) {
             }
             selectElement.appendChild(option);
         });
+        console.log('[GROUPS] Group options loaded successfully');
     } catch (e) {
-        console.error('加载题组选项失败:', e);
+        console.error('[GROUPS] 加载题组选项失败:', e);
         showToast('加载题组选项失败: ' + (e.response?.data?.message||e.message), 'danger');
     }
 }
 
 async function loadProblemsInGroup(group_id) {
+    console.log('[GROUPS] Loading problems in group:', group_id);
     try {
         const res = await axios.get('/teacher/api');
         const allProblems = res.data?.problems || [];
@@ -476,6 +536,7 @@ async function loadProblemsInGroup(group_id) {
 
         if (problemsInGroup.length === 0) {
             contentDiv.innerHTML = '<p class="text-muted">题组内暂无题目</p>';
+            console.log('[GROUPS] No problems in group:', group_id);
             return;
         }
 
@@ -489,13 +550,15 @@ async function loadProblemsInGroup(group_id) {
                 </div>
             </div>
         `).join('');
+        console.log('[GROUPS] Loaded', problemsInGroup.length, 'problems for group:', group_id);
     } catch (e) {
-        console.error('加载题组内题目失败:', e);
+        console.error('[GROUPS] 加载题组内题目失败:', e);
         showToast('加载题组内题目失败: ' + (e.response?.data?.message||e.message), 'danger');
     }
 }
 
 async function loadUnassignedProblemsForAssignment(group_id) {
+    console.log('[GROUPS] Loading unassigned problems for assignment to group:', group_id);
     try {
         const res = await axios.get('/teacher/api');
         const allProblems = res.data?.problems || [];
@@ -512,6 +575,7 @@ async function loadUnassignedProblemsForAssignment(group_id) {
             option.disabled = true;
             option.textContent = '暂无未分配题目';
             selectElement.appendChild(option);
+            console.log('[GROUPS] No unassigned problems available');
             return;
         }
         unassignedProblems.forEach(p => {
@@ -520,13 +584,15 @@ async function loadUnassignedProblemsForAssignment(group_id) {
             option.textContent = `${p.problem_id} - ${p.title || '(未命名题目)'}`;
             selectElement.appendChild(option);
         });
+        console.log('[GROUPS] Loaded', unassignedProblems.length, 'unassigned problems for group:', group_id);
     } catch (e) {
-        console.error('加载未分配题目列表失败:', e);
+        console.error('[GROUPS] 加载未分配题目列表失败:', e);
         showToast('加载未分配题目列表失败: ' + (e.response?.data?.message||e.message), 'danger');
     }
 }
 
 async function assignProblemToGroup(group_id) {
+    console.log('[GROUPS] Assigning problem to group:', group_id);
     const selectElement = document.getElementById(`unassignedProblemSelect_${group_id}`);
     if (!selectElement || !selectElement.value) {
         showToast('请选择要添加的题目', 'warning');
@@ -563,14 +629,15 @@ async function assignProblemToGroup(group_id) {
         showToast('添加成功！', 'success');
         const group = window._groupData.find(g => g.group_id === group_id);
         if (group) renderGroupEditor(group);
-
+        console.log('[GROUPS] Problem assigned to group successfully');
     } catch (e) {
-        console.error('添加失败:', e);
+        console.error('[GROUPS] 添加失败:', e);
         showToast('添加失败: ' + (e.response?.data?.message||e.message), 'danger');
     }
 }
 
 async function removeProblemFromGroup(problem_id) {
+    console.log('[GROUPS] Removing problem from group:', problem_id);
     if (!await showConfirm('确定要将此题目移出题组吗？')) return;
 
     try {
@@ -600,17 +667,19 @@ async function removeProblemFromGroup(problem_id) {
             const group = window._groupData.find(g => g.group_id === currentGroupId);
             if (group) renderGroupEditor(group);
         }
-
+        console.log('[GROUPS] Problem removed from group successfully');
     } catch (e) {
-        console.error('移出失败:', e);
+        console.error('[GROUPS] 移出失败:', e);
         showToast('移出失败: ' + (e.response?.data?.message||e.message), 'danger');
     }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('[INIT] Document loaded, initializing...');
     document.querySelectorAll('.tab-button').forEach((btn, index) => {
         btn.setAttribute('data-tab', index === 0 ? 'problems' : 'groups');
     });
 
     fetchTeacherData();
+    console.log('[INIT] Initialization complete');
 });

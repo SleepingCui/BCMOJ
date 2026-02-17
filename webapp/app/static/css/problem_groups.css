@@ -229,3 +229,12 @@ body {
         padding: 1rem;
     }
 }
+.left-action-buttons {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
