@@ -6,15 +6,13 @@
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/SleepingCui/BCMOJ/maven.yml)
 ![GitHub Release](https://img.shields.io/github/v/release/SleepingCui/BCMOJ)
 
-> [!WARNING]
-> **这个项目目前处于开发阶段,可能存在未经查明的bug
-> 如果您发现任何bug，请在[issue](https://github.com/SleepingCui/BCMOJ/issues)中反馈。**
 ---
 ## **BCMOJ** ———一个轻量化的在线代码评测系统<sub>~~(几位初中生花100+h堆石山代码堆出来的玩意)~~</sub>
 
 ### 特点
 
 - 多模式判题 (忽略空格,不区分大小写,浮点容错)
+- 支持题组
 - Markdown + LaTeX 支持
 - 基于cgroup的内存限制 **(Linux Only)**
 - 微服务架构,WebApp与JudgeServer分离
