@@ -264,17 +264,17 @@ def teacher_groups_api_endpoint():
 @app.route("/teacher/api/create_group", methods=["POST"])
 @teacher_required
 def teacher_create_group_route():
-    return teacher_create_group_route(request.json)
+    return teacher_create_group(request.json)
 
 @app.route("/teacher/api/update_group", methods=["POST"])
 @teacher_required
 def teacher_update_group_route():
-    return teacher_update_group_route(request.json)
+    return teacher_update_group(request.json)
 
 @app.route("/teacher/api/delete_group", methods=["POST"])
 @teacher_required
 def teacher_delete_group_route():
-    return teacher_delete_group_route(request.json)
+    return teacher_delete_group(request.json)
 
 # admin results
 @app.route('/admin_results', methods=['GET'])

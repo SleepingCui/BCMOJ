@@ -79,9 +79,8 @@ def teacher_groups_api():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def teacher_create_group_route():
+def teacher_create_group(data):
     try:
-        data = request.json 
         if not data or 'group_name' not in data:
             return jsonify({'error': 'Missing group_name'}), 400
 
@@ -98,9 +97,8 @@ def teacher_create_group_route():
         return jsonify({'error': str(e)}), 500
 
 
-def teacher_update_group_route():
+def teacher_update_group(data):
     try:
-        data = request.json 
         if not data or 'group_id' not in data or 'group_name' not in data:
             return jsonify({'error': 'Missing group_id or group_name'}), 400
 
@@ -114,9 +112,8 @@ def teacher_update_group_route():
         return jsonify({'error': str(e)}), 500
 
 
-def teacher_delete_group_route():
+def teacher_delete_group(data):
     try:
-        data = request.json 
         if not data or 'group_id' not in data:
             return jsonify({'error': 'Missing group_id'}), 400
 
