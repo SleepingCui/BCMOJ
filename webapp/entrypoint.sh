@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+
+echo "[entrypoint] Current working directory: $(pwd)"
 CONFIG_FILE="config.yml"
 
 check_env_vars() {
@@ -43,7 +45,9 @@ email_config:
   email_password: ${EMAIL_PASSWORD:-password}
   email_sender: ${EMAIL_SENDER:-example@example.com}
   email_smtp_port: ${EMAIL_SMTP_PORT:-587}
-  email_smtp_server: ${EMAIL_SMTP_SERVER:-smtp.example.com} 
+  email_smtp_server: ${EMAIL_SMTP_SERVER:-smtp.example.com}
+  reset_subject: Password Reset Request
+  reset_body_template: code is {code}
 judge_config:
   enable_code_security_check: false
   judge_host: ${JUDGE_HOST:-localhost}
@@ -53,6 +57,35 @@ app_settings:
   upload_folder: tmp
   userdata_folder: userdata
   disable_color_log: false
+captcha_config:
+  width: 50
+  height: 30
+  font_size: 15
+  text_length:
+  - 4
+  - 4
+  interference_lines: 3
+  interference_points: 12
+  wave_amplitude:
+  - 2
+  - 6
+  wave_frequency:
+  - 0.05
+  - 0.1
+  noise_range:
+  - -5
+  - 5
+  bg_color:
+  - 255
+  - 255
+  - 255
+  text_color_range:
+  - 0
+  - 50
+  interference_color_range:
+  - 200
+  - 230
+  expire_time: 300
 EOF
     echo "[entrypoint] config.yml created."
 else

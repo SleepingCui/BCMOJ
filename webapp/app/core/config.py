@@ -47,7 +47,9 @@ class ConfigManager:
             'email_sender': 'example@example.com',
             'email_password': 'password',
             'email_smtp_server': 'smtp.example.com',
-            'email_smtp_port': 587
+            'email_smtp_port': 587,
+            'reset_subject': 'Password Reset',
+            'reset_body_template': 'Your verification code is: {code}'
         })
         add_section_header(email_config, section_comment("Email Configuration"))
         config['email_config'] = email_config
@@ -57,8 +59,26 @@ class ConfigManager:
             'judge_host': 'localhost',
             'judge_port': 12345
         })
-        add_section_header(judge_config, section_comment("Judge Configuration") + "# Refer to: https://github.com/SleepingCui/BCMOJ/wiki/%E9%85%8D%E7%BD%AE")
+        add_section_header(judge_config, section_comment("Judge Configuration") + "# Refer to: https://github.com/SleepingCui/BCMOJ/wiki/%E9%85%8D%E7%BD%AE    ")
         config['judge_config'] = judge_config
+
+        captcha_config = add_comments({
+            'width': 50,
+            'height': 30,
+            'font_size': 15,
+            'text_length': [4, 4], 
+            'interference_lines': 3,
+            'interference_points': 12,
+            'wave_amplitude': [2, 6],
+            'wave_frequency': [0.05, 0.1],
+            'noise_range': [-5, 5],
+            'bg_color': [255, 255, 255],
+            'text_color_range': [0, 50],
+            'interference_color_range': [200, 230],
+            'expire_time': 300
+        })
+        add_section_header(captcha_config, section_comment("CAPTCHA Configuration"))
+        config['captcha_config'] = captcha_config
 
         app_settings = add_comments({
             'secret_key': 'your_secret_key_here',

@@ -96,3 +96,8 @@
   <img src="imgs/ss4.jpeg" alt="ss3"/>
   <img src="imgs/ss3.jpeg" alt="ss4"/>
 </p>
+
+---
+
+## License
+[MIT](LICENSE)

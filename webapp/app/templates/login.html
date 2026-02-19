@@ -26,6 +26,14 @@
                     <label for="password"><i class="bi bi-lock me-1"></i>密码</label>
                     <input type="password" class="form-control" id="password" name="password" required placeholder="请输入密码">
                 </div>
+                <div class="form-group">
+                    <label for="captcha"><i class="bi bi-shield-lock me-1"></i>验证码</label>
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control me-2" id="captcha" name="captcha" required placeholder="请输入验证码" maxlength="6" style="flex: 1;">
+                        <img id="captcha-img" src="/captcha" alt="验证码" class="border rounded" style="cursor: pointer; height: 40px;" onclick="refreshCaptcha()">
+                        <button type="button" class="btn btn-outline-secondary ms-2" onclick="refreshCaptcha()">刷新</button>
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-login"><i class="bi bi-box-arrow-in-right me-2"></i>登录</button>
             </form>
             <div class="links">
@@ -36,9 +44,10 @@
     </div>
 
     <div class="footer">
-        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
-    </div>
+  <p>&copy; <span id="currentYear"></span> BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT  " target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
+</div>
 
+    <script src="/static/js/common.js"></script>
     <script src="/static/js/lib/popper.min.js"></script>
     <script src="/static/js/lib/bootstrap.min.js"></script>
     <script>
@@ -75,6 +84,12 @@
             toastEl.remove();
         });
     }
+    
+    function refreshCaptcha() {
+        const captchaImg = document.getElementById('captcha-img');
+        captchaImg.src = '/captcha?' + Date.now();
+    }
+    
     document.addEventListener('DOMContentLoaded', function () {
         const flashMessages = {{ get_flashed_messages(with_categories=true) | tojson }};
         flashMessages.forEach(([category, message]) => {
@@ -87,6 +102,6 @@
             );
         });
     });
-</script>
+    </script>
 </body>
 </html>

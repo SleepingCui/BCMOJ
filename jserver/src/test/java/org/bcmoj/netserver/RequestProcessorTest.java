@@ -3,6 +3,7 @@ package org.bcmoj.netserver;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
+import org.bcmoj.config.ServerConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,10 +21,12 @@ public class RequestProcessorTest {
     @Mock
     private ChannelHandlerContext ctx;
     private RequestProcessor processor;
+    private ServerConfig mockConfig;
 
     @Before
     public void setUp() {
-        processor = new RequestProcessor("kw.txt", "g++", "c++17", false,true,true);
+        mockConfig = ServerConfig.builder().host("localhost").port(8080).keywordFilePath("kw.txt").compilerPath("g++").cppStandard("c++17").disableSecurityArgs(false).disableMemLimit(true).useOldFormat(true).build();
+        processor = new RequestProcessor(mockConfig);
     }
 
     @Test
@@ -75,7 +78,7 @@ public class RequestProcessorTest {
     }
 
     @Test
-    public void testChannelRead_invalidFilenameLength() {
+    public void testChannelRead_invalidFilenameLength() throws Exception {
         io.netty.buffer.ByteBuf buf = Unpooled.buffer();
         buf.writeInt(-114514);
 
@@ -83,7 +86,8 @@ public class RequestProcessorTest {
             processor.channelRead(ctx, buf);
             fail("Expected IOException");
         } catch (Exception e) {
-            assertTrue(e.getMessage().contains("Invalid filename length"));
+            assertTrue("Exception was not an IOException or subtype: " + e.getClass().getName(), e instanceof java.io.IOException);
+            assertTrue("Exception message did not contain 'Invalid filename length'", e.getMessage().contains("Invalid filename length"));
         }
     }
 }

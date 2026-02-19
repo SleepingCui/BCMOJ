@@ -1,4 +1,4 @@
-const { username, userId, usergroup, totalPages, query, version } = window.appData;
+const { username, userId, usergroup, version } = window.appData;
 
 function showToast(message, type = 'info') {
     console.log(`[Toast][${type.toUpperCase()}] ${message}`);
@@ -75,20 +75,8 @@ function initSearchInput() {
         });
     }
 }
-
-function jumpToPage() {
-    const $pageInput = $('#jumpPage');
-    const pageNum = parseInt($pageInput.val());
-
-    if (isNaN(pageNum) || pageNum < 1 || pageNum > parseInt(totalPages)) {
-        showToast('请输入有效的页码', 'danger');
-        return;
-    }
-    window.location.href = `{{ url_for('problems') }}?q=${encodeURIComponent(query)}&page=${pageNum}`;
-}
-
 $(document).ready(function() {
-    console.log('[Init] DOM loaded. Initializing UI...');
+    console.log('[Init] DOM loaded. Initializing UI for Problem Groups...');
     initUserInfo(username, userId, usergroup);
     initSearchInput();
 
@@ -133,4 +121,5 @@ $(document).ready(function() {
                 });
         });
     }
+    console.log('[Init] Problem Groups page initialized.');
 });

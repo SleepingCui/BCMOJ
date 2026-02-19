@@ -13,9 +13,171 @@
     </header>
 
     <div class="section">
-        <h2>编辑 app 设置（需自行重启应用）</h2>
-        <textarea id="configYmlContent"></textarea><br>
-        <button onclick="saveYml()">保存</button>
+        <h2>编辑通用设置 (修改后需重启应用)</h2>
+        <form id="configForm">
+            <div class="form-section">
+                <h3>邮件配置 (email_config)</h3>
+                <div class="form-row">
+                    <label for="emailSender" title="用于发送邮件的邮箱地址">邮箱账号 (email_sender)</label>
+                    <input type="email" id="emailSender" name="email_config.email_sender">
+                </div>
+                <div class="form-row">
+                    <label for="emailPassword" title="用于登录邮箱的密码或授权码">邮箱密码 (email_password)</label>
+                    <input type="password" id="emailPassword" name="email_config.email_password">
+                </div>
+                <div class="form-row">
+                    <label for="emailSmtpServer" title="邮件 SMTP 服务器地址，例如 smtp.example.com">邮件 SMTP 服务器地址 (email_smtp_server)</label>
+                    <input type="text" id="emailSmtpServer" name="email_config.email_smtp_server">
+                </div>
+                <div class="form-row">
+                    <label for="emailSmtpPort" title="邮件 SMTP 端口，默认 587(TLS)，如使用 SSL 通常为 465">邮件 SMTP 端口 (email_smtp_port)</label>
+                    <input type="number" id="emailSmtpPort" name="email_config.email_smtp_port" min="1" max="65535">
+                </div>
+                <div class="form-row">
+                    <label for="resetSubject" title="密码重置邮件的主题">密码重置邮件主题 (reset_subject)</label>
+                    <input type="text" id="resetSubject" name="email_config.reset_subject">
+                </div>
+                <div class="form-row">
+                    <label for="resetBodyTemplate" title="密码重置邮件的内容模板，{code} 会被替换为验证码">密码重置邮件内容模板 (reset_body_template)</label>
+                    <textarea id="resetBodyTemplate" name="email_config.reset_body_template" rows="4" cols="50"></textarea>
+                </div>
+
+            </div>
+
+            <div class="form-section">
+                <h3>判题配置 (judge_config)</h3>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="enableSecurityCheck" name="judge_config.enable_code_security_check">
+                    <label for="enableSecurityCheck" title="是否启用判题安全关键字检测">启用代码安全检查 (enable_code_security_check)</label>
+                </div>
+                <div class="form-row">
+                    <label for="judgeHost" title="Judge Server 运行的主机 IP">判题服务器地址 (judge_host)</label>
+                    <input type="text" id="judgeHost" name="judge_config.judge_host">
+                </div>
+                <div class="form-row">
+                    <label for="judgePort" title="Judge Server 监听的端口号">判题服务器端口 (judge_port)</label>
+                    <input type="number" id="judgePort" name="judge_config.judge_port" min="1" max="65535">
+                </div>
+                <div class="form-row">
+                    <label>测试连接</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button type="button" id="testConnectionBtn" onclick="testJudgeConnection()">测试连接</button>
+                        <span id="connectionStatus"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>验证码配置 (captcha_config)</h3>
+                <div class="form-row">
+                    <label for="captchaWidth" title="验证码图片宽度 (像素)">图片宽度 (width)</label>
+                    <input type="number" id="captchaWidth" name="captcha_config.width" min="1" max="200">
+                </div>
+                <div class="form-row">
+                    <label for="captchaHeight" title="验证码图片高度 (像素)">图片高度 (height)</label>
+                    <input type="number" id="captchaHeight" name="captcha_config.height" min="1" max="200">
+                </div>
+                <div class="form-row">
+                    <label for="captchaFontSize" title="验证码文字字体大小 (像素)">字体大小 (font_size)</label>
+                    <input type="number" id="captchaFontSize" name="captcha_config.font_size" min="1" max="200">
+                </div>
+                <div class="form-row">
+                    <label for="captchaTextLengthMin" title="验证码最小长度">文本长度范围 (text_length) - 最小值</label>
+                    <input type="number" id="captchaTextLengthMin" name="captcha_config.text_length[0]" min="1" max="10">
+                </div>
+                 <div class="form-row">
+                    <label for="captchaTextLengthMax" title="验证码最大长度">文本长度范围 (text_length) - 最大值</label>
+                    <input type="number" id="captchaTextLengthMax" name="captcha_config.text_length[1]" min="1" max="10">
+                </div>
+                <div class="form-row">
+                    <label for="captchaInterferenceLines" title="干扰线的数量">干扰线数量 (interference_lines)</label>
+                    <input type="number" id="captchaInterferenceLines" name="captcha_config.interference_lines" min="0" max="20">
+                </div>
+                <div class="form-row">
+                    <label for="captchaInterferencePoints" title="干扰点的数量">干扰点数量 (interference_points)</label>
+                    <input type="number" id="captchaInterferencePoints" name="captcha_config.interference_points" min="0" max="100">
+                </div>
+                <div class="form-row">
+                    <label for="captchaWaveAmplitudeMin" title="波动效果的最小幅度">波动幅度范围 (wave_amplitude) - 最小值</label>
+                    <input type="number" step="0.01" id="captchaWaveAmplitudeMin" name="captcha_config.wave_amplitude[0]" min="0" max="20">
+                </div>
+                <div class="form-row">
+                    <label for="captchaWaveAmplitudeMax" title="波动效果的最大幅度">波动幅度范围 (wave_amplitude) - 最大值</label>
+                    <input type="number" step="0.01" id="captchaWaveAmplitudeMax" name="captcha_config.wave_amplitude[1]" min="0" max="20">
+                </div>
+                <div class="form-row">
+                    <label for="captchaWaveFrequencyMin" title="波动效果的最小频率">波动频率范围 (wave_frequency) - 最小值</label>
+                    <input type="number" step="0.001" id="captchaWaveFrequencyMin" name="captcha_config.wave_frequency[0]" min="0" max="1">
+                </div>
+                <div class="form-row">
+                    <label for="captchaWaveFrequencyMax" title="波动效果的最大频率">波动频率范围 (wave_frequency) - 最大值</label>
+                    <input type="number" step="0.001" id="captchaWaveFrequencyMax" name="captcha_config.wave_frequency[1]" min="0" max="1">
+                </div>
+                <div class="form-row">
+                    <label for="captchaNoiseRangeMin" title="噪声效果的最小值">噪声范围 (noise_range) - 最小值</label>
+                    <input type="number" id="captchaNoiseRangeMin" name="captcha_config.noise_range[0]" min="-50" max="50">
+                </div>
+                <div class="form-row">
+                    <label for="captchaNoiseRangeMax" title="噪声效果的最大值">噪声范围 (noise_range) - 最大值</label>
+                    <input type="number" id="captchaNoiseRangeMax" name="captcha_config.noise_range[1]" min="-50" max="50">
+                </div>
+                <div class="form-row">
+                    <label for="captchaBgColorR" title="背景色 R 分量 (0-255)">背景色 (bg_color) - R</label>
+                    <input type="number" id="captchaBgColorR" name="captcha_config.bg_color[0]" min="0" max="255">
+                </div>
+                <div class="form-row">
+                    <label for="captchaBgColorG" title="背景色 G 分量 (0-255)">背景色 (bg_color) - G</label>
+                    <input type="number" id="captchaBgColorG" name="captcha_config.bg_color[1]" min="0" max="255">
+                </div>
+                <div class="form-row">
+                    <label for="captchaBgColorB" title="背景色 B 分量 (0-255)">背景色 (bg_color) - B</label>
+                    <input type="number" id="captchaBgColorB" name="captcha_config.bg_color[2]" min="0" max="255">
+                </div>
+                <div class="form-row">
+                    <label for="captchaTextColorMin" title="文字颜色 R/G/B 最小值 (0-255)">文字颜色范围 (text_color_range) - 最小值</label>
+                    <input type="number" id="captchaTextColorMin" name="captcha_config.text_color_range[0]" min="0" max="255">
+                </div>
+                <div class="form-row">
+                    <label for="captchaTextColorMax" title="文字颜色 R/G/B 最大值 (0-255)">文字颜色范围 (text_color_range) - 最大值</label>
+                    <input type="number" id="captchaTextColorMax" name="captcha_config.text_color_range[1]" min="0" max="255">
+                </div>
+                <div class="form-row">
+                    <label for="captchaInterferenceColorMin" title="干扰元素颜色 R/G/B 最小值 (0-255)">干扰色范围 (interference_color_range) - 最小值</label>
+                    <input type="number" id="captchaInterferenceColorMin" name="captcha_config.interference_color_range[0]" min="0" max="255">
+                </div>
+                <div class="form-row">
+                    <label for="captchaInterferenceColorMax" title="干扰元素颜色 R/G/B 最大值 (0-255)">干扰色范围 (interference_color_range) - 最大值</label>
+                    <input type="number" id="captchaInterferenceColorMax" name="captcha_config.interference_color_range[1]" min="0" max="255">
+                </div>
+                <div class="form-row">
+                    <label for="captchaExpireTime" title="验证码过期时间 (秒)">过期时间 (expire_time)</label>
+                    <input type="number" id="captchaExpireTime" name="captcha_config.expire_time" min="1" max="3600">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>应用设置 (app_settings)</h3>
+                <div class="form-row">
+                    <label for="uploadFolder" title="临时存放用户上传代码的目录">上传目录 (upload_folder)</label>
+                    <input type="text" id="uploadFolder" name="app_settings.upload_folder">
+                </div>
+                <div class="form-row">
+                    <label for="userdataFolder" title="用户数据目录">用户数据目录 (userdata_folder)</label>
+                    <input type="text" id="userdataFolder" name="app_settings.userdata_folder">
+                </div>
+                <div class="form-row">
+                    <label for="gunicornWorkers" title="Gunicorn 部署时的 worker 数量，建议根据 CPU 核心数设置">Gunicorn 工作进程数 (gunicorn_workers)</label>
+                    <input type="number" id="gunicornWorkers" name="app_settings.gunicorn_workers" min="1">
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="disableColorLog" name="app_settings.disable_color_log">
+                    <label for="disableColorLog" title="是否禁用彩色日志输出">禁用彩色日志 (disable_color_log)</label>
+                </div>
+            </div>
+
+            <button type="submit">保存通用设置</button>
+        </form>
+        <p class="note">注意：修改配置后需要手动重启 Flask 应用程序才能生效。数据库(db_config)、Flask加密密钥(secret_key)等敏感信息仍需在 config.yml 文件中手动配置。</p>
     </div>
 
     <div class="section">
@@ -24,7 +186,7 @@
             <thead>
                 <tr>
                     <th>用户名</th>
-                    <th>密码</th>
+                    <th>密码 (SHA256)</th>
                     <th>Email</th>
                     <th>用户组</th>
                     <th>操作</th>
@@ -35,9 +197,10 @@
     </div>
 
     <div class="footer">
-        <p>&copy; 2025 BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
-    </div>
+  <p>&copy; <span id="currentYear"></span> BCMOJ. Released under the <a href="https://opensource.org/licenses/MIT  " target="_blank">MIT License</a>. | <a href="/about">关于我们</a></p>
+</div>
 
+    <script src="/static/js/common.js"></script>
     <script src="/static/js/admin.js"></script>
 </body>
 </html>

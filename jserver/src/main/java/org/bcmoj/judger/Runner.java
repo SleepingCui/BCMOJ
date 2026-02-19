@@ -1,8 +1,8 @@
 package org.bcmoj.judger;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bcmoj.exception.MemoryLimitExceededException;
-import org.bcmoj.exception.TimeoutException;
+import org.bcmoj.exceptions.MemoryLimitExceededException;
+import org.bcmoj.exceptions.TimeoutException;
 
 import java.io.*;
 

@@ -203,3 +203,29 @@
                 left: 10px;
             }
         }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        #captcha-img {
+            height: 40px;
+            width: auto;
+            max-width: 100px;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        .captcha-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .captcha-input {
+            flex: 1;
+        }
+
+        .refresh-btn {
+            height: 40px;
+        }

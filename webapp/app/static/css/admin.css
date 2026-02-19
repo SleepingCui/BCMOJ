@@ -1,32 +1,33 @@
-body {
-    font-family: 'Nunito', sans-serif;
-    background-color: #f8f9fc;
-    margin: 0;
-    padding: 0;
-}
+        /* 原有的 admin.css 内容 */
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8f9fc;
+            margin: 0;
+            padding: 0;
+        }
 
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #fff;
-    padding: 20px 30px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    border-radius: 0 0 15px 15px;
-    flex-wrap: wrap;
-}
-header h1 {
-    margin: 0;
-    color: #4e73df;
-    font-size: 1.5em;
-}
-header a {
-    color: #fff;
-    text-decoration: none;
-    font-weight: 600;
-}
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 20px 30px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            border-radius: 0 0 15px 15px;
+            flex-wrap: wrap;
+        }
+        header h1 {
+            margin: 0;
+            color: #4e73df;
+            font-size: 1.5em;
+        }
+        header a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+        }
 
-button {
+        button {
             background: linear-gradient(90deg, #4e73df, #6f42c1);
             color: #fff;
             border: none;
@@ -41,87 +42,183 @@ button {
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-.section {
-    max-width: 1000px;
-    margin: 30px auto;
-    background: #fff;
-    border-radius: 15px;
-    padding: 20px 30px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-.section h2 {
-    color: #4e73df;
-    margin-bottom: 15px;
-}
-.section textarea {
-    width: 100%;
-    height: 400px;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #6c757d;
-    resize: vertical;
-    font-family: 'Nunito', sans-serif;
-}
-.section button {
-    background: linear-gradient(90deg, #4e73df, #6f42c1);
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-    margin-top: 10px;
-}
-.section button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
+        .section {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #4e73df;
+            margin-bottom: 15px;
+        }
+        .section textarea {
+            width: 90%;
+            height: 400px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #6c757d;
+            resize: vertical;
+            font-family: 'Nunito', sans-serif;
+        }
+        .section button {
+            background: linear-gradient(90deg, #4e73df, #6f42c1);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .section button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-th, td {
-    text-align: left;
-    padding: 12px 10px;
-    border-bottom: 1px solid #e0e0e0;
-    color: #495057;
-}
-th {
-    background-color: #f8f9fc;
-    color: #4e73df;
-}
-tr:hover {
-    background-color: #f1f3f6;
-}
-table input, table select {
-    width: 100%;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #6c757d;
-    font-family: 'Nunito', sans-serif;
-}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #495057;
+        }
+        th {
+            background-color: #f8f9fc;
+            color: #4e73df;
+        }
+        tr:hover {
+            background-color: #f1f3f6;
+        }
+        table input, table select {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #6c757d;
+            font-family: 'Nunito', sans-serif;
+        }
 
-.footer {
-    text-align: center;
-    margin-top: 30px;
-    padding: 20px 10px;
-    color: #888;
-    font-size: 14px;
-}
-.footer a {
-    color: #4e73df;
-    text-decoration: none;
-}
-.footer a:hover {
-    color: #6f42c1;
-    text-decoration: underline;
-}
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px 10px;
+            color: #888;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #4e73df;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            color: #6f42c1;
+            text-decoration: underline;
+        }
 
-@media(max-width:768px){
-    header {
-        flex-direction: column;
-        gap: 10px;
-    }
-}
+        @media(max-width:768px){
+            header {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        #configForm {
+            width: 100%;
+        }
+        .form-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background-color: #fafbff;
+        }
+        .form-section h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #6f42c1;
+            font-size: 1.1em;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 5px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        .form-row label {
+            display: block;
+            font-weight: 600;
+            color: #5a5c69;
+            margin-bottom: 0;
+            font-size: 0.95em;
+        }
+        .form-row input[type="text"],
+        .form-row input[type="number"],
+        .form-row input[type="email"],
+        .form-row input[type="password"],
+        .form-row select {
+            width: 90%;
+            padding: 8px 10px;
+            border: 1px solid #b7b9cc;
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95em;
+            transition: border-color 0.2s;
+        }
+        .form-row input:focus,
+        .form-row select:focus {
+            outline: none;
+            border-color: #4e73df;
+            box-shadow: 0 0 0 2px rgba(78, 115, 223, 0.2);
+        }
+        .form-row.checkbox-row {
+            grid-template-columns: auto 1fr;
+        }
+        .form-row.checkbox-row label {
+             font-weight: normal;
+             cursor: pointer;
+        }
+        .form-row input[type="checkbox"] {
+            appearance: none; 
+            width: 18px; 
+            height: 18px;
+            border: 2px solid #b7b9cc; 
+            border-radius: 4px; 
+            position: relative;
+            cursor: pointer;
+            margin: 0 8px 0 0; 
+            flex-shrink: 0;
+        }
+        .form-row input[type="checkbox"]:not(:checked):hover {
+            border-color: #4e73df;
+        }
+        .form-row input[type="checkbox"]:checked {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+        .form-row input[type="checkbox"]:checked::after {
+            content: ''; 
+            position: absolute;
+            left: 5px;
+            top: 1px;
+            width: 6px; 
+            height: 10px;
+            border: solid white; 
+            border-width: 0 2px 2px 0; 
+            transform: rotate(45deg);
+            box-sizing: border-box;
+        }
+        .note {
+            font-style: italic;
+            color: #888;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            font-size: 0.9em;
+        }

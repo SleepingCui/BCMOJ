@@ -13,4 +13,4 @@ USER judge
 
 EXPOSE 12345
 ENTRYPOINT ["java", "-jar", "jserver.jar"]
-CMD ["--host=0.0.0.0", "--port=12345", "--kwfile=keywords.txt", "--std=c++11"]
+CMD ["--host=0.0.0.0", "--port=12345", "--kwfile=keywords.txt", "--std=c++11", "--disable-mem-limit"]

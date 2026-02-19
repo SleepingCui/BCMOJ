@@ -36,7 +36,7 @@ public class OutputCompareUtil {
             log.warn("Comparison failed: one of the outputs is null");
             return false;
         }
-        log.debug("Comparison mode: {}, Expected output: {}, Actual output: {}", mode, expectedOutput, actualOutput);
+        log.debug("mode={}, exp={}, act={}", mode, expectedOutput, actualOutput);
         return switch (mode) {
             case STRICT -> expectedOutput.equals(actualOutput);
             case IGNORE_SPACES -> normalizeSpaces(expectedOutput).equals(normalizeSpaces(actualOutput));
@@ -74,7 +74,7 @@ public class OutputCompareUtil {
                 double eVal = Double.parseDouble(e);
                 double aVal = Double.parseDouble(a);
                 double diff = Math.abs(eVal - aVal);
-                log.debug("Comparing token {}: expected={} actual={} diff={}", i, eVal, aVal, diff);
+                log.debug("token={}: exp={} act={} diff={}", i, eVal, aVal, diff);
                 if (diff > 1.1E-6) {
                     return false;
                 }

@@ -1,11 +1,13 @@
 from flask import Flask, request, session, render_template, redirect, url_for, send_from_directory, flash, abort, jsonify
 
 import os
+import base64
 
 from .core.config import get_config
 from .core.logger import setup_logging, log_route_context
 from .core.db import init_db
 from .services import *
+from .core import version
 
 app = Flask(__name__)
 setup_logging(app)
@@ -50,10 +52,21 @@ def index():
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+@app.route('/captcha')
+def captcha():
+    img_str = generate_captcha()
+    img_data = base64.b64decode(img_str)
+    from flask import Response
+    return Response(img_data, mimetype='image/png')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        captcha_input = request.form.get('captcha')
+        if not verify_captcha(captcha_input):
+            flash('验证码错误', 'error')
+            return render_template('register.html')
+        
         success, message = register_user(request.form)
         flash(message, 'success' if success else 'error')
         if success:
@@ -62,12 +75,17 @@ def register():
             return redirect(url_for('register'))
     return render_template('register.html')
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username_or_email = request.form.get('username_or_email')
         password = request.form.get('password')
+        captcha_input = request.form.get('captcha')
+    
+        if not verify_captcha(captcha_input):
+            flash('验证码错误', 'error')
+            return render_template('login.html')
+        
         user = verify_user_login(username_or_email, password)
         if user:
             login_user_session(user, session)
@@ -93,6 +111,11 @@ def edit_account():
 def forgot_password():
     if request.method == 'POST':
         if 'email' in request.form:
+            captcha_input = request.form.get('captcha')
+            if not verify_captcha(captcha_input):
+                flash('验证码错误', 'error')
+                return render_template('forgot_password.html', step=1)
+            
             email = request.form.get('email')
             success, msg = start_password_reset(email)
             flash(msg, 'success' if success else 'error')
@@ -130,6 +153,17 @@ def problem(problem_id):
 
     return render_template('problem.html', problem=problem, examples=examples)
 
+@app.route('/problem_groups')
+def problem_groups():
+    groups_with_problems = get_groups() 
+    context = {
+        'groups': groups_with_problems,
+        'username': session.get('username'),
+        'user_id': session.get('user_id'),
+        'usergroup': session.get('usergroup'),
+        'version': version,
+    }
+    return render_template('problem_groups.html', **context)
 
 @app.route('/submit/<int:problem_id>', methods=['POST'])
 @login_required
@@ -172,6 +206,14 @@ def admin_save_config_yml():
     content = request.json.get("content", "")
     return save_config_yml(content)
 
+@app.route("/admin/api/save_general_config", methods=["POST"])
+@admin_required
+def admin_save_general_config():
+    new_config = request.json.get("general_config", {})
+    if not isinstance(new_config, dict):
+         return jsonify({"error": "Invalid config format"}), 400
+    return save_general_config(new_config)
+
 @app.route("/admin/api/update_user", methods=["POST"])
 @admin_required
 def admin_update_user():
@@ -184,23 +226,9 @@ def admin_delete_user():
     userid = request.json.get("userid")
     return delete_user(userid)
 
-@app.route("/admin/api/create_problem", methods=["POST"])
-@admin_required
-def admin_create_problem():
-    data = request.json
-    return create_problem(data)
-
-@app.route("/admin/api/update_problem", methods=["POST"])
-@admin_required
-def admin_update_problem():
-    data = request.json
-    return update_problem(data)
-
-@app.route("/admin/api/delete_problem", methods=["POST"])
-@admin_required
-def admin_delete_problem():
-    problem_id = request.json.get("problem_id")
-    return delete_problem(problem_id)
+@app.route('/admin/api/test_connection', methods=['POST'])
+def test_connection():
+    return test_judge_connection()
 
 # teacher
 @app.route('/teacher')
@@ -228,6 +256,25 @@ def teacher_update_problem_route():
 def teacher_delete_problem_route():
     return teacher_delete_problem(request.json.get("problem_id"))
 
+@app.route("/teacher/api/groups", methods=["GET"]) 
+@teacher_required
+def teacher_groups_api_endpoint():
+    return teacher_groups_api() 
+
+@app.route("/teacher/api/create_group", methods=["POST"])
+@teacher_required
+def teacher_create_group_route():
+    return teacher_create_group(request.json)
+
+@app.route("/teacher/api/update_group", methods=["POST"])
+@teacher_required
+def teacher_update_group_route():
+    return teacher_update_group(request.json)
+
+@app.route("/teacher/api/delete_group", methods=["POST"])
+@teacher_required
+def teacher_delete_group_route():
+    return teacher_delete_group(request.json)
 
 # admin results
 @app.route('/admin_results', methods=['GET'])

@@ -13,9 +13,12 @@ config.yml
 /webapp/__pycache__
 keywords.txt
 .idea/fastRequest/fastRequestCurrentProjectLocalConfig.xml
+.idea/copilot.*.xml
+.idea/discord.xml
 *.pyc
 /jserver/logs/
 *.log
 /migrations/
 *.properties
 temp/
+venv/

@@ -20,6 +20,7 @@ public class PropertiesExportUtil {
      *                     If null, an empty Properties object will be used.
      */
     public static void export(Properties cmdLineProps) {
+        log.debug("Props: {}",cmdLineProps);
         if (cmdLineProps == null) cmdLineProps = new Properties();
         String host = cmdLineProps.getProperty("host", "");
         String port = cmdLineProps.getProperty("port", "");

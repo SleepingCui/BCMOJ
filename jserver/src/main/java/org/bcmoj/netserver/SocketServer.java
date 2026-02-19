@@ -5,6 +5,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
+import org.bcmoj.config.ServerConfig;
 
 /**
  * Asynchronous non-blocking network server based on Netty,
@@ -28,38 +29,17 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class SocketServer {
-    private final String host;
-    private final int port;
-    private final boolean DisableSecurityArgs;
-    private final boolean DisableMemLimit;
-    private final boolean UseOldFormat;
-    private final String cppStandard;
-    private final String kwFilePath;
-    private final String compilerPath;
+    private final ServerConfig config;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
     /**
-     * Constructs the server with specified host, port, and keyword file path.
+     * Constructs the server with the provided configuration object.
      *
-     * @param host                  the host address to bind, e.g. "0.0.0.0"
-     * @param port                  the port number to listen on, e.g. 12345
-     * @param DisableSecurityArgs   Disable Compiler security flags
-     * @param DisableMemLimit       Disable memory limit for the judging process
-     * @param kwFilePath            the path to the keyword file used by the judge service
-     * @param compilerPath          path to the compiler used by the judge service
-     * @param cppStandard           C++ standard version, e.g. "c++11"
-     * 
+     * @param config The server configuration containing all necessary settings.
      */
-    public SocketServer(String host, int port, boolean DisableSecurityArgs, boolean DisableMemLimit, boolean useOldFormat, String kwFilePath, String compilerPath, String cppStandard) {
-        this.host = host;
-        this.port = port;
-        this.DisableSecurityArgs = DisableSecurityArgs;
-        this.DisableMemLimit = DisableMemLimit;
-        this.UseOldFormat = useOldFormat;
-        this.kwFilePath = kwFilePath;
-        this.compilerPath = compilerPath;
-        this.cppStandard = cppStandard;
+    public SocketServer(ServerConfig config) {
+        this.config = config;
     }
 
     /**
@@ -69,11 +49,12 @@ public class SocketServer {
      * This method blocks the calling thread until the server is shut down.
      * </p>
      *
+     * @param nettyThreads Number of threads for the Netty event loop group.
      * @throws InterruptedException if the thread is interrupted during startup or operation
      */
 
-    public void start() throws InterruptedException {
-        bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
+    public void start(int nettyThreads) throws InterruptedException {
+        bossGroup = new MultiThreadIoEventLoopGroup(nettyThreads, NioIoHandler.newFactory());
         workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
 
         try {
@@ -82,19 +63,18 @@ public class SocketServer {
                     .channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
-                            ch.pipeline().addLast(new RequestProcessor(kwFilePath, compilerPath, cppStandard, DisableSecurityArgs, DisableMemLimit, UseOldFormat));
+                            ch.pipeline().addLast(new RequestProcessor(SocketServer.this.config));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
-            ChannelFuture future = bootstrap.bind(host, port).sync();
-            log.info("Server started on {}:{}", host, port);
+            ChannelFuture future = bootstrap.bind(config.getHost(), config.getPort()).sync();
+            log.info("Server successfully started and listening on {}:{}", config.getHost(), config.getPort());
             future.channel().closeFuture().sync();
         } finally {
             log.debug("Server shutting down...");
             stop();
         }
     }
-
 
     /**
      * Gracefully shuts down the server and releases thread pool resources.

@@ -89,7 +89,7 @@ public class JsonValidateUtil {
      * @return {@code true} if the JSON is valid and all checkpoint pairs are matched; {@code false} otherwise.
      */
     public boolean validate(String jsonConfig) {
-        return validate(jsonConfig, false); // 默认使用新格式
+        return validate(jsonConfig, false);
     }
 
     /**

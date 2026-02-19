@@ -6,6 +6,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
+import org.bcmoj.config.ServerConfig;
+import org.bcmoj.config.JudgeTaskConfig;
 import org.bcmoj.judgeserver.JudgeServer;
 import org.bcmoj.utils.FileHashUtil;
 import org.bcmoj.utils.JsonValidateUtil;
@@ -78,12 +80,8 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
     private static final int MAX_FILENAME_CHARS = 128;
 
     private final JsonValidateUtil validator = new JsonValidateUtil();
-    private final boolean DisableSecurityArgs;
-    private final boolean DisableMemLimit;
-    private final boolean UseOldFormat;
-    private final String kwFilePath;
-    private final String compilerPath;
-    private final String cppStandard;
+    private final ServerConfig serverConfig; // 存储服务器配置对象
+
     private State state = State.READ_FILENAME_LENGTH;
 
     private int filenameLength;
@@ -100,24 +98,12 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
     private final StringBuilder hashBuilder = new StringBuilder();
 
     /**
-     * Constructs a RequestProcessor with the given keyword file path
-     * for judge server processing.
+     * Constructs a RequestProcessor with the given server configuration.
      *
-     * @param kwFilePath   path to the keyword file used by JudgeServer
-     * @param compilerPath path to the compiler used by JudgeServer
-     * @param cppStandard  C++ standard version used by JudgeServer
-     * @param DisableSecurityArgs Disable Compiler security flags
-     * @param DisableMemLimit   Disable memory limit for the judging process
+     * @param serverConfig The server configuration containing all necessary settings.
      */
-    public RequestProcessor(String kwFilePath, String compilerPath, String cppStandard, boolean DisableSecurityArgs, boolean DisableMemLimit, boolean UseOldFormat) {
-        this.kwFilePath = kwFilePath;
-        this.compilerPath = compilerPath;
-        this.cppStandard = cppStandard;
-        this.DisableSecurityArgs = DisableSecurityArgs;
-        this.DisableMemLimit = DisableMemLimit;
-        this.UseOldFormat = UseOldFormat;
-
-
+    public RequestProcessor(ServerConfig serverConfig) {
+        this.serverConfig = serverConfig;
     }
 
     /**
@@ -264,7 +250,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                         hashBuilder.append(new String(hashBytes, StandardCharsets.UTF_8));
                         if (hashBuilder.length() == hashLength) {
                             declaredHash = hashBuilder.toString();
-                            log.info("Declared hash: {}", declaredHash);
+                            log.debug("Declared hash: {}", declaredHash);
                             state = State.PROCESSING;
                             processJudge(ctx);
                         }
@@ -296,6 +282,7 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
         }
     };
     private final ExecutorService JudgeTaskExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), namedThreadFactory);
+
     private void processJudge(ChannelHandlerContext ctx) {
         Map<String, String> contextMap = MDC.getCopyOfContextMap();
         JudgeTaskExecutor.submit(() -> {
@@ -304,24 +291,25 @@ public class RequestProcessor extends ChannelInboundHandlerAdapter {
                 if (declaredHash != null) {
                     try {
                         String actualHash = FileHashUtil.calculateSHA256(tempFile);
-                        log.info("Actual hash: {}", actualHash);
+                        log.debug("Actual hash: {}", actualHash);
                         if (!actualHash.equalsIgnoreCase(declaredHash)) {
-                            log.warn("File hash mismatch! Sending error result...");
-                            sendResponse(ctx, JudgeResultUtil.buildResult(List.of(), false, true, parseCheckpointCount(jsonConfig),UseOldFormat));
+                            log.warn("File hash mismatch! D: {}, A: {}", declaredHash, actualHash);
+                            sendResponse(ctx, JudgeResultUtil.buildResult(List.of(), false, true, parseCheckpointCount(jsonConfig), serverConfig.isUseOldFormat()));
                             return;
                         }
                     } catch (NoSuchAlgorithmException e) {
                         log.warn("Hash calculation failed: {}", e.getMessage());
                     }
                 }
-                if (!validator.validate(jsonConfig,UseOldFormat)) {
+                if (!validator.validate(jsonConfig, serverConfig.isUseOldFormat())) {
                     String errorJson = validator.getLastErrorJson();
                     if (errorJson != null) {
                         sendResponse(ctx, errorJson);
                     }
                     return;
                 }
-                String response = JudgeServer.serve(jsonConfig, compilerPath, cppStandard, tempFile, new File(kwFilePath), DisableSecurityArgs, DisableMemLimit,UseOldFormat);
+                JudgeTaskConfig taskConfig = JudgeTaskConfig.builder().sourceFile(tempFile).keywordFile(new File(serverConfig.getKeywordFilePath())).compilerPath(serverConfig.getCompilerPath()).cppStandard(serverConfig.getCppStandard()).disableSecurityArgs(serverConfig.isDisableSecurityArgs()).disableMemLimit(serverConfig.isDisableMemLimit()).useOldFormat(serverConfig.isUseOldFormat()).build();
+                String response = JudgeServer.serve(taskConfig, jsonConfig);
                 log.info("JudgeServer response: {}", response);
                 sendResponse(ctx, response);
 
